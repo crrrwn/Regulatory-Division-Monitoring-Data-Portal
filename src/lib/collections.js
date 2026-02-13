@@ -36,7 +36,7 @@ export const COLLECTION_TITLE_FIELD = {
 
 // Edit modal: same order as in each form (do not change order)
 export const COLLECTION_FIELD_ORDER = {
-  animalFeed: ['date', 'companyName', 'officeAddress', 'plantAddress', 'email', 'cellphone', 'natureOfBusiness', 'businessOrg', 'productLines', 'nutritionistName', 'prcIdNo', 'validity', 'certNo', 'dateIssued', 'fee', 'orNo', 'orDate', 'remarks'],
+  animalFeed: ['date', 'province', 'controlNo', 'registrationNo', 'dateOfInspection', 'dateOfMonitoring', 'companyName', 'lastName', 'middleName', 'firstName', 'nameExt', 'completeName', 'birthDate', 'barangay', 'municipality', 'completeAddress', 'officeAddress', 'plantAddress', 'cellphone', 'email', 'natureOfBusiness', 'businessOrg', 'productLines', 'type', 'orNo', 'orDate', 'fee', 'dateIssued', 'dateOfFeedSampling1stSem', 'dateOfFeedSampling2ndSem', 'noOfFeedSamples1stSem', 'noOfFeedSamples2ndSem', 'attachmentFileName', 'attachmentData', 'remarks'],
   animalWelfare: ['dateApplied', 'facilityName', 'ownerName', 'address', 'facilityType', 'speciesHandled', 'headVet', 'prcLicenseNo', 'certificateNo', 'validityDate', 'status'],
   livestockHandlers: ['ownershipType', 'singleName', 'companyName', 'repName', 'address', 'businessType', 'contact', 'applicantType', 'category', 'livestock', 'poultry', 'byProducts', 'region'],
   transportCarrier: ['ownerName', 'businessAddress', 'businessOrg', 'typeOfApplicant', 'contactNo', 'email', 'applicantTin', 'companyTin', 'typeOfServices', 'applicationType', 'speciesCargoBirds', 'speciesAnimals', 'byProducts', 'typeOfVehicle', 'bodyType', 'fleet'],
@@ -50,4 +50,45 @@ export const COLLECTION_FIELD_ORDER = {
   plantPestSurveillance: ['dateOfMonitoring', 'location', 'farmerName', 'cropAffected', 'stageOfCrop', 'pestDiseaseObserved', 'incidenceRate', 'damageSeverity', 'actionTaken', 'technicianName'],
   cfsAdmcc: ['date', 'establishment', 'sampleType', 'parameterTested', 'sourceOrigin', 'resultValue', 'standardLimit', 'compliance', 'referenceReportNo'],
   animalDiseaseSurveillance: ['dateReported', 'barangay', 'municipality', 'farmOwnerName', 'species', 'clinicalSigns', 'totalPopulation', 'mortality', 'laboratoryTest', 'result', 'controlMeasures'],
+}
+
+// Same labels as in Animal Feed form (for Edit Record in View Records)
+export const COLLECTION_FIELD_LABELS = {
+  animalFeed: {
+    date: 'Date of Application/Valuated',
+    province: 'Province',
+    controlNo: 'Control No.',
+    registrationNo: 'Registration No.',
+    dateOfInspection: 'Date of Inspection',
+    dateOfMonitoring: 'Date of Monitoring',
+    companyName: 'Name of Establishment',
+    lastName: 'Last Name',
+    middleName: 'Middle Name',
+    firstName: 'First Name',
+    nameExt: 'Name Ext.',
+    completeName: 'Complete Name',
+    birthDate: 'Birth Date',
+    barangay: 'Barangay',
+    municipality: 'Municipality',
+    completeAddress: 'Complete Address',
+    officeAddress: 'Office Address',
+    plantAddress: 'Plant/Warehouse Address',
+    cellphone: 'Contact No.',
+    email: 'Email Address',
+    natureOfBusiness: 'Nature of Business',
+    businessOrg: 'Business Organization',
+    productLines: 'Product Line',
+    type: 'Type',
+    orNo: 'Official Receipt No.',
+    orDate: 'Official Receipt Date',
+    fee: 'Fees Collected',
+    dateIssued: 'Date of Issuance of LTO',
+    dateOfFeedSampling1stSem: 'Date of Feed Sampling (1st Semester)',
+    dateOfFeedSampling2ndSem: 'Date of Feed Sampling (2nd Semester)',
+    noOfFeedSamples1stSem: 'No. of Feed Samples Collected (1st Semester)',
+    noOfFeedSamples2ndSem: 'No. of Feed Samples Collected (2nd Semester)',
+    attachmentFileName: 'Attachments (file name)',
+    attachmentData: 'Attachments (file)',
+    remarks: 'Remarks',
+  },
 }

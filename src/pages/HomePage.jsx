@@ -22,7 +22,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 max-w-2xl mx-auto">
             <Link
               to="/admin-login"
-              className="group flex flex-col items-center p-6 sm:p-8 rounded-xl bg-white border-2 border-border hover:border-primary hover:shadow-lg transition-all"
+              className="group flex flex-col items-center p-6 sm:p-8 rounded-xl bg-white border-2 border-border hover:border-primary hover:shadow-lg transition-all min-h-[120px] justify-center"
             >
               <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-4 group-hover:bg-primary group-hover:text-white transition">
                 <iconify-icon icon="mdi:shield-account" width="28" height="28"></iconify-icon>
@@ -32,7 +32,7 @@ export default function HomePage() {
             </Link>
             <Link
               to="/staff-login"
-              className="group flex flex-col items-center p-8 rounded-xl bg-white border-2 border-border hover:border-primary hover:shadow-lg transition-all"
+              className="group flex flex-col items-center p-6 sm:p-8 rounded-xl bg-white border-2 border-border hover:border-primary hover:shadow-lg transition-all min-h-[120px] justify-center"
             >
               <span className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 text-primary mb-4 group-hover:bg-primary group-hover:text-white transition">
                 <iconify-icon icon="mdi:account-group" width="28" height="28"></iconify-icon>
@@ -66,27 +66,27 @@ export default function HomePage() {
             Features
           </h2>
           <ul className="space-y-3 sm:space-y-4">
-            <li className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-white border border-border">
+            <li className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-white border border-border min-w-0">
               <iconify-icon icon="mdi:lock-outline" class="text-primary shrink-0" width="24" height="24"></iconify-icon>
-              <div>
+              <div className="min-w-0">
                 <strong className="text-primary">Secure Login</strong> — Separate access for Admins and Standard Users using Firebase Authentication.
               </div>
             </li>
-            <li className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-white border border-border">
+            <li className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-white border border-border min-w-0">
               <iconify-icon icon="mdi:cloud-outline" class="text-primary shrink-0" width="24" height="24"></iconify-icon>
-              <div>
+              <div className="min-w-0">
                 <strong className="text-primary">Cloud Database</strong> — Data is saved instantly using Firebase Firestore. No more manual spreadsheets.
               </div>
             </li>
-            <li className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-white border border-border">
+            <li className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-white border border-border min-w-0">
               <iconify-icon icon="mdi:view-dashboard-outline" class="text-primary shrink-0" width="24" height="24"></iconify-icon>
-              <div>
+              <div className="min-w-0">
                 <strong className="text-primary">Easy Dashboard</strong> — Quick access to Registration, Quality Control, and Surveillance units.
               </div>
             </li>
-            <li className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-white border border-border">
+            <li className="flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg bg-white border border-border min-w-0">
               <iconify-icon icon="mdi:magnify" class="text-primary shrink-0" width="24" height="24"></iconify-icon>
-              <div>
+              <div className="min-w-0">
                 <strong className="text-primary">Smart Search</strong> — Fast searching for records, names, and accreditation status.
               </div>
             </li>

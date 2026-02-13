@@ -47,8 +47,8 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto py-8 sm:py-12 px-3 sm:px-4">
-      <div className="bg-white rounded-xl shadow-lg border border-border p-4 sm:p-6 md:p-8">
+    <div className="w-full max-w-md mx-auto py-8 sm:py-12 px-3 sm:px-4 min-h-0" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))', paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+      <div className="bg-white rounded-xl shadow-lg border border-border p-4 sm:p-6 md:p-8 w-full min-w-0">
         <div className="text-center mb-6">
           <img src="/DA LOGO.jpg" alt="DA" className="h-16 w-16 rounded-full mx-auto object-cover border-2 border-primary/20 mb-4" />
           <h1 className="text-xl font-bold text-primary">Admin Portal</h1>
@@ -96,7 +96,7 @@ export default function AdminLogin() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50"
+            className="w-full min-h-[44px] py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50"
           >
             {loading ? 'Please wait...' : isRegister ? 'Register as Admin' : 'Login'}
           </button>

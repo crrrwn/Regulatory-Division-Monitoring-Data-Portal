@@ -1,5 +1,6 @@
 import { Routes as RR, Route, Navigate } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+import { AnalyticsProvider } from './context/AnalyticsContext'
 
 import LandingLayout from './layouts/LandingLayout'
 import DashboardLayout from './layouts/DashboardLayout'
@@ -43,7 +44,7 @@ export default function Routes() {
         <Route path="staff-login" element={<StaffLogin />} />
       </Route>
 
-      <Route path="/dashboard" element={<ProtectedRoute><DashboardLayout /></ProtectedRoute>}>
+      <Route path="/dashboard" element={<ProtectedRoute><AnalyticsProvider><DashboardLayout /></AnalyticsProvider></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
         <Route path="analytics" element={<DataAnalytics />} />
         <Route path="records" element={<ViewRecords />} />

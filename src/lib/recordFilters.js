@@ -40,6 +40,10 @@ export function docToRow(doc) {
   const row = {}
   Object.entries(doc).forEach(([key, value]) => {
     if (key === 'id' || skip.includes(key)) return
+    if (key === 'attachmentData') {
+      row[key] = value && String(value).length > 0 ? '(file attached)' : ''
+      return
+    }
     if (value === null || value === undefined) row[key] = ''
     else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       if (typeof value.toDate === 'function') row[key] = value.toDate().toLocaleString()

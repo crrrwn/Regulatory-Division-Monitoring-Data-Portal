@@ -4,32 +4,35 @@ import { useAuth } from '../context/AuthContext'
 
 const SIDEBAR_SECTIONS = [
   {
-    title: 'Registration and Licensing',
+    title: 'Registration & Licensing',
+    icon: 'mdi:certificate-outline',
     items: [
       { path: '/dashboard/forms/animal-feed', label: 'Animal Feeds Unit' },
-      { path: '/dashboard/forms/animal-welfare', label: 'Animal Welfare Concern Unit' },
-      { path: '/dashboard/forms/livestock-handlers', label: 'Livestock/Poultry/By-Products Handlers' },
-      { path: '/dashboard/forms/transport-carrier', label: 'Transport Carriers Accreditation' },
-      { path: '/dashboard/forms/plant-material', label: 'Plant Material / Nursery Accreditation' },
-      { path: '/dashboard/forms/organic-agri', label: 'Organic Agriculture Certification' },
+      { path: '/dashboard/forms/animal-welfare', label: 'Animal Welfare Concern' },
+      { path: '/dashboard/forms/livestock-handlers', label: 'Livestock & Handlers' },
+      { path: '/dashboard/forms/transport-carrier', label: 'Transport Carriers' },
+      { path: '/dashboard/forms/plant-material', label: 'Plant Material / Nursery' },
+      { path: '/dashboard/forms/organic-agri', label: 'Organic Agri Certification' },
     ],
   },
   {
-    title: 'Quality Control and Inspection',
+    title: 'Quality Control',
+    icon: 'mdi:shield-check-outline',
     items: [
-      { path: '/dashboard/forms/good-agri-practices', label: 'Good Agricultural Practices Unit' },
-      { path: '/dashboard/forms/good-animal-husbandry', label: 'Good Animal Husbandry Practices Unit' },
-      { path: '/dashboard/forms/organic-post-market', label: 'Organic Product Post-Market Surveillance' },
-      { path: '/dashboard/forms/land-use-matter', label: 'Land Use Matter Concern Unit' },
+      { path: '/dashboard/forms/good-agri-practices', label: 'Good Agri Practices' },
+      { path: '/dashboard/forms/good-animal-husbandry', label: 'Good Animal Husbandry' },
+      { path: '/dashboard/forms/organic-post-market', label: 'Organic Post-Market' },
+      { path: '/dashboard/forms/land-use-matter', label: 'Land Use Concern' },
       { path: '/dashboard/forms/food-safety', label: 'Food Safety Unit' },
     ],
   },
   {
-    title: 'Plant Pest & Animal Disease Surveillance',
+    title: 'Surveillance & Disease',
+    icon: 'mdi:virus-outline',
     items: [
-      { path: '/dashboard/forms/plant-pest-surveillance', label: 'Plant Pest and Disease Surveillance' },
-      { path: '/dashboard/forms/cfs-admcc', label: 'CFS/ADMCC' },
-      { path: '/dashboard/forms/animal-disease-surveillance', label: 'Animal Disease Surveillance' },
+      { path: '/dashboard/forms/plant-pest-surveillance', label: 'Plant Pest Surveillance' },
+      { path: '/dashboard/forms/cfs-admcc', label: 'CFS / ADMCC' },
+      { path: '/dashboard/forms/animal-disease-surveillance', label: 'Animal Disease Surv.' },
     ],
   },
 ]
@@ -37,7 +40,7 @@ const SIDEBAR_SECTIONS = [
 function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [openSections, setOpenSections] = useState([0, 1, 2])
+  const [openSections, setOpenSections] = useState([])
   const location = useLocation()
   const navigate = useNavigate()
   const { user, role, signOut } = useAuth()
@@ -55,137 +58,313 @@ function DashboardLayout() {
     navigate('/')
   }
 
+  const isActive = (path) => location.pathname === path
+
+  // Auto-expand sidebar section if a child is active
+  useEffect(() => {
+    SIDEBAR_SECTIONS.forEach((section, idx) => {
+      if (section.items.some(item => item.path === location.pathname)) {
+        if (!openSections.includes(idx)) {
+          setOpenSections(prev => [...prev, idx])
+        }
+      }
+    })
+  }, [location.pathname])
+
   return (
-    <div className="min-h-screen bg-background flex">
-      {/* Mobile overlay when sidebar open */}
+    <div className="flex h-screen min-h-[100dvh] bg-background overflow-hidden font-sans text-primary w-full min-w-0">
+      
+      {/* --- MOBILE OVERLAY (only when sidebar is drawer) --- */}
       <div
-        className={`fixed inset-0 z-30 bg-black/50 lg:hidden transition-opacity ${mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-40 bg-primary-dark/90 backdrop-blur-sm md:hidden transition-opacity duration-300 ${
+          mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
         onClick={() => setMobileMenuOpen(false)}
-        aria-hidden="true"
       />
+
+      {/* --- SIDEBAR: drawer < md, always visible >= md --- */}
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-40 h-full lg:h-screen w-72 lg:w-64 flex flex-col shrink-0 transition-transform duration-300 ease-out lg:translate-x-0
-          ${sidebarOpen ? 'lg:w-64' : 'lg:w-20'}
-          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          bg-primary text-white shadow-xl lg:shadow-lg`}
+        className={`fixed md:static inset-y-0 left-0 z-50 flex flex-col bg-primary-dark text-accent-light transition-[transform,width] duration-300 ease-out shadow-2xl border-r border-primary relative
+          pt-[env(safe-area-inset-top)]
+          w-[min(280px,85vw)] ${sidebarOpen || mobileMenuOpen ? 'md:w-[280px]' : 'md:w-[88px]'}
+          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          max-w-full
+        `}
+        style={{ 
+          backgroundImage: 'radial-gradient(circle at top left, #1e4d2b, #153019, #0d1f12)',
+          paddingLeft: 'env(safe-area-inset-left)',
+        }}
       >
-        <div className="p-3 sm:p-4 flex items-center justify-between border-b border-white/10">
-          <Link to="/dashboard" className="flex items-center gap-2 overflow-hidden min-w-0">
-            <img src="/DA LOGO.jpg" alt="Logo" className="h-9 w-9 rounded-full object-cover shrink-0" />
-            {sidebarOpen && <span className="font-semibold truncate text-sm">Regulatory Portal</span>}
+        {/* --- FLOATING TOGGLE BUTTON (DESKTOP) --- */}
+        <button
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className={`absolute -right-3 top-6 sm:top-9 z-50 hidden md:flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-background text-primary shadow-[0_2px_8px_rgba(0,0,0,0.15)] ring-1 ring-primary/20 transition-all hover:bg-accent-light hover:text-primary hover:scale-110 focus:outline-none active:scale-95
+             ${!sidebarOpen ? 'rotate-180' : 'rotate-0'}
+          `}
+          title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
+          aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+        >
+          <iconify-icon icon="mdi:chevron-left" width="18"></iconify-icon>
+        </button>
+
+        {/* Brand Header */}
+        <div className={`min-h-[72px] sm:h-24 flex items-center px-4 sm:px-6 border-b border-white/5 relative overflow-hidden transition-all duration-300 shrink-0 ${!sidebarOpen && !mobileMenuOpen ? 'justify-center px-0' : 'justify-between'}`}>
+          <Link to="/dashboard" className="flex items-center gap-4 overflow-hidden min-w-0 z-10 group">
+            <div className="relative w-10 h-10 shrink-0">
+               {/* Logo Container with Glow */}
+               <div className="absolute inset-0 bg-primary blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
+               <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform">
+                  <img src="/DA LOGO.jpg" alt="DA" className="w-full h-full object-cover rounded-xl" onError={(e) => e.target.style.display = 'none'} />
+                  <span className="absolute font-bold text-xs">DA</span>
+               </div>
+            </div>
+            
+            {/* Text Content with Fade Transition */}
+            <div className={`flex flex-col transition-all duration-300 min-w-0 ${sidebarOpen || mobileMenuOpen ? 'opacity-100 translate-x-0 w-auto' : 'opacity-0 -translate-x-4 w-0 overflow-hidden'}`}>
+              <h1 className="font-bold text-white text-sm sm:text-[15px] leading-tight tracking-wide truncate">REGULATORY</h1>
+              <p className="text-[10px] text-accent-light font-bold tracking-wider uppercase truncate">Division Portal</p>
+            </div>
           </Link>
-          <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden p-2 rounded hover:bg-white/10"
-              aria-label="Close menu"
-            >
-              <iconify-icon icon="mdi:close" width="24"></iconify-icon>
-            </button>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="hidden lg:block p-1 rounded hover:bg-white/10"
-              aria-label="Toggle sidebar"
-            >
-              <iconify-icon icon={sidebarOpen ? 'mdi:chevron-left' : 'mdi:chevron-right'} width="24"></iconify-icon>
-            </button>
-          </div>
+          
+          {/* Mobile Close Button (only when sidebar is drawer) */}
+          <button onClick={() => setMobileMenuOpen(false)} className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-accent-light/80 hover:text-white transition-colors -mr-2" aria-label="Close menu">
+            <iconify-icon icon="mdi:close" width="24"></iconify-icon>
+          </button>
         </div>
-        <nav className="flex-1 overflow-y-auto py-2">
-          <Link
-            to="/dashboard"
-            className={`flex items-center gap-3 px-4 py-3 hover:bg-white/10 ${location.pathname === '/dashboard' ? 'bg-white/15' : ''}`}
-          >
-            <iconify-icon icon="mdi:view-dashboard" width="22"></iconify-icon>
-            {(sidebarOpen || mobileMenuOpen) && <span>Dashboard</span>}
-          </Link>
-          <Link
-            to="/dashboard/analytics"
-            className={`flex items-center gap-3 px-4 py-3 hover:bg-white/10 ${location.pathname === '/dashboard/analytics' ? 'bg-white/15' : ''}`}
-          >
-            <iconify-icon icon="mdi:chart-bar" width="22"></iconify-icon>
-            {(sidebarOpen || mobileMenuOpen) && <span>Data Analytics</span>}
-          </Link>
-          <Link
-            to="/dashboard/records"
-            className={`flex items-center gap-3 px-4 py-3 hover:bg-white/10 ${location.pathname === '/dashboard/records' ? 'bg-white/15' : ''}`}
-          >
-            <iconify-icon icon="mdi:table" width="22"></iconify-icon>
-            {(sidebarOpen || mobileMenuOpen) && <span>View Records</span>}
-          </Link>
-          {(sidebarOpen || mobileMenuOpen) && (
-            <>
-              {SIDEBAR_SECTIONS.map((section, idx) => (
-                <div key={idx} className="mt-2">
-                  <button
-                    type="button"
-                    onClick={() => toggleSection(idx)}
-                    className="w-full flex items-center justify-between px-4 py-2 text-left text-white/90 hover:bg-white/10 text-sm font-medium"
-                  >
-                    <span className="truncate pr-2">{section.title}</span>
-                    <iconify-icon icon={openSections.includes(idx) ? 'mdi:chevron-up' : 'mdi:chevron-down'} width="20"></iconify-icon>
-                  </button>
-                  {openSections.includes(idx) && (
-                    <div className="pl-4 pb-2">
-                      {section.items.map((item) => (
-                        <Link
-                          key={item.path}
-                          to={item.path}
-                          className={`block py-2 px-2 rounded text-sm truncate ${location.pathname === item.path ? 'bg-white/15' : 'text-white/80 hover:bg-white/10'}`}
-                        >
-                          {item.label}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </>
-          )}
-        </nav>
-        <div className="p-3 border-t border-white/10">
-          <div className={`flex items-center gap-2 ${!sidebarOpen && !mobileMenuOpen ? 'justify-center' : ''}`}>
-            <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center shrink-0">
-              <iconify-icon icon="mdi:account" width="18"></iconify-icon>
-            </span>
+
+        {/* Navigation Scroll Area */}
+        <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-4 sm:py-6 px-3 sm:px-4 space-y-6 sm:space-y-8 custom-scrollbar">
+          
+          {/* Main Module */}
+          <div>
             {(sidebarOpen || mobileMenuOpen) && (
-              <>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm truncate">{user?.email}</p>
-                  <p className="text-xs text-white/70 capitalize">{role}</p>
+               <p className="px-2 text-[10px] font-bold text-accent-light/70 uppercase tracking-widest mb-3 animate-fade-in">Main Module</p>
+            )}
+            <div className="space-y-1">
+              <NavItem to="/dashboard" icon="mdi:view-dashboard-variant-outline" label="Dashboard Overview" active={isActive('/dashboard')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+              <NavItem to="/dashboard/analytics" icon="mdi:chart-box-outline" label="Data Analytics" active={isActive('/dashboard/analytics')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+              <NavItem to="/dashboard/records" icon="mdi:database-search-outline" label="Master Records" active={isActive('/dashboard/records')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+            </div>
+          </div>
+
+          {/* Department Units */}
+          <div>
+            {(sidebarOpen || mobileMenuOpen) && (
+               <p className="px-2 text-[10px] font-bold text-accent-light/70 uppercase tracking-widest mb-3 animate-fade-in">Operational Units</p>
+            )}
+            <div className="space-y-1">
+              {SIDEBAR_SECTIONS.map((section, idx) => (
+                <AccordionItem 
+                  key={idx}
+                  section={section}
+                  isOpen={openSections.includes(idx)}
+                  onToggle={() => toggleSection(idx)}
+                  isActiveRoute={isActive}
+                  sidebarOpen={sidebarOpen}
+                  mobileMenuOpen={mobileMenuOpen}
+                  setSidebarOpen={setSidebarOpen}
+                />
+              ))}
+            </div>
+          </div>
+        </nav>
+
+        {/* User Profile Footer */}
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-primary/30 bg-primary/20 backdrop-blur-sm">
+          <div className={`flex items-center gap-3 transition-all ${!sidebarOpen && !mobileMenuOpen ? 'justify-center' : ''} group`}>
+             <div className="relative shrink-0">
+                <div className="w-9 h-9 rounded-full bg-primary border border-primary-light/50 flex items-center justify-center text-accent-light shadow-sm overflow-hidden group-hover:border-accent-light transition-colors">
+                  <iconify-icon icon="mdi:account" width="20"></iconify-icon>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleSignOut}
-                  className="p-1.5 rounded hover:bg-white/10"
-                  title="Sign out"
-                >
-                  <iconify-icon icon="mdi:logout" width="20"></iconify-icon>
-                </button>
-              </>
+                <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-accent border-2 border-primary-dark rounded-full animate-pulse"></div>
+             </div>
+
+            <div className={`flex-1 min-w-0 transition-all duration-300 ${sidebarOpen || mobileMenuOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+              <p className="text-sm font-semibold text-white truncate group-hover:text-accent-light transition-colors">{user?.email?.split('@')[0]}</p>
+              <p className="text-[10px] text-accent-light/70 uppercase font-medium truncate">{role || 'Admin Access'}</p>
+            </div>
+            
+            {(sidebarOpen || mobileMenuOpen) && (
+              <button
+                onClick={handleSignOut}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-accent-light/80 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all touch-manipulation"
+                title="Sign Out"
+                aria-label="Sign out"
+              >
+                <iconify-icon icon="mdi:logout" width="18"></iconify-icon>
+              </button>
             )}
           </div>
         </div>
       </aside>
-      <div className="flex-1 flex flex-col min-w-0 w-full">
-        <header className="h-12 sm:h-14 bg-white border-b border-border flex items-center px-3 sm:px-6 shrink-0">
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(true)}
-            className="lg:hidden p-2 -ml-2 rounded-lg text-primary hover:bg-surface"
-            aria-label="Open menu"
-          >
-            <iconify-icon icon="mdi:menu" width="24" height="24"></iconify-icon>
-          </button>
-          <h1 className="font-semibold text-primary text-sm sm:text-base truncate ml-2 lg:ml-0">
-            Regulatory Division Portal
-          </h1>
+
+      {/* --- MAIN CONTENT --- */}
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full bg-background relative">
+        {/* Header */}
+        <header
+          className="h-14 sm:h-16 min-h-[44px] sticky top-0 z-30 flex items-center justify-between gap-2 px-3 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top)] pr-[max(0.75rem,env(safe-area-inset-right))] bg-white/90 backdrop-blur-md border-b border-border shadow-sm shrink-0"
+        >
+           {/* Hamburger + Title */}
+           <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+              <button
+                onClick={() => setMobileMenuOpen(true)}
+                className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 -ml-1 text-primary hover:bg-surface active:bg-border rounded-lg transition-colors touch-manipulation"
+                aria-label="Open menu"
+              >
+                <iconify-icon icon="mdi:menu" width="24"></iconify-icon>
+              </button>
+              
+              <div className="flex flex-col justify-center min-w-0">
+                 <h2 className="text-base sm:text-lg font-bold text-primary tracking-tight leading-tight truncate">
+                    {SIDEBAR_SECTIONS.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || 'Dashboard'}
+                 </h2>
+                 <p className="text-xs text-text-muted mt-0.5 hidden sm:block truncate">Regulatory Division Portal</p>
+              </div>
+           </div>
+
+           {/* Right: Date + Notifications */}
+           <div className="flex items-center gap-1 sm:gap-4 shrink-0">
+              <div className="hidden md:flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-surface rounded-full border border-border">
+                 <iconify-icon icon="mdi:calendar-month-outline" width="16" class="text-text-muted"></iconify-icon>
+                 <span className="text-xs font-semibold text-primary whitespace-nowrap">
+                    {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                 </span>
+              </div>
+              <button className="relative min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-text-muted hover:text-primary hover:bg-surface rounded-full transition-colors touch-manipulation" aria-label="Notifications">
+                 <iconify-icon icon="mdi:bell-outline" width="22"></iconify-icon>
+                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
+              </button>
+           </div>
         </header>
-        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-auto min-h-0">
-          <Outlet />
+
+        {/* Content Body */}
+        <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto p-3 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))]">
+           <div className="w-full max-w-7xl mx-auto min-w-0 animate-fade-in-up">
+              <Outlet />
+           </div>
         </main>
+      </div>
+    </div>
+  )
+}
+
+// ---------------- ENHANCED NAV COMPONENTS ---------------- //
+
+function NavItem({ to, icon, label, active, sidebarOpen }) {
+  return (
+    <Link
+      to={to}
+      className={`relative flex items-center gap-3 px-3 py-2.5 min-h-[44px] md:min-h-0 rounded-lg transition-all duration-200 group overflow-hidden touch-manipulation
+        ${active 
+          ? 'text-white shadow-lg shadow-primary-dark/20' 
+          : 'text-accent-light/80 hover:text-accent-light hover:bg-white/5'
+        }
+        ${!sidebarOpen ? 'justify-center' : ''}
+      `}
+    >
+      {/* Active Background - theme primary */}
+      {active && (
+         <div className="absolute inset-0 bg-primary border border-white/10 rounded-lg"></div>
+      )}
+
+      {/* Icon */}
+      <iconify-icon 
+         icon={icon} 
+         width="20" 
+         class={`relative z-10 transition-colors duration-200 ${active ? 'text-white' : 'group-hover:text-accent-light'}`}
+      ></iconify-icon>
+      
+      {/* Label */}
+      <span className={`relative z-10 font-medium text-[13.5px] tracking-wide whitespace-nowrap transition-all duration-300 ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+         {label}
+      </span>
+
+      {/* Tooltip (Only when collapsed) */}
+      {!sidebarOpen && (
+        <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 px-3 py-1.5 bg-primary-dark text-white text-xs font-medium rounded-md shadow-xl border border-primary opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-2 group-hover:translate-x-0 z-[60] whitespace-nowrap">
+          {label}
+          <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 bg-primary-dark border-l border-b border-primary transform rotate-45"></div>
+        </div>
+      )}
+    </Link>
+  )
+}
+
+function AccordionItem({ section, isOpen, onToggle, isActiveRoute, sidebarOpen, mobileMenuOpen, setSidebarOpen }) {
+  const isChildActive = section.items.some(item => isActiveRoute(item.path));
+  const showText = sidebarOpen || mobileMenuOpen;
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => {
+           if (!showText) setSidebarOpen(true);
+           onToggle();
+        }}
+        className={`relative w-full flex items-center px-3 py-2.5 min-h-[44px] md:min-h-0 rounded-lg transition-all duration-200 group touch-manipulation
+           ${isChildActive ? 'bg-white/5 text-accent-light' : 'text-accent-light/80 hover:bg-white/5 hover:text-accent-light'}
+           ${!showText ? 'justify-center' : 'justify-between'}
+        `}
+      >
+        <div className="flex items-center gap-3">
+          <iconify-icon 
+             icon={section.icon} 
+             width="20" 
+             class={`${isChildActive ? 'text-accent-light' : 'group-hover:text-accent-light'} transition-colors`}
+          ></iconify-icon>
+          
+          <span className={`text-[13.5px] font-semibold tracking-wide whitespace-nowrap transition-all duration-300 ${showText ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+             {section.title}
+          </span>
+        </div>
+        
+        {showText && (
+           <iconify-icon 
+             icon="mdi:chevron-down" 
+             width="16" 
+             style={{ 
+                transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
+                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+             }}
+             class={`transition-colors ${isChildActive ? 'text-accent-light' : ''}`}
+           ></iconify-icon>
+        )}
+
+        {/* Tooltip for Parent Item when collapsed */}
+        {!showText && (
+           <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 px-3 py-1.5 bg-primary-dark text-white text-xs font-medium rounded-md shadow-xl border border-primary opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-2 group-hover:translate-x-0 z-[60] whitespace-nowrap">
+             {section.title}
+             <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 bg-primary-dark border-l border-b border-primary transform rotate-45"></div>
+           </div>
+        )}
+      </button>
+
+      {/* Submenu with Smooth Height Transition */}
+      <div 
+        className={`grid transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${isOpen && showText ? 'grid-rows-[1fr] opacity-100 mt-1' : 'grid-rows-[0fr] opacity-0'}`}
+      >
+        <div className="overflow-hidden">
+          <div className="ml-5 pl-4 border-l border-white/10 space-y-1 py-1">
+            {section.items.map((item) => {
+               const active = isActiveRoute(item.path);
+               return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-2 py-2 px-3 min-h-[44px] md:min-h-0 rounded-md text-[12.5px] transition-all relative group/item touch-manipulation
+                      ${active 
+                        ? 'text-white font-medium bg-primary/30' 
+                        : 'text-accent-light/80 hover:text-white hover:translate-x-1'
+                      }`}
+                  >
+                    <span className={`absolute -left-[17px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full transition-all duration-300 ${active ? 'bg-accent-light scale-100' : 'bg-primary scale-0 group-hover/item:scale-75'}`}></span>
+                    
+                    {item.label}
+                  </Link>
+               )
+            })}
+          </div>
+        </div>
       </div>
     </div>
   )

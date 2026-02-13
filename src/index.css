@@ -7,25 +7,28 @@
 @layer base {
   html {
     -webkit-text-size-adjust: 100%;
+    min-height: 100%;
   }
   body {
-    @apply font-sans antialiased text-[#2d2a26] bg-background;
+    @apply font-sans antialiased bg-background;
+    color: var(--color-text);
     font-family: 'Poppins', sans-serif;
     overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  #root {
+    min-height: 100%;
   }
 }
 
-/* Theme variables from public/theme.css */
-:root {
-  --color-primary: #1e4d2b;
-  --color-primary-light: #4a6b3c;
-  --color-primary-dark: #153019;
-  --color-muted-green: #5c7355;
-  --color-accent: #b8a066;
-  --color-accent-light: #d4c4a0;
-  --color-surface: #e8e0d4;
-  --color-background: #faf8f5;
-  --color-text: #2d2a26;
-  --color-text-muted: #5c574f;
-  --color-border: #d4cdc0;
+@layer utilities {
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
 }
+
+/* Theme variables loaded from public/theme.css; Tailwind uses these via tailwind.config.js */
