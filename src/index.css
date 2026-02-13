@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply font-sans antialiased text-[#2d2a26] bg-background;
+    font-family: 'Poppins', sans-serif;
+    overflow-x: hidden;
+  }
+}
+
+/* Theme variables from public/theme.css */
+:root {
+  --color-primary: #1e4d2b;
+  --color-primary-light: #4a6b3c;
+  --color-primary-dark: #153019;
+  --color-muted-green: #5c7355;
+  --color-accent: #b8a066;
+  --color-accent-light: #d4c4a0;
+  --color-surface: #e8e0d4;
+  --color-background: #faf8f5;
+  --color-text: #2d2a26;
+  --color-text-muted: #5c574f;
+  --color-border: #d4cdc0;
+}

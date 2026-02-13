@@ -1,0 +1,25 @@
+/* Regulatory Division Monitoring Data Portal - Color Theme (from COLOR THEME.png) */
+:root {
+  /* Primary - Dark Green (top band) */
+  --color-primary: #1e4d2b;
+  --color-primary-light: #4a6b3c;
+  --color-primary-dark: #153019;
+  /* Muted Green (second band) - secondary/links */
+  --color-muted-green: #5c7355;
+  /* Accent - warm tone from khaki */
+  --color-accent: #b8a066;
+  --color-accent-light: #d4c4a0;
+  /* Light Khaki/Beige (third band) - surface */
+  --color-surface: #e8e0d4;
+  /* Pale Cream/Off-white (bottom band) - background */
+  --color-background: #faf8f5;
+  /* Neutrals */
+  --color-text: #2d2a26;
+  --color-text-muted: #5c574f;
+  /* Borders */
+  --color-border: #d4cdc0;
+  --color-border-focus: var(--color-primary);
+  /* Roles */
+  --color-admin: #5c7355;
+  --color-staff: #4a6b3c;
+}
