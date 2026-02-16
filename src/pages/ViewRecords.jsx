@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { collection, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
-import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS } from '../lib/collections'
+import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, RATING_FIELD_KEYS, RATING_LABELS } from '../lib/collections'
 import {
   getMonthFromDoc,
   getProvinceFromDoc,
@@ -30,6 +30,36 @@ function flattenForSearch(data) {
   if (data == null) return ''
   if (typeof data !== 'object') return String(data)
   return Object.values(data).map(flattenForSearch).join(' ')
+}
+
+const RATING_COLLECTIONS = {
+  animalFeed: RATING_FIELD_KEYS,
+  animalWelfare: RATING_FIELD_KEYS,
+  livestockHandlers: RATING_FIELD_KEYS,
+  transportCarrier: RATING_FIELD_KEYS,
+  plantMaterial: RATING_FIELD_KEYS,
+  organicAgri: RATING_FIELD_KEYS,
+  goodAgriPractices: RATING_FIELD_KEYS,
+  goodAnimalHusbandry: RATING_FIELD_KEYS,
+  organicPostMarket: RATING_FIELD_KEYS,
+  landUseMatter: RATING_FIELD_KEYS,
+  foodSafety: RATING_FIELD_KEYS,
+  plantPestSurveillance: RATING_FIELD_KEYS,
+  cfsAdmcc: RATING_FIELD_KEYS,
+  animalDiseaseSurveillance: RATING_FIELD_KEYS,
+  safdzValidation: RATING_FIELD_KEYS,
+}
+function getAvgRating(docItem, collectionId) {
+  const keys = RATING_COLLECTIONS[collectionId] || []
+  if (keys.length === 0) return null
+  const nums = keys.map((k) => {
+    const v = docItem[k]
+    if (v === '' || v == null) return null
+    const n = parseInt(v, 10)
+    return isNaN(n) ? null : n
+  }).filter((n) => n != null)
+  if (nums.length === 0) return null
+  return (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1)
 }
 
 export default function ViewRecords() {
@@ -193,8 +223,25 @@ export default function ViewRecords() {
   }
 
   // --- FORM RENDERER ---
+  const RATING_OPTIONS = [
+    { value: '', label: 'Select rating...' },
+    { value: '1', label: 'Poor (1)' },
+    { value: '2', label: 'Fair (2)' },
+    { value: '3', label: 'Satisfied (3)' },
+    { value: '4', label: 'Very Satisfied (4)' },
+    { value: '5', label: 'Excellent (5)' },
+  ]
+
   const renderEditValue = (key, value) => {
     const inputClass = "w-full px-3 py-2 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-shadow text-primary placeholder-text-muted"
+
+    if (RATING_FIELD_KEYS.includes(key)) {
+      return (
+        <select value={value ?? ''} onChange={(e) => updateEditField(key, e.target.value)} className={inputClass}>
+          {RATING_OPTIONS.map((o) => <option key={o.value || 'empty'} value={o.value}>{o.label}</option>)}
+        </select>
+      )
+    }
 
     if (key === 'attachmentData') {
       const base64 = value && String(value)
@@ -375,6 +422,9 @@ export default function ViewRecords() {
             <thead className="bg-surface border-b border-border sticky top-0 z-10">
               <tr>
                 <th className="px-6 py-4 font-bold text-primary uppercase text-xs tracking-wider whitespace-nowrap">Primary Identifier / Name</th>
+                {RATING_COLLECTIONS[selectedCollection] && (
+                  <th className="px-6 py-4 font-bold text-primary uppercase text-xs tracking-wider whitespace-nowrap">Avg. Rating</th>
+                )}
                 <th className="px-6 py-4 font-bold text-primary uppercase text-xs tracking-wider whitespace-nowrap">Record Date</th>
                 <th className="px-6 py-4 font-bold text-primary uppercase text-xs tracking-wider text-right w-32">Actions</th>
               </tr>
@@ -382,7 +432,7 @@ export default function ViewRecords() {
             <tbody className="divide-y divide-border">
               {filtered.length === 0 ? (
                  <tr>
-                    <td colSpan="3" className="px-6 py-12 text-center">
+                    <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-6 py-12 text-center">
                        <div className="flex flex-col items-center justify-center text-text-muted">
                           <iconify-icon icon="mdi:database-off-outline" width="48"></iconify-icon>
                           <p className="mt-2 font-medium">No records found matching your filters.</p>
@@ -402,6 +452,19 @@ export default function ViewRecords() {
                           </div>
                        </div>
                     </td>
+                    {RATING_COLLECTIONS[selectedCollection] && (
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          const avg = getAvgRating(docItem, selectedCollection)
+                          return avg ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary font-semibold text-sm">
+                              <iconify-icon icon="mdi:star" width="14"></iconify-icon>
+                              {avg}/5
+                            </span>
+                          ) : <span className="text-text-muted text-sm">—</span>
+                        })()}
+                      </td>
+                    )}
                     <td className="px-6 py-4 whitespace-nowrap">
                        <div className="text-text-muted text-xs font-medium">
                           {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}

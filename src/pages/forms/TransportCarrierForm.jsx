@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
+import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { REGIONS, PROVINCES } from '../../lib/regions'
 
@@ -27,6 +28,8 @@ export default function TransportCarrierForm() {
   const [typeOfVehicle, setTypeOfVehicle] = useState([])
   const [bodyType, setBodyType] = useState([])
   const [fleet, setFleet] = useState([{ accreditationNo: '', makeSeries: '', plateNo: '', bodyType: '', noOfWheels: '' }])
+  const [ratings, setRatings] = useState({ ratingQuantity: '', ratingServicesPersonnel: '', ratingTraining: '', ratingAttitude: '', ratingPromptness: '' })
+  const [recommendation, setRecommendation] = useState('')
   const { submit, loading, message } = useFormSubmit('transportCarrier')
 
   const toggleCheckbox = (setter, value) => setter((prev) => (prev.includes(value) ? prev.filter((x) => x !== value) : [...prev, value]))
@@ -53,6 +56,8 @@ export default function TransportCarrierForm() {
       typeOfVehicle,
       bodyType,
       fleet,
+      ...ratings,
+      recommendation,
     })
     setOwnerName({ last: '', first: '', mi: '' })
     setBusinessAddress({ barangay: '', cityMuni: '', province: '', region: '' })
@@ -70,6 +75,8 @@ export default function TransportCarrierForm() {
     setTypeOfVehicle([])
     setBodyType([])
     setFleet([{ accreditationNo: '', makeSeries: '', plateNo: '', bodyType: '', noOfWheels: '' }])
+    setRatings({ ratingQuantity: '', ratingServicesPersonnel: '', ratingTraining: '', ratingAttitude: '', ratingPromptness: '' })
+    setRecommendation('')
   }
 
   return (
@@ -154,6 +161,13 @@ export default function TransportCarrierForm() {
               </tbody>
             </table>
           </div>
+        </div>
+
+        <CustomerRatingsTable ratings={ratings} onChange={(k, v) => setRatings((r) => ({ ...r, [k]: v }))} />
+
+        <div>
+          <label className="block text-sm font-medium text-primary mb-1">Recommendation</label>
+          <textarea value={recommendation} onChange={(e) => setRecommendation((e.target.value || '').toUpperCase())} className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-content text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[80px]" rows="3" placeholder="Recommendations..." />
         </div>
 
         {message && <p className={`p-3 rounded ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`}>{message.text}</p>}

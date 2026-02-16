@@ -2,7 +2,7 @@ import { PROVINCES } from './regions'
 
 /** Get YYYY-MM from doc for month filter (uses createdAt or first date field found) */
 export function getMonthFromDoc(doc) {
-  const d = doc.createdAt || doc.date || doc.dateApplied || doc.applicationDate || doc.dateOfMonitoring || doc.inspectionDate || doc.dateReceived || doc.dateReported
+  const d = doc.createdAt || doc.date || doc.dateApplied || doc.applicationDate || doc.dateOfMonitoring || doc.inspectionDate || doc.dateReceived || doc.dateReported || doc.requestLetterDate || doc.dateOfCommunicationLetter || doc.dateOfSurveillance || doc.dateOfRequest || doc.dateReceivedAndEvaluated || doc.dateOfPreAssessment || doc.dateOfMonitoring
   if (!d) return null
   const date = typeof d === 'string' ? new Date(d) : d
   if (isNaN(date.getTime())) return null

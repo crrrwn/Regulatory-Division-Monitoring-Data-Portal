@@ -26,6 +26,7 @@ import FoodSafetyForm from './pages/forms/FoodSafetyForm'
 import PlantPestSurveillanceForm from './pages/forms/PlantPestSurveillanceForm'
 import CFSADMCCForm from './pages/forms/CFSADMCCForm'
 import AnimalDiseaseSurveillanceForm from './pages/forms/AnimalDiseaseSurveillanceForm'
+import SafdzValidationForm from './pages/forms/SafdzValidationForm'
 
 function ProtectedRoute({ children, requireAdmin }) {
   const { user, role, loading } = useAuth()
@@ -59,6 +60,7 @@ export default function Routes() {
         <Route path="forms/organic-post-market" element={<OrganicPostMarketForm />} />
         <Route path="forms/land-use-matter" element={<LandUseMatterForm />} />
         <Route path="forms/food-safety" element={<FoodSafetyForm />} />
+        <Route path="forms/safdz-validation" element={<SafdzValidationForm />} />
         <Route path="forms/plant-pest-surveillance" element={<PlantPestSurveillanceForm />} />
         <Route path="forms/cfs-admcc" element={<CFSADMCCForm />} />
         <Route path="forms/animal-disease-surveillance" element={<AnimalDiseaseSurveillanceForm />} />

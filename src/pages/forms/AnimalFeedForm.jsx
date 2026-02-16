@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
+import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { PROVINCES } from '../../lib/regions'
 
@@ -18,6 +19,8 @@ const initialState = {
   orNo: '', orDate: '', fee: '', dateIssued: '',
   dateOfFeedSampling1stSem: '', dateOfFeedSampling2ndSem: '', noOfFeedSamples1stSem: '', noOfFeedSamples2ndSem: '',
   attachmentFileName: '', attachmentData: '', remarks: '',
+  ratingQuantity: '', ratingServicesPersonnel: '', ratingTraining: '', ratingAttitude: '', ratingPromptness: '',
+  recommendation: '',
 }
 
 export default function AnimalFeedForm() {
@@ -236,6 +239,11 @@ export default function AnimalFeedForm() {
               {REMARKS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
             </select>
           </div>
+        </div>
+        <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
+        <div>
+          <label className="block text-sm font-medium text-primary mb-1">Recommendation</label>
+          <textarea value={form.recommendation} onChange={(e) => update('recommendation', (e.target.value || '').toUpperCase())} className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-content text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-text-muted uppercase min-h-[80px]" rows="3" placeholder="Recommendations..." />
         </div>
         {message && (
           <p className={`p-3 rounded ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`}>

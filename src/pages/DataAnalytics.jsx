@@ -1,10 +1,18 @@
 import { Link } from 'react-router-dom'
-import { COLLECTIONS } from '../lib/collections'
+import { COLLECTIONS, RATING_LABELS } from '../lib/collections'
 import { formatMonthLabel } from '../lib/recordFilters'
 import { useAnalytics } from '../context/AnalyticsContext'
 
+const RATING_FIELD_LABELS = {
+  ratingQuantity: 'Quantity of Goods/Services',
+  ratingServicesPersonnel: 'Services Rendered by Personnel',
+  ratingTraining: 'Training Relevance',
+  ratingAttitude: 'Attitude (Courteousness)',
+  ratingPromptness: 'Promptness',
+}
+
 export default function DataAnalytics() {
-  const { stats } = useAnalytics()
+  const { stats, refresh } = useAnalytics()
 
   // Helpers
   const getPercentage = (value, total) => {
@@ -44,9 +52,9 @@ export default function DataAnalytics() {
           </div>
         </div>
         <div className="flex gap-3">
-          <button className="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary border border-border rounded-lg hover:bg-surface hover:text-primary-dark transition-all shadow-sm font-medium text-sm">
-            <iconify-icon icon="mdi:download-outline" width="18"></iconify-icon>
-            Export
+          <button onClick={refresh} className="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary border border-border rounded-lg hover:bg-surface hover:text-primary-dark transition-all shadow-sm font-medium text-sm">
+            <iconify-icon icon="mdi:refresh" width="18"></iconify-icon>
+            Refresh
           </button>
           <Link 
             to="/dashboard" 
@@ -171,6 +179,68 @@ export default function DataAnalytics() {
            </div>
         </div>
       </div>
+
+      {/* --- CUSTOMER SATISFACTION RATINGS (all units) --- */}
+      {stats.unitRatings && Object.entries(stats.unitRatings).map(([unitId, data]) => {
+        if (!data || data.totalRecords === 0) return null
+        const unitLabel = COLLECTIONS.find((c) => c.id === unitId)?.label || unitId
+        return (
+          <div key={unitId} className="bg-white rounded-2xl border border-border shadow-sm p-6">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 bg-accent/20 text-accent rounded-lg">
+                <iconify-icon icon="mdi:star" width="24"></iconify-icon>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-primary">{unitLabel} – Customer Satisfaction Ratings</h3>
+                <p className="text-sm text-text-muted">{data.ratedCount} of {data.totalRecords} records with ratings</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-primary/5 border border-primary/20">
+                  <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Overall Average</p>
+                  <p className="text-3xl font-extrabold text-primary">
+                    {data.overallAvg > 0 ? data.overallAvg.toFixed(2) : '—'} <span className="text-lg text-text-muted font-normal">/ 5</span>
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <p className="text-sm font-bold text-primary uppercase tracking-wide">Average by Particular</p>
+                  {Object.entries(data.averages || {}).map(([field, avg]) => (
+                    <div key={field} className="flex items-center justify-between gap-4">
+                      <span className="text-sm text-primary">{RATING_FIELD_LABELS[field] || field}</span>
+                      <div className="flex items-center gap-2 flex-1 max-w-[200px]">
+                        <div className="flex-1 h-2 bg-surface rounded-full overflow-hidden">
+                          <div className="h-full bg-primary rounded-full" style={{ width: avg ? `${(parseFloat(avg) / 5) * 100}%` : '0%' }}></div>
+                        </div>
+                        <span className="text-sm font-bold text-primary w-12">{avg ?? '—'}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-primary uppercase tracking-wide mb-4">Rating Distribution</p>
+                <div className="space-y-3">
+                  {[5, 4, 3, 2, 1].map((score) => {
+                    const count = (data.byScore && data.byScore[score]) || 0
+                    const totalRatings = data.byScore ? Object.values(data.byScore).reduce((a, b) => a + b, 0) : 0
+                    const pct = totalRatings > 0 ? (count / totalRatings) * 100 : 0
+                    return (
+                      <div key={score} className="flex items-center gap-3">
+                        <span className="w-24 text-sm text-primary">{RATING_LABELS[String(score)]} ({score})</span>
+                        <div className="flex-1 h-6 bg-surface rounded-lg overflow-hidden">
+                          <div className="h-full bg-primary rounded-lg transition-all duration-500" style={{ width: `${pct}%` }}></div>
+                        </div>
+                        <span className="text-sm font-bold text-primary w-12">{count}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })}
 
       {/* --- PROVINCE DISTRIBUTION --- */}
       <div className="bg-white rounded-2xl border border-border shadow-sm p-6">

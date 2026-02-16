@@ -24,6 +24,7 @@ const SIDEBAR_SECTIONS = [
       { path: '/dashboard/forms/organic-post-market', label: 'Organic Post-Market' },
       { path: '/dashboard/forms/land-use-matter', label: 'Land Use Concern' },
       { path: '/dashboard/forms/food-safety', label: 'Food Safety Unit' },
+      { path: '/dashboard/forms/safdz-validation', label: 'SAFDZ Validation' },
     ],
   },
   {

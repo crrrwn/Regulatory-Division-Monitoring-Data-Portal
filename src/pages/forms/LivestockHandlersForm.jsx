@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
+import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { REGIONS, PROVINCES } from '../../lib/regions'
 
@@ -28,6 +29,8 @@ export default function LivestockHandlersForm() {
   const [poultry, setPoultry] = useState(() => emptyMatrix(POULTRY_COLS))
   const [byProducts, setByProducts] = useState(() => emptyMatrix(BYPRODUCTS_COLS))
   const [region, setRegion] = useState('')
+  const [ratings, setRatings] = useState({ ratingQuantity: '', ratingServicesPersonnel: '', ratingTraining: '', ratingAttitude: '', ratingPromptness: '' })
+  const [recommendation, setRecommendation] = useState('')
   const { submit, loading, message } = useFormSubmit('livestockHandlers')
 
   const provinces = PROVINCES
@@ -47,6 +50,8 @@ export default function LivestockHandlersForm() {
     byProducts,
     region,
     province: address.province,
+    ...ratings,
+    recommendation,
   })
 
   const handleSubmit = async (e) => {
@@ -65,6 +70,8 @@ export default function LivestockHandlersForm() {
     setPoultry(emptyMatrix(POULTRY_COLS))
     setByProducts(emptyMatrix(BYPRODUCTS_COLS))
     setRegion('')
+    setRatings({ ratingQuantity: '', ratingServicesPersonnel: '', ratingTraining: '', ratingAttitude: '', ratingPromptness: '' })
+    setRecommendation('')
   }
 
   const updateMatrix = (setter, key, field, value) => {
@@ -217,6 +224,13 @@ export default function LivestockHandlersForm() {
             <option value="">Select Region</option>
             {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
           </select>
+        </div>
+
+        <CustomerRatingsTable ratings={ratings} onChange={(k, v) => setRatings((r) => ({ ...r, [k]: v }))} />
+
+        <div>
+          <label className="block text-sm font-medium text-primary mb-1">Recommendation</label>
+          <textarea value={recommendation} onChange={(e) => setRecommendation((e.target.value || '').toUpperCase())} className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-content text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary min-h-[80px]" rows="3" placeholder="Recommendations..." />
         </div>
 
         {message && <p className={`p-3 rounded ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`}>{message.text}</p>}

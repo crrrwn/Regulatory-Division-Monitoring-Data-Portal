@@ -1,47 +1,94 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
+import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 
-const VIOLATION_OPTIONS = ['Mislabeling', 'No Cert', 'Fake Logo', 'Others']
-const ACTION_OPTIONS = ['Warning', 'Confiscation', 'Notice of Violation', 'Others']
-
 const initialState = {
-  inspectionDate: '', establishmentName: '', address: '', productName: '', brand: '',
-  labelClaim: '', certifyingLogoPresent: '', violationFound: '', actionTaken: '', inspectorName: '',
+  requestLetterDate: '',
+  identifiedMarketOutlet: '',
+  dateOfCommunicationLetter: '',
+  nameOfProduct: '',
+  commodity: '',
+  certification: '',
+  nameOfOwnerManager: '',
+  location: '',
+  dateOfSurveillance: '',
+  remarks: '',
+  linkFile: '',
+  ratingQuantity: '',
+  ratingServicesPersonnel: '',
+  ratingTraining: '',
+  ratingAttitude: '',
+  ratingPromptness: '',
+  recommendation: '',
 }
 
 export default function OrganicPostMarketForm() {
   const [form, setForm] = useState(initialState)
   const { submit, loading, message } = useFormSubmit('organicPostMarket')
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+  const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
   const handleSubmit = async (e) => {
     e.preventDefault()
     const ok = await submit(form)
     if (ok) setForm(initialState)
   }
+  const labelClass = "block text-sm font-medium text-primary mb-1"
+  const inputClass = "w-full px-3 py-2.5 bg-background border border-border rounded-lg text-content text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-text-muted uppercase"
   return (
     <FormLayout title="Organic Product Post-Market Surveillance">
       <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><label className="block text-sm font-medium text-primary mb-1">Inspection Date</label><input type="date" value={form.inspectionDate} onChange={(e) => update('inspectionDate', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg" required /></div>
-          <div><label className="block text-sm font-medium text-primary mb-1">Establishment Name (Store/Supermarket)</label><input type="text" value={form.establishmentName} onChange={(e) => update('establishmentName', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg" /></div>
+        <div>
+          <label className={labelClass}>Request Letter (Date)</label>
+          <input type="date" value={form.requestLetterDate} onChange={(e) => update('requestLetterDate', e.target.value)} className={inputClass} required />
         </div>
-        <div><label className="block text-sm font-medium text-primary mb-1">Address</label><input type="text" value={form.address} onChange={(e) => update('address', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg" /></div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><label className="block text-sm font-medium text-primary mb-1">Product Name</label><input type="text" value={form.productName} onChange={(e) => update('productName', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg" /></div>
-          <div><label className="block text-sm font-medium text-primary mb-1">Brand</label><input type="text" value={form.brand} onChange={(e) => update('brand', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg" /></div>
+        <div>
+          <label className={labelClass}>Identified Market Outlet/Establishment</label>
+          <input type="text" value={form.identifiedMarketOutlet} onChange={updateUpper('identifiedMarketOutlet')} className={inputClass} placeholder="Market outlet or establishment name" required />
         </div>
-        <div><label className="block text-sm font-medium text-primary mb-1">Label Claim</label><input type="text" value={form.labelClaim} onChange={(e) => update('labelClaim', e.target.value)} placeholder='e.g. "100% Organic"' className="w-full px-3 py-2 border border-border rounded-lg" /></div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><label className="block text-sm font-medium text-primary mb-1">Certifying Logo Present?</label><select value={form.certifyingLogoPresent} onChange={(e) => update('certifyingLogoPresent', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg"><option value="">Select</option><option value="Yes">Yes</option><option value="No">No</option></select></div>
-          <div><label className="block text-sm font-medium text-primary mb-1">Violation Found</label><select value={form.violationFound} onChange={(e) => update('violationFound', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg"><option value="">Select</option>{VIOLATION_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}</select></div>
+        <div>
+          <label className={labelClass}>Date of Communication Letter</label>
+          <input type="date" value={form.dateOfCommunicationLetter} onChange={(e) => update('dateOfCommunicationLetter', e.target.value)} className={inputClass} />
         </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div><label className="block text-sm font-medium text-primary mb-1">Action Taken</label><select value={form.actionTaken} onChange={(e) => update('actionTaken', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg"><option value="">Select</option>{ACTION_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}</select></div>
-          <div><label className="block text-sm font-medium text-primary mb-1">Inspector Name</label><input type="text" value={form.inspectorName} onChange={(e) => update('inspectorName', e.target.value)} className="w-full px-3 py-2 border border-border rounded-lg" /></div>
+        <div>
+          <label className={labelClass}>Name of Product</label>
+          <input type="text" value={form.nameOfProduct} onChange={updateUpper('nameOfProduct')} className={inputClass} placeholder="Product name" />
         </div>
-        {message && <p className={`p-3 rounded ${message.type === 'success' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`}>{message.text}</p>}
-        <button type="submit" disabled={loading} className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50">{loading ? 'Saving...' : 'Submit'}</button>
+        <div>
+          <label className={labelClass}>Commodity</label>
+          <input type="text" value={form.commodity} onChange={updateUpper('commodity')} className={inputClass} placeholder="e.g. Rice, Vegetables" />
+        </div>
+        <div>
+          <label className={labelClass}>Certification</label>
+          <input type="text" value={form.certification} onChange={updateUpper('certification')} className={inputClass} placeholder="Organic certification details" />
+        </div>
+        <div>
+          <label className={labelClass}>Name of Owner/Manager</label>
+          <input type="text" value={form.nameOfOwnerManager} onChange={updateUpper('nameOfOwnerManager')} className={inputClass} placeholder="Owner or manager name" />
+        </div>
+        <div>
+          <label className={labelClass}>Location</label>
+          <input type="text" value={form.location} onChange={updateUpper('location')} className={inputClass} placeholder="Complete address/location" />
+        </div>
+        <div>
+          <label className={labelClass}>Date of Surveillance</label>
+          <input type="date" value={form.dateOfSurveillance} onChange={(e) => update('dateOfSurveillance', e.target.value)} className={inputClass} />
+        </div>
+        <div>
+          <label className={labelClass}>Remarks</label>
+          <textarea value={form.remarks} onChange={updateUpper('remarks')} className={`${inputClass} min-h-[80px]`} rows="3" placeholder="Additional notes..." />
+        </div>
+        <div>
+          <label className={labelClass}>Link File</label>
+          <input type="url" value={form.linkFile} onChange={(e) => update('linkFile', e.target.value)} className="w-full px-3 py-2.5 bg-background border border-border rounded-lg text-content text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-text-muted" placeholder="https://..." />
+        </div>
+        <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
+        <div>
+          <label className={labelClass}>Recommendation</label>
+          <textarea value={form.recommendation} onChange={updateUpper('recommendation')} className={`${inputClass} min-h-[80px]`} rows="3" placeholder="Recommendations..." />
+        </div>
+        {message && <p className={`p-3 rounded ${message.type === 'success' ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-red-50 text-red-700 border border-red-200'}`}>{message.text}</p>}
+        <button type="submit" disabled={loading} className="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 font-semibold">{loading ? 'Saving...' : 'Submit'}</button>
       </form>
     </FormLayout>
   )

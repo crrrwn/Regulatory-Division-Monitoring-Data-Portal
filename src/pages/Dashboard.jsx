@@ -28,6 +28,7 @@ const SECTIONS = [
       { path: '/dashboard/forms/organic-post-market', label: 'Organic Post-Market Surveillance' },
       { path: '/dashboard/forms/land-use-matter', label: 'Land Use Matter Concern' },
       { path: '/dashboard/forms/food-safety', label: 'Food Safety Unit' },
+      { path: '/dashboard/forms/safdz-validation', label: 'SAFDZ Validation' },
     ],
   },
   {
