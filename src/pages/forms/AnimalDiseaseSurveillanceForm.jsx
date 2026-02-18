@@ -1,4 +1,18 @@
 import { useState } from 'react'
+import { 
+  Activity, 
+  Building2, 
+  MapPin, 
+  Calendar, 
+  Syringe, 
+  TestTube2, 
+  FileOutput, 
+  ClipboardList, 
+  Save, 
+  CheckCircle2, 
+  AlertCircle,
+  Stethoscope
+} from 'lucide-react'
 import FormLayout from '../../components/FormLayout'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 
@@ -32,6 +46,7 @@ const initialState = {
 export default function AnimalDiseaseSurveillanceForm() {
   const [form, setForm] = useState(initialState)
   const { submit, loading, message } = useFormSubmit('animalDiseaseSurveillance')
+  
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
 
@@ -44,130 +59,235 @@ export default function AnimalDiseaseSurveillanceForm() {
     }
   }
 
-  const labelClass = "block text-sm font-medium text-primary mb-1"
-  const inputClass = "w-full px-3 py-2.5 bg-background border border-border rounded-lg text-content text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-text-muted uppercase"
+  // --- Design Constants ---
+  const sectionTitleClass = "text-lg font-bold text-primary flex items-center gap-2 mb-4 pb-2 border-b border-gray-100"
+  const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide"
+  const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all duration-200 placeholder:text-gray-400 uppercase"
+  const textAreaClass = `${inputClass} min-h-[100px] resize-y`
+
+  // Helper: Input with Icon
+  const IconInput = ({ icon: Icon, ...props }) => (
+    <div className="relative">
+      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <Icon className="h-4 w-4 text-gray-400" />
+      </div>
+      <input {...props} className={`${inputClass} pl-10`} />
+    </div>
+  )
 
   return (
     <FormLayout title="Animal Disease Surveillance">
-      <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
-        <div>
-          <label className={labelClass}>Name of Local Government Unit/Client/Farm</label>
-          <input type="text" value={form.clientName} onChange={updateUpper('clientName')} className={inputClass} placeholder="LGU/Client/Farm name" required />
-        </div>
-        <div>
-          <label className={labelClass}>Type of Disease Surveillance</label>
-          <input type="text" value={form.typeOfDiseaseSurveillance} onChange={updateUpper('typeOfDiseaseSurveillance')} className={inputClass} placeholder="e.g. Avian Influenza, ASF" />
-        </div>
-        <div>
-          <label className={labelClass}>Purpose</label>
-          <input type="text" value={form.purpose} onChange={updateUpper('purpose')} className={inputClass} placeholder="Purpose of surveillance" />
-        </div>
-        <div>
-          <label className={labelClass}>Address</label>
-          <input type="text" value={form.address} onChange={updateUpper('address')} className={inputClass} placeholder="Complete address" />
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Date of Request</label>
-            <input type="date" value={form.dateOfRequest} onChange={(e) => update('dateOfRequest', e.target.value)} className={inputClass} required />
+      <form onSubmit={handleSubmit} className="space-y-8 max-w-5xl mx-auto">
+        
+        {/* --- Section 1: Client & Purpose --- */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className={sectionTitleClass}>
+            <Building2 className="w-5 h-5" /> Client & Surveillance Details
+          </h3>
+          
+          <div className="grid sm:grid-cols-12 gap-6">
+            <div className="sm:col-span-8">
+              <label className={labelClass}>Name of LGU / Client / Farm</label>
+              <IconInput 
+                icon={Building2}
+                type="text" 
+                value={form.clientName} 
+                onChange={updateUpper('clientName')} 
+                placeholder="Name of LGU, Client or Farm" 
+                required 
+              />
+            </div>
+
+            <div className="sm:col-span-4">
+              <label className={labelClass}>Date of Request</label>
+              <div className="relative">
+                 <input 
+                  type="date" 
+                  value={form.dateOfRequest} 
+                  onChange={(e) => update('dateOfRequest', e.target.value)} 
+                  className={inputClass} 
+                  required 
+                />
+              </div>
+            </div>
+
+            <div className="sm:col-span-12">
+              <label className={labelClass}>Address</label>
+              <IconInput 
+                icon={MapPin}
+                type="text" 
+                value={form.address} 
+                onChange={updateUpper('address')} 
+                placeholder="Complete Address" 
+              />
+            </div>
+
+            <div className="sm:col-span-6">
+              <label className={labelClass}>Type of Disease Surveillance</label>
+              <IconInput 
+                icon={Activity}
+                type="text" 
+                value={form.typeOfDiseaseSurveillance} 
+                onChange={updateUpper('typeOfDiseaseSurveillance')} 
+                placeholder="e.g. Avian Influenza, ASF, Rabies" 
+              />
+            </div>
+
+            <div className="sm:col-span-6">
+              <label className={labelClass}>Purpose</label>
+              <IconInput 
+                icon={Stethoscope}
+                type="text" 
+                value={form.purpose} 
+                onChange={updateUpper('purpose')} 
+                placeholder="Reason for surveillance" 
+              />
+            </div>
           </div>
-          <div>
-            <label className={labelClass}>Date of Surveillance (Blood Collection)</label>
-            <input type="date" value={form.dateOfSurveillance} onChange={(e) => update('dateOfSurveillance', e.target.value)} className={inputClass} />
-          </div>
-        </div>
-        <div>
-          <label className={labelClass}>Number of Samples Collected & Submitted</label>
-          <input type="text" value={form.numberOfSamples} onChange={updateUpper('numberOfSamples')} className={inputClass} placeholder="e.g. 50" />
-        </div>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass}>Date Submitted to Laboratory</label>
-            <input type="date" value={form.dateSubmittedToLab} onChange={(e) => update('dateSubmittedToLab', e.target.value)} className={inputClass} />
-          </div>
-          <div>
-            <label className={labelClass}>Date of Endorsement to DA-BAI</label>
-            <input type="date" value={form.dateOfEndorsementToDA} onChange={(e) => update('dateOfEndorsementToDA', e.target.value)} className={inputClass} />
-          </div>
-        </div>
-        <div>
-          <label className={labelClass}>Remarks</label>
-          <textarea value={form.remarks} onChange={updateUpper('remarks')} className={`${inputClass} min-h-[80px]`} rows="3" placeholder="Additional notes..." />
         </div>
 
-        {/* --- CUSTOMER SATISFACTION RATINGS --- */}
-        <div className="bg-surface/50 p-6 rounded-xl border border-border">
-          <h3 className="text-sm font-bold text-primary uppercase tracking-wide mb-4 flex items-center gap-2">
-            <iconify-icon icon="mdi:star-outline" width="18"></iconify-icon>
-            Customer Satisfaction Ratings
+        {/* --- Section 2: Operation Timeline (Field vs Lab) --- */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className={sectionTitleClass}>
+            <Syringe className="w-5 h-5" /> Operation & Sample Data
           </h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-border">
-                  <th className="text-left py-3 px-2 font-bold text-primary">Particulars</th>
-                  <th className="text-center py-2 px-1"><span className="text-[10px] text-red-600 font-bold">NOT SATISFIED</span></th>
-                  <th className="text-center py-2 px-1"><span className="text-[10px] text-primary font-bold">SATISFIED</span></th>
-                </tr>
-                <tr className="border-b border-border/50">
-                  <th className="py-1"></th>
-                  <th className="text-center py-1 px-1">
-                    <div className="flex justify-center gap-1">
-                      <span className="text-[10px] text-text-muted">Poor (1)</span>
-                      <span className="text-[10px] text-text-muted">Fair (2)</span>
-                    </div>
-                  </th>
-                  <th className="text-center py-1 px-1">
-                    <div className="flex justify-center gap-1 sm:gap-2">
-                      <span className="text-[10px] text-text-muted">Sat (3)</span>
-                      <span className="text-[10px] text-text-muted">VSat (4)</span>
-                      <span className="text-[10px] text-text-muted">Exc (5)</span>
-                    </div>
-                  </th>
+
+          <div className="grid sm:grid-cols-2 gap-8">
+            {/* Field Work Column */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-emerald-600 font-semibold text-sm uppercase tracking-wider mb-2">
+                <Syringe className="w-4 h-4" /> Field Activities
+              </div>
+              <div className="bg-emerald-50/50 p-4 rounded-lg border border-emerald-100 space-y-4">
+                 <div>
+                  <label className={labelClass}>Date of Surveillance (Blood Coll.)</label>
+                  <input 
+                    type="date" 
+                    value={form.dateOfSurveillance} 
+                    onChange={(e) => update('dateOfSurveillance', e.target.value)} 
+                    className={inputClass} 
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>No. of Samples Collected</label>
+                  <IconInput 
+                    icon={TestTube2}
+                    type="text" 
+                    value={form.numberOfSamples} 
+                    onChange={updateUpper('numberOfSamples')} 
+                    placeholder="e.g. 50 Vials" 
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Lab Work Column */}
+             <div className="space-y-4">
+              <div className="flex items-center gap-2 text-blue-600 font-semibold text-sm uppercase tracking-wider mb-2">
+                <FileOutput className="w-4 h-4" /> Lab & Admin
+              </div>
+              <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100 space-y-4">
+                 <div>
+                  <label className={labelClass}>Date Submitted to Lab</label>
+                  <input 
+                    type="date" 
+                    value={form.dateSubmittedToLab} 
+                    onChange={(e) => update('dateSubmittedToLab', e.target.value)} 
+                    className={inputClass} 
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Date Endorsed to DA-BAI</label>
+                  <input 
+                    type="date" 
+                    value={form.dateOfEndorsementToDA} 
+                    onChange={(e) => update('dateOfEndorsementToDA', e.target.value)} 
+                    className={inputClass} 
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Remarks Full Width */}
+            <div className="sm:col-span-2">
+              <label className={labelClass}>Remarks / Observations</label>
+              <textarea 
+                value={form.remarks} 
+                onChange={updateUpper('remarks')} 
+                className={textAreaClass} 
+                placeholder="Additional notes, clinical signs observed, etc..." 
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* --- Section 3: Feedback (Table) --- */}
+        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <h3 className={sectionTitleClass}>
+            <ClipboardList className="w-5 h-5" /> Customer Feedback
+          </h3>
+          
+          <div className="overflow-hidden rounded-lg border border-gray-200 mt-2">
+            <table className="w-full text-sm text-left">
+               <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-bold tracking-wider">
+                <tr>
+                  <th className="py-4 px-6 w-1/2">Evaluation Criteria</th>
+                  <th className="py-4 px-2 text-center text-primary w-1/4">Rating (1-5)</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr className="border-b border-border/50">
-                  <td className="py-3 px-2 font-medium text-primary">1. Quantity of Goods/Services Provided</td>
-                  <td colSpan="2" className="py-2 px-2">
-                    <select value={form.ratingQuantity} onChange={(e) => update('ratingQuantity', e.target.value)} className="w-full sm:w-40 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-sm">
-                      <option value="">Select rating...</option>
+              <tbody className="divide-y divide-gray-100">
+                {/* Q1 */}
+                <tr className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-3 px-6 font-medium text-gray-700">1. Quantity of Goods/Services Provided</td>
+                  <td className="py-3 px-4 text-center">
+                    <select value={form.ratingQuantity} onChange={(e) => update('ratingQuantity', e.target.value)} className={inputClass}>
+                      <option value="">Select...</option>
                       {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </td>
                 </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2 px-2 font-medium text-primary">2. Services Rendered by Personnel</td>
-                  <td colSpan="2" className="py-2 px-2">
-                    <select value={form.ratingServicesPersonnel} onChange={(e) => update('ratingServicesPersonnel', e.target.value)} className="w-full sm:w-40 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-sm">
-                      <option value="">Select rating...</option>
+                {/* Q2 */}
+                <tr className="hover:bg-gray-50/50 transition-colors">
+                  <td className="py-3 px-6 font-medium text-gray-700">2. Services Rendered by Personnel</td>
+                  <td className="py-3 px-4 text-center">
+                    <select value={form.ratingServicesPersonnel} onChange={(e) => update('ratingServicesPersonnel', e.target.value)} className={inputClass}>
+                      <option value="">Select...</option>
                       {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </td>
                 </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2 pl-6 pr-2 text-primary">2.1 For training consider its relevance</td>
-                  <td colSpan="2" className="py-2 px-2">
-                    <select value={form.ratingTraining} onChange={(e) => update('ratingTraining', e.target.value)} className="w-full sm:w-40 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-sm">
-                      <option value="">Select rating...</option>
+                 {/* Q2.1 */}
+                 <tr className="hover:bg-gray-50/50 transition-colors bg-gray-50/30">
+                  <td className="py-3 pl-10 pr-6 text-gray-600 text-xs uppercase tracking-wide flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span> Training Relevance
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <select value={form.ratingTraining} onChange={(e) => update('ratingTraining', e.target.value)} className={inputClass}>
+                      <option value="">Select...</option>
                       {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </td>
                 </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2 pl-6 pr-2 text-primary">2.2 Attitude (i.e. courteousness)</td>
-                  <td colSpan="2" className="py-2 px-2">
-                    <select value={form.ratingAttitude} onChange={(e) => update('ratingAttitude', e.target.value)} className="w-full sm:w-40 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-sm">
-                      <option value="">Select rating...</option>
+                {/* Q2.2 */}
+                <tr className="hover:bg-gray-50/50 transition-colors bg-gray-50/30">
+                  <td className="py-3 pl-10 pr-6 text-gray-600 text-xs uppercase tracking-wide flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span> Attitude (Courteousness)
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <select value={form.ratingAttitude} onChange={(e) => update('ratingAttitude', e.target.value)} className={inputClass}>
+                      <option value="">Select...</option>
                       {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </td>
                 </tr>
-                <tr className="border-b border-border/50">
-                  <td className="py-2 pl-6 pr-2 text-primary">2.3 Promptness in attending the request</td>
-                  <td colSpan="2" className="py-2 px-2">
-                    <select value={form.ratingPromptness} onChange={(e) => update('ratingPromptness', e.target.value)} className="w-full sm:w-40 px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary/20 focus:border-primary bg-background text-sm">
-                      <option value="">Select rating...</option>
+                {/* Q2.3 */}
+                <tr className="hover:bg-gray-50/50 transition-colors bg-gray-50/30">
+                  <td className="py-3 pl-10 pr-6 text-gray-600 text-xs uppercase tracking-wide flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span> Promptness
+                  </td>
+                  <td className="py-3 px-4 text-center">
+                    <select value={form.ratingPromptness} onChange={(e) => update('ratingPromptness', e.target.value)} className={inputClass}>
+                      <option value="">Select...</option>
                       {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
                     </select>
                   </td>
@@ -175,19 +295,53 @@ export default function AnimalDiseaseSurveillanceForm() {
               </tbody>
             </table>
           </div>
+
+          <div className="mt-6">
+            <label className={labelClass}>Recommendation</label>
+            <textarea 
+              value={form.recommendation} 
+              onChange={updateUpper('recommendation')} 
+              className={textAreaClass} 
+              placeholder="Final recommendations..." 
+            />
+          </div>
         </div>
 
-        <div>
-          <label className={labelClass}>Recommendation</label>
-          <textarea value={form.recommendation} onChange={updateUpper('recommendation')} className={`${inputClass} min-h-[80px]`} rows="3" placeholder="Recommendations..." />
+        {/* --- Footer Action --- */}
+        <div className="pt-4 flex flex-col items-end gap-4">
+          {message && (
+             <div className={`w-full p-4 rounded-lg flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 ${
+              message.type === 'success' 
+                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
+                : 'bg-red-50 text-red-700 border border-red-200'
+            }`}>
+              {message.type === 'success' 
+                ? <CheckCircle2 className="w-5 h-5 flex-shrink-0"/> 
+                : <AlertCircle className="w-5 h-5 flex-shrink-0"/>
+              }
+              <p className="font-medium text-sm">{message.text}</p>
+            </div>
+          )}
+
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-70 disabled:cursor-not-allowed font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2"
+          >
+             {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <span>Saving Record...</span>
+              </>
+            ) : (
+              <>
+                <Save className="w-5 h-5" />
+                <span>Submit Surveillance Data</span>
+              </>
+            )}
+          </button>
         </div>
 
-        {message && (
-          <p className={`p-3 rounded ${message.type === 'success' ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-red-50 text-red-700 border border-red-200'}`}>{message.text}</p>
-        )}
-        <button type="submit" disabled={loading} className="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 font-semibold">
-          {loading ? 'Saving...' : 'Submit'}
-        </button>
       </form>
     </FormLayout>
   )
