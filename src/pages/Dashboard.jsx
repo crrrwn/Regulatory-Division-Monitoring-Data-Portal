@@ -1,13 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
-// Icons use <iconify-icon> loaded via script in index.html
 const SECTIONS = [
   {
     title: 'Registration and Licensing',
     description: 'Manage accreditations and compliance for feeds and handlers.',
     theme: 'primary',
     icon: 'mdi:certificate-outline',
+    gradient: 'from-[#1e4d2b] via-[#1a4526] to-[#153019]',
+    borderColor: 'border-[#1e4d2b]',
+    hoverBorder: 'hover:border-[#1e4d2b]/50',
+    iconBg: 'bg-[#1e4d2b]/10 text-[#1e4d2b] group-hover:bg-[#1e4d2b]/15',
     units: [
       { path: '/dashboard/forms/animal-feed', label: 'Animal Feeds Unit' },
       { path: '/dashboard/forms/animal-welfare', label: 'Animal Welfare Concern Unit' },
@@ -22,6 +25,10 @@ const SECTIONS = [
     description: 'Ensure standards for crops, animals, and food safety.',
     theme: 'primary-light',
     icon: 'mdi:shield-check-outline',
+    gradient: 'from-[#5c7355] via-[#4a6b3c] to-[#3d5a32]',
+    borderColor: 'border-[#5c7355]',
+    hoverBorder: 'hover:border-[#5c7355]/50',
+    iconBg: 'bg-[#5c7355]/10 text-[#5c7355] group-hover:bg-[#5c7355]/15',
     units: [
       { path: '/dashboard/forms/good-agri-practices', label: 'Good Agricultural Practices' },
       { path: '/dashboard/forms/good-animal-husbandry', label: 'Good Animal Husbandry' },
@@ -36,6 +43,10 @@ const SECTIONS = [
     description: 'Monitor and control spread of plant and animal diseases.',
     theme: 'accent',
     icon: 'mdi:virus-outline',
+    gradient: 'from-[#9a7b4f] via-[#b8a066] to-[#8f7a45]',
+    borderColor: 'border-[#b8a066]',
+    hoverBorder: 'hover:border-[#b8a066]/50',
+    iconBg: 'bg-[#b8a066]/10 text-[#9a7b4f] group-hover:bg-[#b8a066]/15',
     units: [
       { path: '/dashboard/forms/plant-pest-surveillance', label: 'Plant Pest Surveillance' },
       { path: '/dashboard/forms/cfs-admcc', label: 'CFS / ADMCC' },
@@ -44,111 +55,97 @@ const SECTIONS = [
   },
 ];
 
-// Theme palette: primary (green), primary-light (muted green), accent (khaki) - from public/theme.css
-const getThemeColors = (theme) => {
-  switch (theme) {
-    case 'primary':
-      return 'bg-primary/10 text-primary border-primary/20 group-hover:border-primary/40 group-hover:bg-primary/15';
-    case 'primary-light':
-      return 'bg-primary-light/15 text-primary border-primary-light/30 group-hover:border-primary-light/50 group-hover:bg-primary-light/20';
-    case 'accent':
-      return 'bg-accent/15 text-accent border-accent/30 group-hover:border-accent/50 group-hover:bg-accent/20';
-    default:
-      return 'bg-surface text-primary border-border group-hover:border-primary/30 group-hover:bg-surface';
-  }
-};
-
 export default function Dashboard() {
   return (
-    <div className="min-w-0 w-full max-w-full bg-background p-4 sm:p-6 lg:p-8 overflow-x-hidden">
-      
-      {/* --- HEADER SECTION --- */}
-      <div className="w-full max-w-7xl mx-auto mb-8 sm:mb-12 min-w-0">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 min-w-0">
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight break-words">
-              Dashboard Overview
-            </h1>
-            <p className="text-text-muted mt-1 text-sm sm:text-base break-words">
-              Welcome back! Select a module below to manage records and forms.
-            </p>
-          </div>
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden pb-10">
+      <div className="w-full max-w-7xl mx-auto min-w-0 space-y-6">
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-3 min-w-0 shrink-0">
-            <Link
-              to="/dashboard/analytics"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-primary border border-border rounded-lg shadow-sm hover:bg-surface hover:border-primary/30 transition-all text-sm font-medium"
-            >
-              <iconify-icon icon="mdi:chart-box-outline" width="20"></iconify-icon>
-              Data Analytics
-            </Link>
-            <Link
-              to="/dashboard/records"
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark hover:shadow-lg transition-all text-sm font-medium"
-            >
-              <iconify-icon icon="mdi:database-search-outline" width="20"></iconify-icon>
-              View Masterlist
-            </Link>
+        {/* --- HEADER --- */}
+        <div className="dashboard-section rounded-xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden" style={{ animationDelay: '0ms' }}>
+          <div className="bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-4 sm:px-6 py-4 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="min-w-0">
+                <h1 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-sm break-words">
+                  Dashboard Overview
+                </h1>
+                <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-1 break-words">
+                  Welcome back! Select a module below to manage records and forms.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 shrink-0">
+                <Link
+                  to="/dashboard/analytics"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm"
+                >
+                  <iconify-icon icon="mdi:chart-box-outline" width="18"></iconify-icon>
+                  Data Analytics
+                </Link>
+                <Link
+                  to="/dashboard/records"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#b8a066] text-[#153019] rounded-xl border border-[#b8a066]/50 hover:bg-[#d4c4a0] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm"
+                >
+                  <iconify-icon icon="mdi:database-search-outline" width="18"></iconify-icon>
+                  View Masterlist
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* --- MAIN CONTENT SECTIONS --- */}
-      <div className="w-full max-w-7xl mx-auto space-y-10 min-w-0">
+        {/* --- SECTIONS --- */}
         {SECTIONS.map((section, idx) => (
-          <div key={idx} className="animate-fade-in-up min-w-0" style={{ animationDelay: `${idx * 100}ms` }}>
-            
-            {/* Section Header */}
-            <div className="flex items-center gap-3 mb-5 border-b border-border pb-3 min-w-0">
-              <div className={`shrink-0 p-2 rounded-lg ${
-                  section.theme === 'primary' ? 'bg-primary/15 text-primary' :
-                  section.theme === 'primary-light' ? 'bg-primary-light/20 text-primary' :
-                  'bg-accent/20 text-accent'
-                }`}>
-                <iconify-icon icon={section.icon} width="24"></iconify-icon>
-              </div>
-              <div className="min-w-0">
-                <h3 className="text-lg font-bold text-primary leading-tight break-words">
-                  {section.title}
-                </h3>
-                <p className="text-xs sm:text-sm text-text-muted mt-1 break-words">
-                  {section.description}
-                </p>
+          <div
+            key={idx}
+            className="dashboard-section rounded-xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/5 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/8 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]"
+            style={{ animationDelay: `${80 + idx * 120}ms` }}
+          >
+            {/* Section header strip */}
+            <div className={`bg-gradient-to-r ${section.gradient} px-4 sm:px-5 py-3 relative overflow-hidden`}>
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+              <div className="relative z-10 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-white">
+                  <iconify-icon icon={section.icon} width="22"></iconify-icon>
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm break-words">
+                    {section.title}
+                  </h2>
+                  <p className="text-[10px] font-semibold text-white/85 tracking-wider mt-0.5 break-words">
+                    {section.description}
+                  </p>
+                </div>
               </div>
             </div>
 
-            {/* Grid of Units */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 min-w-0">
-              {section.units.map((unit) => (
-                <Link
-                  key={unit.path}
-                  to={unit.path}
-                  className="group relative bg-white p-4 rounded-xl border border-border shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex items-start gap-4 overflow-hidden min-w-0"
-                >
-                  {/* Decorative background on hover - theme color */}
-                  <div className={`absolute inset-0 opacity-0 group-hover:opacity-[0.07] transition-opacity duration-300 ${
-                    section.theme === 'primary' ? 'bg-primary' :
-                    section.theme === 'primary-light' ? 'bg-primary-light' : 'bg-accent'
-                  }`} />
-
-                  {/* Icon Box */}
-                  <div className={`shrink-0 w-10 h-10 rounded-lg flex items-center justify-center transition-colors duration-300 ${getThemeColors(section.theme)}`}>
-                    <iconify-icon icon="mdi:file-document-edit-outline" width="20"></iconify-icon>
-                  </div>
-
-                  {/* Text Content */}
-                  <div className="flex-1 min-w-0 z-10">
-                    <p className="font-semibold text-primary group-hover:text-primary-dark text-sm leading-snug">
-                      {unit.label}
-                    </p>
-                    <div className="flex items-center gap-1 text-xs text-text-muted mt-1.5 group-hover:text-primary transition-colors">
-                      <span>Open Form</span>
-                      <iconify-icon icon="mdi:arrow-right" width="14"></iconify-icon>
+            {/* Unit cards grid */}
+            <div className="p-4 sm:p-5 bg-gradient-to-b from-[#faf8f5] to-[#f2ede6]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 min-w-0">
+                {section.units.map((unit, unitIdx) => (
+                  <Link
+                    key={unit.path}
+                    to={unit.path}
+                    className="dashboard-card group relative bg-white rounded-xl border-2 border-[#e8e0d4] p-4 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-[#1e4d2b]/40 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] flex items-start gap-3 overflow-hidden min-w-0"
+                    style={{ animationDelay: `${180 + idx * 120 + unitIdx * 40}ms` }}
+                  >
+                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-[0.04] transition-opacity duration-300 bg-gradient-to-br ${section.gradient}`} />
+                    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-110 ${section.iconBg} border border-[#e8e0d4]`}>
+                      <iconify-icon icon="mdi:file-document-edit-outline" width="20"></iconify-icon>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                    <div className="flex-1 min-w-0 z-10">
+                      <p className="font-bold text-[#1e4d2b] group-hover:text-[#153019] text-sm leading-snug transition-colors duration-300">
+                        {unit.label}
+                      </p>
+                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5c7355] mt-1.5 group-hover:text-[#1e4d2b] transition-colors duration-300">
+                        <span>Open Form</span>
+                        <span className="inline-block transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:translate-x-0.5">
+                          <iconify-icon icon="mdi:arrow-right" width="14"></iconify-icon>
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         ))}

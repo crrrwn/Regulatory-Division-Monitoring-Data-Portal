@@ -85,7 +85,7 @@ function DashboardLayout() {
 
       {/* --- SIDEBAR: drawer < md, always visible >= md --- */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 flex flex-col bg-primary-dark text-accent-light transition-[transform,width] duration-300 ease-out shadow-2xl border-r border-primary relative
+        className={`fixed md:static inset-y-0 left-0 z-50 flex flex-col bg-primary-dark text-accent-light shadow-2xl border-r border-primary relative
           pt-[env(safe-area-inset-top)]
           w-[min(280px,85vw)] ${sidebarOpen || mobileMenuOpen ? 'md:w-[280px]' : 'md:w-[88px]'}
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
@@ -94,14 +94,16 @@ function DashboardLayout() {
         style={{ 
           backgroundImage: 'radial-gradient(circle at top left, #1e4d2b, #153019, #0d1f12)',
           paddingLeft: 'env(safe-area-inset-left)',
+          transition: 'width 0.35s cubic-bezier(0.33, 1, 0.68, 1), transform 0.3s cubic-bezier(0.33, 1, 0.68, 1)',
         }}
       >
         {/* --- FLOATING TOGGLE BUTTON (DESKTOP) --- */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`absolute -right-3 top-6 sm:top-9 z-50 hidden md:flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-background text-primary shadow-[0_2px_8px_rgba(0,0,0,0.15)] ring-1 ring-primary/20 transition-all hover:bg-accent-light hover:text-primary hover:scale-110 focus:outline-none active:scale-95
+          className={`absolute -right-3 top-6 sm:top-9 z-50 hidden md:flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-background text-primary shadow-[0_2px_8px_rgba(0,0,0,0.15)] ring-1 ring-primary/20 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-accent-light hover:text-primary hover:scale-110 focus:outline-none active:scale-95
              ${!sidebarOpen ? 'rotate-180' : 'rotate-0'}
           `}
+          style={{ transition: 'transform 0.35s cubic-bezier(0.33, 1, 0.68, 1), background-color 0.2s, box-shadow 0.2s' }}
           title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
           aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
         >
@@ -109,19 +111,17 @@ function DashboardLayout() {
         </button>
 
         {/* Brand Header */}
-        <div className={`min-h-[72px] sm:h-24 flex items-center px-4 sm:px-6 border-b border-white/5 relative overflow-hidden transition-all duration-300 shrink-0 ${!sidebarOpen && !mobileMenuOpen ? 'justify-center px-0' : 'justify-between'}`}>
+        <div className={`min-h-[72px] sm:h-24 flex items-center px-4 sm:px-6 border-b border-white/5 relative overflow-hidden shrink-0 ${!sidebarOpen && !mobileMenuOpen ? 'justify-center px-0' : 'justify-between'}`} style={{ transition: 'padding 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}>
           <Link to="/dashboard" className="flex items-center gap-4 overflow-hidden min-w-0 z-10 group">
             <div className="relative w-10 h-10 shrink-0">
-               {/* Logo Container with Glow */}
-               <div className="absolute inset-0 bg-primary blur-lg opacity-30 group-hover:opacity-50 transition-opacity"></div>
-               <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform">
+               <div className="absolute inset-0 bg-primary blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
+               <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
                   <img src="/DA LOGO.jpg" alt="DA" className="w-full h-full object-cover rounded-xl" onError={(e) => e.target.style.display = 'none'} />
                   <span className="absolute font-bold text-xs">DA</span>
                </div>
             </div>
             
-            {/* Text Content with Fade Transition */}
-            <div className={`flex flex-col transition-all duration-300 min-w-0 ${sidebarOpen || mobileMenuOpen ? 'opacity-100 translate-x-0 w-auto' : 'opacity-0 -translate-x-4 w-0 overflow-hidden'}`}>
+            <div className={`flex flex-col min-w-0 overflow-hidden ${sidebarOpen || mobileMenuOpen ? 'opacity-100 translate-x-0 w-auto' : 'opacity-0 -translate-x-4 w-0'}`} style={{ transition: 'opacity 0.3s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, transform 0.35s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, width 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}>
               <h1 className="font-bold text-white text-sm sm:text-[15px] leading-tight tracking-wide truncate">REGULATORY</h1>
               <p className="text-[10px] text-accent-light font-bold tracking-wider uppercase truncate">Division Portal</p>
             </div>
@@ -138,9 +138,12 @@ function DashboardLayout() {
           
           {/* Main Module */}
           <div>
-            {(sidebarOpen || mobileMenuOpen) && (
-               <p className="px-2 text-[10px] font-bold text-accent-light/70 uppercase tracking-widest mb-3 animate-fade-in">Main Module</p>
-            )}
+            <p
+              className={`px-2 text-[10px] font-bold text-accent-light/70 uppercase tracking-widest mb-3 overflow-hidden whitespace-nowrap ${sidebarOpen || mobileMenuOpen ? 'opacity-100 max-h-8' : 'opacity-0 max-h-0 mb-0'}`}
+              style={{ transition: 'opacity 0.28s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, max-height 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}
+            >
+              Main Module
+            </p>
             <div className="space-y-1">
               <NavItem to="/dashboard" icon="mdi:view-dashboard-variant-outline" label="Dashboard Overview" active={isActive('/dashboard')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
               <NavItem to="/dashboard/analytics" icon="mdi:chart-box-outline" label="Data Analytics" active={isActive('/dashboard/analytics')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
@@ -150,9 +153,12 @@ function DashboardLayout() {
 
           {/* Department Units */}
           <div>
-            {(sidebarOpen || mobileMenuOpen) && (
-               <p className="px-2 text-[10px] font-bold text-accent-light/70 uppercase tracking-widest mb-3 animate-fade-in">Operational Units</p>
-            )}
+            <p
+              className={`px-2 text-[10px] font-bold text-accent-light/70 uppercase tracking-widest mb-3 overflow-hidden whitespace-nowrap ${sidebarOpen || mobileMenuOpen ? 'opacity-100 max-h-8' : 'opacity-0 max-h-0 mb-0'}`}
+              style={{ transition: 'opacity 0.28s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, max-height 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}
+            >
+              Operational Units
+            </p>
             <div className="space-y-1">
               {SIDEBAR_SECTIONS.map((section, idx) => (
                 <AccordionItem 
@@ -172,29 +178,31 @@ function DashboardLayout() {
 
         {/* User Profile Footer */}
         <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] border-t border-primary/30 bg-primary/20 backdrop-blur-sm">
-          <div className={`flex items-center gap-3 transition-all ${!sidebarOpen && !mobileMenuOpen ? 'justify-center' : ''} group`}>
+          <div className={`flex items-center gap-3 overflow-hidden group ${!sidebarOpen && !mobileMenuOpen ? 'justify-center' : ''}`} style={{ transition: 'justify-content 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}>
              <div className="relative shrink-0">
-                <div className="w-9 h-9 rounded-full bg-primary border border-primary-light/50 flex items-center justify-center text-accent-light shadow-sm overflow-hidden group-hover:border-accent-light transition-colors">
+                <div className="w-9 h-9 rounded-full bg-primary border border-primary-light/50 flex items-center justify-center text-accent-light shadow-sm overflow-hidden group-hover:border-accent-light transition-colors duration-200">
                   <iconify-icon icon="mdi:account" width="20"></iconify-icon>
                 </div>
                 <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-accent border-2 border-primary-dark rounded-full animate-pulse"></div>
              </div>
 
-            <div className={`flex-1 min-w-0 transition-all duration-300 ${sidebarOpen || mobileMenuOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
-              <p className="text-sm font-semibold text-white truncate group-hover:text-accent-light transition-colors">{user?.email?.split('@')[0]}</p>
+            <div
+              className={`flex-1 min-w-0 overflow-hidden ${sidebarOpen || mobileMenuOpen ? 'opacity-100 max-w-[160px]' : 'opacity-0 max-w-0'}`}
+              style={{ transition: 'opacity 0.28s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, max-width 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}
+            >
+              <p className="text-sm font-semibold text-white truncate group-hover:text-accent-light transition-colors duration-200">{user?.email?.split('@')[0]}</p>
               <p className="text-[10px] text-accent-light/70 uppercase font-medium truncate">{role || 'Admin Access'}</p>
             </div>
             
-            {(sidebarOpen || mobileMenuOpen) && (
-              <button
-                onClick={handleSignOut}
-                className="min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-accent-light/80 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all touch-manipulation"
-                title="Sign Out"
-                aria-label="Sign out"
-              >
-                <iconify-icon icon="mdi:logout" width="18"></iconify-icon>
-              </button>
-            )}
+            <button
+              onClick={handleSignOut}
+              className={`shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-accent-light/80 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] touch-manipulation ${sidebarOpen || mobileMenuOpen ? 'opacity-100 w-11 pointer-events-auto' : 'opacity-0 w-0 min-w-0 overflow-hidden pointer-events-none'}`}
+              style={{ transition: 'opacity 0.25s 0.06s, width 0.35s cubic-bezier(0.33, 1, 0.68, 1), min-width 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}
+              title="Sign Out"
+              aria-label="Sign out"
+            >
+              <iconify-icon icon="mdi:logout" width="18"></iconify-icon>
+            </button>
           </div>
         </div>
       </aside>
@@ -239,7 +247,7 @@ function DashboardLayout() {
         </header>
 
         {/* Content Body */}
-        <main className="flex-1 min-w-0 overflow-x-hidden overflow-y-auto p-3 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        <main className="flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto custom-scrollbar view-records-scroll p-3 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))]">
            <div className="w-full max-w-7xl mx-auto min-w-0 animate-fade-in-up">
               <Outlet />
            </div>
@@ -255,7 +263,7 @@ function NavItem({ to, icon, label, active, sidebarOpen }) {
   return (
     <Link
       to={to}
-      className={`relative flex items-center gap-3 px-3 py-2.5 min-h-[44px] md:min-h-0 rounded-lg transition-all duration-200 group overflow-hidden touch-manipulation
+      className={`relative flex items-center gap-3 px-3 py-2.5 min-h-[44px] md:min-h-0 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group overflow-hidden touch-manipulation
         ${active 
           ? 'text-white shadow-lg shadow-primary-dark/20' 
           : 'text-accent-light/80 hover:text-accent-light hover:bg-white/5'
@@ -263,20 +271,20 @@ function NavItem({ to, icon, label, active, sidebarOpen }) {
         ${!sidebarOpen ? 'justify-center' : ''}
       `}
     >
-      {/* Active Background - theme primary */}
       {active && (
          <div className="absolute inset-0 bg-primary border border-white/10 rounded-lg"></div>
       )}
 
-      {/* Icon */}
       <iconify-icon 
          icon={icon} 
          width="20" 
-         class={`relative z-10 transition-colors duration-200 ${active ? 'text-white' : 'group-hover:text-accent-light'}`}
+         class={`relative z-10 shrink-0 transition-colors duration-200 ${active ? 'text-white' : 'group-hover:text-accent-light'}`}
       ></iconify-icon>
       
-      {/* Label */}
-      <span className={`relative z-10 font-medium text-[13.5px] tracking-wide whitespace-nowrap transition-all duration-300 ${sidebarOpen ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+      <span
+        className={`relative z-10 font-medium text-[13.5px] tracking-wide whitespace-nowrap overflow-hidden min-w-0 ${sidebarOpen ? 'opacity-100 max-w-[200px]' : 'opacity-0 max-w-0'}`}
+        style={{ transition: 'opacity 0.28s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, max-width 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}
+      >
          {label}
       </span>
 
@@ -302,19 +310,22 @@ function AccordionItem({ section, isOpen, onToggle, isActiveRoute, sidebarOpen, 
            if (!showText) setSidebarOpen(true);
            onToggle();
         }}
-        className={`relative w-full flex items-center px-3 py-2.5 min-h-[44px] md:min-h-0 rounded-lg transition-all duration-200 group touch-manipulation
+        className={`relative w-full flex items-center px-3 py-2.5 min-h-[44px] md:min-h-0 rounded-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group touch-manipulation overflow-hidden
            ${isChildActive ? 'bg-white/5 text-accent-light' : 'text-accent-light/80 hover:bg-white/5 hover:text-accent-light'}
            ${!showText ? 'justify-center' : 'justify-between'}
         `}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <iconify-icon 
              icon={section.icon} 
              width="20" 
-             class={`${isChildActive ? 'text-accent-light' : 'group-hover:text-accent-light'} transition-colors`}
+             class={`shrink-0 ${isChildActive ? 'text-accent-light' : 'group-hover:text-accent-light'} transition-colors duration-200`}
           ></iconify-icon>
           
-          <span className={`text-[13.5px] font-semibold tracking-wide whitespace-nowrap transition-all duration-300 ${showText ? 'opacity-100 w-auto' : 'opacity-0 w-0 hidden'}`}>
+          <span
+            className={`text-[13.5px] font-semibold tracking-wide whitespace-nowrap overflow-hidden min-w-0 ${showText ? 'opacity-100 max-w-[180px]' : 'opacity-0 max-w-0'}`}
+            style={{ transition: 'opacity 0.28s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, max-width 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}
+          >
              {section.title}
           </span>
         </div>
@@ -325,7 +336,7 @@ function AccordionItem({ section, isOpen, onToggle, isActiveRoute, sidebarOpen, 
              width="16" 
              style={{ 
                 transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)', 
-                transition: 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)' 
+                transition: 'transform 0.35s cubic-bezier(0.33, 1, 0.68, 1)' 
              }}
              class={`transition-colors ${isChildActive ? 'text-accent-light' : ''}`}
            ></iconify-icon>

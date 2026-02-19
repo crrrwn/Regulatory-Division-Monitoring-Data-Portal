@@ -18,6 +18,7 @@ import {
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import 'iconify-icon'
 
 const STATUS_OPTIONS = ['Pending', 'On-Process', 'Approved', 'Denied']
 
@@ -55,84 +56,91 @@ export default function SafdzValidationForm() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     const ok = await submit(form)
-    if (ok) setForm(initialState)
+    if (ok) {
+      setForm(initialState)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
-  // --- UI Constants & Classes ---
-  const sectionTitleClass = "text-lg font-bold text-primary flex items-center gap-2 mb-4 pb-2 border-b border-gray-100"
-  const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide"
-  const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all duration-200 placeholder:text-gray-400 uppercase"
-  const textAreaClass = `${inputClass} min-h-[100px] resize-y`
-  
-  // Helper for inputs with icons
-  const IconInput = ({ icon: Icon, ...props }) => (
-    <div className="relative">
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Icon className="h-4 w-4 text-gray-400" />
-      </div>
-      <input {...props} className={`${inputClass} pl-10`} />
-    </div>
-  )
+  // --- Theme: green #1e4d2b, khaki #b8a066, neutral #5c574f, border #e8e0d4 ---
+  const sectionTitleClass = "text-sm font-black text-[#1e4d2b] uppercase tracking-wide border-b-2 border-[#1e4d2b]/15 pb-3 mb-5 flex items-center gap-2.5 transition-colors duration-300"
+  const labelClass = "block text-[10px] font-bold text-[#5c574f] uppercase tracking-wider mb-1.5 transition-colors duration-200"
+  const inputClass = "w-full min-w-0 px-4 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-sm text-[#1e4d2b] font-medium focus:outline-none focus:ring-2 focus:ring-[#1e4d2b]/30 focus:border-[#1e4d2b] hover:border-[#1e4d2b]/50 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] placeholder:text-[#8a857c] uppercase"
+  const textAreaClass = `${inputClass} min-h-[100px] resize-y normal-case placeholder:normal-case`
 
   return (
     <FormLayout title="SAFDZ Validation">
-      <form onSubmit={handleSubmit} className="space-y-8 max-w-5xl mx-auto">
+      <div className="max-w-5xl mx-auto pb-10 min-w-0 w-full">
+        {/* --- HEADER --- */}
+        <div className="mb-8 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+          <div className="bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 sm:px-6 py-4 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+            <div className="relative z-10 flex items-center gap-3">
+              <span className="p-2.5 bg-white/15 rounded-xl border border-white/20 shrink-0">
+                <iconify-icon icon="mdi:map-marker-check" width="24" class="text-white"></iconify-icon>
+              </span>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-sm">SAFDZ Validation</h2>
+                <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-0.5">
+                  Strategic Agricultural and Fisheries Development Zone validation and endorsement.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
 
         {/* --- Section 1: Application Details --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="safdz-validation-section safdz-validation-section-1 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <h3 className={sectionTitleClass}>
-            <FileText className="w-5 h-5" /> Application Overview
+            <FileText className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Application Overview
           </h3>
           
           <div className="grid sm:grid-cols-2 gap-6">
             <div>
               <label className={labelClass}>Exploration Permit App. No.</label>
-              <IconInput 
-                icon={FileCheck}
-                type="text" 
-                value={form.explorationPermitApplicationNo} 
-                onChange={updateUpper('explorationPermitApplicationNo')} 
-                placeholder="Permit Number" 
-                required 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <FileCheck className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.explorationPermitApplicationNo} onChange={updateUpper('explorationPermitApplicationNo')} placeholder="Permit Number" required className={`${inputClass} pl-10`} />
+              </div>
             </div>
             <div>
               <label className={labelClass}>Name of Applicant</label>
-              <IconInput 
-                icon={User}
-                type="text" 
-                value={form.nameOfApplicant} 
-                onChange={updateUpper('nameOfApplicant')} 
-                placeholder="Applicant Full Name" 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.nameOfApplicant} onChange={updateUpper('nameOfApplicant')} placeholder="Applicant Full Name" className={`${inputClass} pl-10`} />
+              </div>
             </div>
             <div>
               <label className={labelClass}>Location</label>
-              <IconInput 
-                icon={MapPin}
-                type="text" 
-                value={form.location} 
-                onChange={updateUpper('location')} 
-                placeholder="Site Location" 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.location} onChange={updateUpper('location')} placeholder="Site Location" className={`${inputClass} pl-10`} />
+              </div>
             </div>
             <div>
               <label className={labelClass}>Area (Hectares)</label>
-              <IconInput 
-                icon={Ruler}
-                type="text" 
-                value={form.area} 
-                onChange={updateUpper('area')} 
-                placeholder="e.g. 5.00" 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Ruler className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.area} onChange={updateUpper('area')} placeholder="e.g. 5.00" className={`${inputClass} pl-10`} />
+              </div>
             </div>
           </div>
         </div>
 
         {/* --- Section 2: Endorsements & Timeline --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="safdz-validation-section safdz-validation-section-2 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <h3 className={sectionTitleClass}>
-            <Send className="w-5 h-5" /> Timeline & Endorsements
+            <Send className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Timeline & Endorsements
           </h3>
           
           <div className="grid sm:grid-cols-4 gap-4">
@@ -145,25 +153,25 @@ export default function SafdzValidationForm() {
               <input type="date" value={form.dateOfReplyToRequest} onChange={(e) => update('dateOfReplyToRequest', e.target.value)} className={inputClass} />
             </div>
             
-            <div className="sm:col-span-4 h-px bg-gray-100 my-2"></div>
+            <div className="sm:col-span-4 h-px bg-[#e8e0d4] my-2"></div>
             
             <div className="sm:col-span-2">
               <label className={labelClass}>Endorsement to BSWM</label>
               <input type="date" value={form.endorsementToBSWM} onChange={(e) => update('endorsementToBSWM', e.target.value)} className={inputClass} />
-              <p className="text-[10px] text-gray-400 mt-1">Bureau of Soils and Water Management</p>
+              <p className="text-[10px] text-[#5c574f]/80 mt-1">Bureau of Soils and Water Management</p>
             </div>
             <div className="sm:col-span-2">
               <label className={labelClass}>Endorsement to MGB</label>
               <input type="date" value={form.endorsementToMGB} onChange={(e) => update('endorsementToMGB', e.target.value)} className={inputClass} />
-              <p className="text-[10px] text-gray-400 mt-1">Mines and Geosciences Bureau</p>
+              <p className="text-[10px] text-[#5c574f]/80 mt-1">Mines and Geosciences Bureau</p>
             </div>
           </div>
         </div>
 
         {/* --- Section 3: Field Validation --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="safdz-validation-section safdz-validation-section-3 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <h3 className={sectionTitleClass}>
-            <Search className="w-5 h-5" /> Field Validation & Findings
+            <Search className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Field Validation & Findings
           </h3>
           
           <div className="grid sm:grid-cols-2 gap-6">
@@ -209,9 +217,9 @@ export default function SafdzValidationForm() {
         </div>
 
         {/* --- Section 4: Final Disposition --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="safdz-validation-section safdz-validation-section-4 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <h3 className={sectionTitleClass}>
-            <Stamp className="w-5 h-5" /> Issuance & Status
+            <Stamp className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Issuance & Status
           </h3>
 
           <div className="grid sm:grid-cols-2 gap-6">
@@ -242,9 +250,9 @@ export default function SafdzValidationForm() {
         </div>
 
         {/* --- Section 5: Ratings & Recommendation --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="safdz-validation-section safdz-validation-section-5 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <h3 className={sectionTitleClass}>
-            <ClipboardList className="w-5 h-5" /> Feedback & Recommendation
+            <ClipboardList className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Feedback & Recommendation
           </h3>
           
           <div className="space-y-6">
@@ -262,42 +270,40 @@ export default function SafdzValidationForm() {
           </div>
         </div>
 
-        {/* --- Action Buttons --- */}
-        <div className="pt-4 flex flex-col items-end gap-4">
+        {/* --- Submit Section --- */}
+        <div className="safdz-validation-section safdz-validation-section-6 pt-2 flex flex-col items-end gap-4">
           {message && (
-             <div className={`w-full p-4 rounded-lg flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 ${
+            <div className={`animal-feed-message-enter w-full max-w-2xl p-4 rounded-xl shadow-lg flex items-center gap-3 border-l-4 ${
               message.type === 'success' 
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                : 'bg-red-50 text-red-700 border border-red-200'
+                ? 'bg-[#1e4d2b] text-white border-[#153019]' 
+                : 'bg-red-500 text-white border-red-700'
             }`}>
-              {message.type === 'success' 
-                ? <CheckCircle2 className="w-5 h-5 flex-shrink-0"/> 
-                : <AlertCircle className="w-5 h-5 flex-shrink-0"/>
-              }
-              <p className="font-medium text-sm">{message.text}</p>
+              <iconify-icon icon={message.type === 'success' ? 'mdi:check-circle' : 'mdi:alert-circle'} width="24"></iconify-icon>
+              <p className="font-medium">{message.text}</p>
             </div>
           )}
 
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-70 disabled:cursor-not-allowed font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
           >
-             {loading ? (
+            {loading ? (
               <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Saving...</span>
+                <iconify-icon icon="mdi:loading" width="20" class="animate-spin"></iconify-icon>
+                Processing...
               </>
             ) : (
               <>
-                <Save className="w-5 h-5" />
-                <span>Submit Validation</span>
+                <iconify-icon icon="mdi:content-save-check" width="22"></iconify-icon>
+                SUBMIT VALIDATION
               </>
             )}
           </button>
         </div>
 
       </form>
+      </div>
     </FormLayout>
   )
 }

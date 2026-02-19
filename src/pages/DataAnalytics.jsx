@@ -20,7 +20,12 @@ import {
   LayoutGrid,
   CheckCircle2,
   AlertCircle,
-  BarChart2
+  BarChart2,
+  Package,
+  Users,
+  BookOpen,
+  Smile,
+  Clock
 } from 'lucide-react'
 
 // --- THEME CONSTANTS ---
@@ -31,13 +36,20 @@ const RATING_FIELD_LABELS = {
   ratingAttitude: 'Attitude (Courteousness)',
   ratingPromptness: 'Promptness',
 }
+const RATING_FIELD_ICONS = {
+  ratingQuantity: Package,
+  ratingServicesPersonnel: Users,
+  ratingTraining: BookOpen,
+  ratingAttitude: Smile,
+  ratingPromptness: Clock,
+}
 
-// Enhanced Styling for Unit Groups
+// Enhanced Styling for Unit Groups: Green (left), Khaki/Brown (middle), Matcha (right)
 const UNIT_GROUPS = [
   {
     title: 'Registration & Licensing',
     icon: Award,
-    // Theme: Primary Green (#1e4d2b)
+    // Theme: Green (#1e4d2b)
     theme: 'primary',
     bgHeader: 'bg-[#1e4d2b]',
     textHeader: 'text-white',
@@ -53,14 +65,14 @@ const UNIT_GROUPS = [
   {
     title: 'Quality Control',
     icon: ShieldCheck,
-    // Theme: Muted Green (#5c7355)
+    // Theme: Khaki/Brown (#9a7b4f)
     theme: 'secondary',
-    bgHeader: 'bg-[#5c7355]',
+    bgHeader: 'bg-[#9a7b4f]',
     textHeader: 'text-white',
-    borderColor: 'border-[#5c7355]',
-    softBg: 'bg-[#5c7355]/5',
-    hoverBorder: 'hover:border-[#5c7355]',
-    accentText: 'text-[#5c7355]',
+    borderColor: 'border-[#9a7b4f]',
+    softBg: 'bg-[#9a7b4f]/5',
+    hoverBorder: 'hover:border-[#9a7b4f]',
+    accentText: 'text-[#9a7b4f]',
     units: [
       'goodAgriPractices', 'goodAnimalHusbandry', 'organicPostMarket', 
       'landUseMatter', 'foodSafety', 'safdzValidation'
@@ -69,14 +81,14 @@ const UNIT_GROUPS = [
   {
     title: 'Surveillance',
     icon: Activity,
-    // Theme: Gold/Accent (#b8a066)
+    // Theme: Matcha (#6b8e5a)
     theme: 'accent',
-    bgHeader: 'bg-[#b8a066]',
-    textHeader: 'text-[#153019]', // Dark text for contrast on gold
-    borderColor: 'border-[#b8a066]',
-    softBg: 'bg-[#b8a066]/10',
-    hoverBorder: 'hover:border-[#b8a066]',
-    accentText: 'text-[#8f7a45]', // Darker gold for text
+    bgHeader: 'bg-[#6b8e5a]',
+    textHeader: 'text-white',
+    borderColor: 'border-[#6b8e5a]',
+    softBg: 'bg-[#6b8e5a]/10',
+    hoverBorder: 'hover:border-[#6b8e5a]',
+    accentText: 'text-[#6b8e5a]',
     units: [
       'plantPestSurveillance', 'cfsAdmcc', 'animalDiseaseSurveillance'
     ]
@@ -107,55 +119,48 @@ export default function DataAnalytics() {
 
   return (
     <>
-      <div className="space-y-8 animate-in fade-in zoom-in duration-500 pb-12 relative font-sans text-[#2d2a26]">
+      <div className="space-y-5 pb-8 relative font-sans text-[#2d2a26]">
         
-        {/* --- DASHBOARD HEADER --- */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-[#d4cdc0] pb-6">
-          <div>
-            <h2 className="text-3xl font-black text-[#1e4d2b] tracking-tight uppercase">Analytics Dashboard</h2>
-            <div className="flex items-center gap-2 mt-2 text-sm font-medium text-[#5c7355]">
-               <span className="flex items-center gap-1.5 bg-white px-3 py-1 rounded-full border border-[#d4cdc0] shadow-sm">
-                 <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#4a6b3c] opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-[#1e4d2b]"></span>
-                  </span> 
-                  Live System Data
-               </span>
-               <span className="text-[#b8a066]">|</span>
-               <span>Updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+        {/* --- DASHBOARD HEADER (same style as Dashboard Overview & Master Records) --- */}
+        <div className="analytics-section rounded-xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden" style={{ animationDelay: '0ms' }}>
+          <div className="bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-4 sm:px-6 py-4 relative overflow-hidden">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-sm">Analytics Dashboard</h2>
+                <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-1">
+                  Live system data · Updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </p>
+              </div>
+            <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => setShowRatingsModal(true)}
+                  className="group inline-flex items-center gap-1.5 px-4 py-2 bg-[#b8a066] text-[#153019] rounded-xl hover:bg-[#d4c4a0] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs border border-[#b8a066]/50"
+                >
+                  <Star size={16} className="fill-[#153019] transition-transform duration-300 group-hover:scale-110" />
+                  View Ratings
+                </button>
+                <button
+                  onClick={refresh}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#1e4d2b] rounded-xl hover:bg-[#faf8f5] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs border border-white/30"
+                >
+                  <RefreshCw size={16} />
+                  Refresh
+                </button>
+                <Link
+                  to="/dashboard"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs"
+                >
+                  <ArrowLeft size={16} />
+                  Dashboard
+                </Link>
+              </div>
             </div>
-          </div>
-          
-          <div className="flex flex-wrap gap-3">
-            {/* RATINGS BUTTON */}
-            <button 
-              onClick={() => setShowRatingsModal(true)} 
-              className="group inline-flex items-center gap-2 px-5 py-2.5 bg-[#b8a066] text-[#153019] rounded-xl hover:bg-[#d4c4a0] shadow-md hover:shadow-lg transition-all font-bold text-sm transform hover:-translate-y-0.5 border border-[#b8a066]"
-            >
-              <Star size={18} className="fill-[#153019] transition-transform group-hover:scale-110" />
-              View Ratings
-            </button>
-
-            <button 
-              onClick={refresh} 
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-white text-[#1e4d2b] border border-[#d4cdc0] rounded-xl hover:bg-[#faf8f5] transition-all shadow-sm font-bold text-sm hover:border-[#1e4d2b]"
-            >
-              <RefreshCw size={18} />
-              Refresh
-            </button>
-            
-            <Link 
-              to="/dashboard" 
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1e4d2b] text-white rounded-xl hover:bg-[#153019] shadow-md hover:shadow-xl transition-all font-bold text-sm"
-            >
-              <ArrowLeft size={18} />
-              Dashboard
-            </Link>
           </div>
         </div>
 
         {/* --- HERO STATS CARDS --- */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="analytics-section grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" style={{ animationDelay: '80ms' }}>
           <StatCard 
             title="Total Records" 
             value={stats.total} 
@@ -181,109 +186,161 @@ export default function DataAnalytics() {
             title="Provinces" 
             value={Object.keys(stats.byProvince).length} 
             icon={MapPin} 
-            gradient="from-[#4a6b3c] to-[#1e4d2b]"
+            gradient="from-[#9a7b4f] to-[#8f7a45]"
             iconColor="text-white"
           />
         </div>
 
         {/* --- MAIN CHARTS --- */}
-        <div className="grid lg:grid-cols-3 gap-6 h-full">
+        <div className="analytics-section grid lg:grid-cols-3 gap-4 h-full" style={{ animationDelay: '160ms' }}>
           {/* Monthly Trends */}
-          <div className="lg:col-span-2 bg-white rounded-2xl border border-[#d4cdc0] shadow-sm p-6 flex flex-col min-h-[400px]">
-             <div className="flex items-center justify-between mb-8">
-               <div>
-                   <h3 className="text-lg font-black text-[#1e4d2b] uppercase tracking-wide">Monthly Trends</h3>
-                   <p className="text-sm text-[#5c574f] font-medium">Volume over time</p>
-               </div>
-               <div className="p-2.5 bg-[#faf8f5] rounded-xl border border-[#d4cdc0] text-[#1e4d2b]">
-                   <TrendingUp size={22} />
+          <div className="lg:col-span-2 rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 overflow-hidden flex flex-col min-h-[320px] bg-white group/card hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+             <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-4 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
+               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
+               <div className="relative z-10 flex items-center justify-between">
+                 <div>
+                   <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Monthly Trends</h3>
+                   <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">Volume over time</p>
+                 </div>
+                 <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-[#d4c4a0]">
+                   <TrendingUp size={18} />
+                 </div>
                </div>
              </div>
-             <div className="flex-1 flex items-end gap-2 sm:gap-4 pb-2 border-b border-[#d4cdc0]/50 overflow-x-auto custom-scrollbar">
-               {sortedMonthEntries.length === 0 ? (
-                  <div className="w-full text-center text-gray-400 py-10">No data available</div>
-               ) : (
-                  sortedMonthEntries.map(([month, count]) => (
-                     <div key={month} className="group flex flex-col items-center flex-1 min-w-[30px]">
-                        <div className="mb-2 opacity-0 group-hover:opacity-100 transition-all -translate-y-2 group-hover:translate-y-0 duration-300 bg-[#1e4d2b] text-white text-[10px] font-bold px-2 py-1 rounded-md shadow-xl whitespace-nowrap z-10 pointer-events-none">
-                           {count} Records
-                        </div>
-                        <div className="relative w-full bg-[#e8e0d4] rounded-t-sm flex items-end overflow-hidden h-[220px]">
-                           <div 
-                              className="w-full bg-[#1e4d2b] rounded-t-sm transition-all duration-1000 ease-out group-hover:bg-[#b8a066] relative"
-                              style={{ height: `${(count / maxMonthCount) * 100}%` }}
-                           />
-                        </div>
-                        <div className="mt-3 text-[10px] font-bold text-[#5c7355] -rotate-45 sm:rotate-0 truncate w-full text-center group-hover:text-[#1e4d2b] transition-colors">
+             <div className="flex-1 p-4 sm:p-5 flex flex-col min-h-0 bg-[linear-gradient(180deg,#faf8f5_0%,#f5f0e8_50%,#efe9e0_100%)] border-l-4 border-[#1e4d2b]/25">
+               <div className="flex-1 flex items-end gap-1.5 sm:gap-2 pb-1 overflow-x-auto custom-scrollbar view-records-scroll min-h-[200px] relative">
+                 {/* Subtle horizontal grid lines */}
+                 <div className="absolute inset-0 pointer-events-none flex flex-col justify-between pt-0 pb-8 px-2" aria-hidden>
+                   {[0, 1, 2, 3, 4].map((i) => (
+                     <div key={i} className="w-full h-px bg-[#d4cdc0]/40" />
+                   ))}
+                 </div>
+                 {sortedMonthEntries.length === 0 ? (
+                   <div className="w-full flex items-center justify-center text-[#5c574f] py-8 rounded-lg border-2 border-dashed border-[#1e4d2b]/25 bg-[#f0f5ee]/80">
+                     <span className="text-xs font-medium">No data available</span>
+                   </div>
+                 ) : (
+                   sortedMonthEntries.map(([month, count]) => {
+                     const pct = maxMonthCount > 0 ? (count / maxMonthCount) * 100 : 0
+                     const isPeak = count === maxMonthCount && maxMonthCount > 0
+                     return (
+                       <div key={month} className="group flex flex-col items-center flex-1 min-w-[32px] sm:min-w-[40px] relative z-10">
+                         <div className="mb-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] -translate-y-1 group-hover:translate-y-0 bg-[#1e4d2b] text-white text-[9px] font-bold px-2 py-1 rounded-md shadow-xl whitespace-nowrap z-20 pointer-events-none border border-white/30 backdrop-blur-sm">
+                           {count} <span className="opacity-90">records</span>
+                         </div>
+                         <div className="relative w-full rounded-t-lg flex items-end overflow-hidden h-[165px] bg-white/50 border border-[#e8e0d4] shadow-inner">
+                           <div
+                             className={`w-full rounded-t-lg transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:brightness-110 relative overflow-hidden ${isPeak ? 'bg-gradient-to-t from-[#0d1f14] via-[#153019] to-[#1e4d2b] shadow-inner' : 'bg-gradient-to-t from-[#153019] via-[#1e4d2b] to-[#5c7355]'}`}
+                             style={{ height: `${Math.max(pct, 4)}%` }}
+                           >
+                             <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white/25 to-transparent rounded-t-lg" />
+                           </div>
+                         </div>
+                         <div className="mt-2 text-[9px] font-bold text-[#5c7355] truncate w-full text-center group-hover:text-[#1e4d2b] transition-colors duration-300">
                            {formatMonthLabel(month)}
-                        </div>
-                     </div>
-                  ))
-               )}
+                         </div>
+                       </div>
+                     )
+                   })
+                 )}
+               </div>
              </div>
           </div>
 
-          {/* Top Units */}
-          <div className="bg-white rounded-2xl border border-[#d4cdc0] shadow-sm p-6 flex flex-col max-h-[500px]">
-             <div className="flex items-center justify-between mb-6">
-               <div>
-                   <h3 className="text-lg font-black text-[#1e4d2b] uppercase tracking-wide">Top Units</h3>
-                   <p className="text-sm text-[#5c574f] font-medium">By submission volume</p>
-               </div>
-               <div className="p-2.5 bg-[#faf8f5] rounded-xl border border-[#d4cdc0] text-[#b8a066]">
-                  <Award size={22} />
+          {/* Top Units — khaki/gold accent (Quality Control style) */}
+          <div className="rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/15 overflow-hidden flex flex-col max-h-[380px] bg-white hover:shadow-xl hover:shadow-[#b8a066]/20 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+             <div className="shrink-0 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] px-4 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#b8a066]/25">
+               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
+               <div className="relative z-10 flex items-center justify-between">
+                 <div>
+                   <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Top Units</h3>
+                   <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">By submission volume</p>
+                 </div>
+                 <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-white">
+                   <Award size={18} />
+                 </div>
                </div>
              </div>
-             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5">
-               {unitEntries.map(([id, data], index) => (
-                  <div key={id} className="relative group">
-                     <div className="flex items-center justify-between mb-2 z-10 relative">
-                        <div className="flex items-center gap-3 overflow-hidden">
-                           <div className={`w-6 h-6 rounded-md flex items-center justify-center text-xs font-black shrink-0 shadow-sm
-                              ${index === 0 ? 'bg-[#b8a066] text-[#153019]' : 
-                                index === 1 ? 'bg-[#5c7355] text-white' :
-                                index === 2 ? 'bg-[#1e4d2b] text-white' :
-                                'bg-[#e8e0d4] text-[#5c574f]'
-                              }`}
-                           >
-                              {index + 1}
-                           </div>
-                           <span className="text-xs font-bold text-[#1e4d2b] truncate uppercase tracking-tight" title={data.label}>{data.label}</span>
-                        </div>
-                        <span className="text-xs font-black text-[#1e4d2b]">{data.count}</span>
+             <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 custom-scrollbar view-records-scroll bg-gradient-to-b from-[#faf8f5] to-[#f2ede6] min-h-0 border-l-4 border-[#b8a066]/25">
+               <div className="space-y-2.5">
+                 {unitEntries.map(([id, data], index) => (
+                   <div key={id} className="group relative bg-white/80 backdrop-blur-sm rounded-lg border border-[#e8e0d4] p-2.5 hover:border-[#b8a066]/40 hover:shadow-md hover:bg-white transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
+                     <div className="flex items-center justify-between mb-1.5">
+                       <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                         <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 shadow-md ring-1 ring-black/5
+                            ${index === 0 ? 'bg-gradient-to-br from-[#b8a066] to-[#9a7b4f] text-[#153019]' :
+                              index === 1 ? 'bg-gradient-to-br from-[#9a7b4f] to-[#8f7a45] text-white' :
+                              index === 2 ? 'bg-gradient-to-br from-[#1e4d2b] to-[#153019] text-white' :
+                              'bg-[#e8e0d4] text-[#5c574f]'
+                            }`}
+                         >
+                           {index + 1}
+                         </div>
+                         <span className="text-[11px] font-bold text-[#1e4d2b] truncate uppercase tracking-tight" title={data.label}>{data.label}</span>
+                       </div>
+                       <span className="text-xs font-black text-[#1e4d2b] shrink-0 ml-1.5">{data.count}</span>
                      </div>
-                     <div className="w-full h-1.5 bg-[#faf8f5] rounded-full overflow-hidden border border-[#d4cdc0]/30">
-                        <div 
-                           className={`h-full rounded-full transition-all duration-1000 ease-out
-                              ${index === 0 ? 'bg-[#b8a066]' : index === 1 ? 'bg-[#5c7355]' : 'bg-[#1e4d2b]'}
-                           `}
-                           style={{ width: `${(data.count / maxUnitCount) * 100}%` }}
-                        ></div>
+                     <div className="w-full h-1.5 bg-[#e8e0d4]/80 rounded-full overflow-hidden">
+                       <div
+                         className={`h-full rounded-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${index === 0 ? 'bg-gradient-to-r from-[#b8a066] to-[#9a7b4f]' : index === 1 ? 'bg-gradient-to-r from-[#9a7b4f] to-[#8f7a45]' : 'bg-gradient-to-r from-[#1e4d2b] to-[#153019]'}`}
+                         style={{ width: `${(data.count / maxUnitCount) * 100}%` }}
+                       />
                      </div>
-                  </div>
-               ))}
+                   </div>
+                 ))}
+               </div>
              </div>
           </div>
         </div>
 
-        {/* --- PROVINCE DISTRIBUTION --- */}
-        <div className="bg-white rounded-2xl border border-[#d4cdc0] shadow-sm p-6">
-           <div className="flex items-center gap-3 mb-6">
-              <div className="p-2 bg-[#1e4d2b] text-white rounded-lg shadow-md">
-                 <MapPin size={20} />
-              </div>
-              <div>
-                 <h3 className="text-lg font-black text-[#1e4d2b] uppercase tracking-wide">Geographic Data</h3>
-                 <p className="text-sm text-[#5c574f] font-medium">Records by Province</p>
-              </div>
+        {/* --- PROVINCE DISTRIBUTION (Geographic Data) — khaki/gold (Pest & Disease style) --- */}
+        <div className="analytics-section rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/12 overflow-hidden bg-white hover:shadow-xl hover:shadow-[#b8a066]/18 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]" style={{ animationDelay: '240ms' }}>
+           <div className="shrink-0 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] px-4 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#b8a066]/25">
+             <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
+             <div className="relative z-10 flex items-center justify-between">
+               <div>
+                 <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Geographic Data</h3>
+                 <p className="text-[10px] font-semibold text-white/85 tracking-wider mt-0.5">Records by Province</p>
+               </div>
+               <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-white">
+                 <MapPin size={18} />
+               </div>
+             </div>
            </div>
-           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {provinceEntries.map(([prov, count]) => (
-                 <div key={prov} className="bg-[#faf8f5] rounded-xl p-4 border border-[#d4cdc0]/50 flex flex-col items-center text-center hover:border-[#1e4d2b] hover:bg-white hover:shadow-lg transition-all group duration-300">
-                    <span className="text-3xl font-black text-[#1e4d2b] group-hover:scale-110 transition-transform">{count}</span>
-                    <span className="text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mt-2 truncate w-full border-t border-[#d4cdc0] pt-2">{prov}</span>
-                 </div>
-              ))}
+           <div className="p-4 sm:p-5 bg-[linear-gradient(180deg,#faf8f5_0%,#f5f0e8_50%,#efe9e0_100%)] border-l-4 border-[#b8a066]/25">
+             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
+               {provinceEntries.map(([prov, count], index) => {
+                 const maxProv = provinceEntries.length > 0 ? Math.max(...provinceEntries.map(([, c]) => c)) : 1
+                 const barPct = maxProv > 0 ? (count / maxProv) * 100 : 0
+                 const isTop = index < 3
+                 return (
+                   <div
+                     key={prov}
+                     className="group relative bg-white rounded-lg border-2 border-[#e8e0d4] p-3 shadow-md hover:shadow-xl hover:border-[#b8a066]/50 hover:-translate-y-0.5 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] overflow-hidden"
+                   >
+                     <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#b8a066]/15 to-transparent rounded-bl-full pointer-events-none" />
+                     {isTop && (
+                       <div className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black shadow-md ring-1 ring-black/10 ${index === 0 ? 'bg-gradient-to-br from-[#b8a066] to-[#9a7b4f] text-[#153019]' : index === 1 ? 'bg-gradient-to-br from-[#5c7355] to-[#4a6b3c] text-white' : 'bg-gradient-to-br from-[#1e4d2b] to-[#153019] text-white'}`}>
+                         {index + 1}
+                       </div>
+                     )}
+                     <div className="flex flex-col items-center text-center relative z-10">
+                       <div className="p-1.5 rounded-lg bg-[#faf8f5] border border-[#e8e0d4] text-[#9a7b4f] group-hover:bg-[#b8a066]/15 group-hover:border-[#b8a066]/30 group-hover:text-[#8f7a45] transition-colors duration-300 mb-1.5">
+                         <MapPin size={14} className="mx-auto" />
+                       </div>
+                       <span className="text-xl sm:text-2xl font-black text-[#1e4d2b] group-hover:scale-105 transition-transform duration-300">{count}</span>
+                       <span className="text-[9px] font-bold text-[#5c7355] uppercase tracking-wider mt-1 truncate w-full">{prov}</span>
+                       <div className="w-full h-1.5 mt-2 bg-[#e8e0d4]/80 rounded-full overflow-hidden shadow-inner">
+                         <div
+                           className="h-full bg-gradient-to-r from-[#9a7b4f] to-[#b8a066] rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                           style={{ width: `${Math.max(barPct, 8)}%` }}
+                         />
+                       </div>
+                     </div>
+                   </div>
+                 )
+               })}
+             </div>
            </div>
         </div>
       </div>
@@ -294,106 +351,143 @@ export default function DataAnalytics() {
           
           {/* BACKDROP */}
           <div 
-            className="absolute inset-0 bg-[#153019]/90 backdrop-blur-md transition-opacity animate-in fade-in duration-300"
+            className="absolute inset-0 bg-gradient-to-br from-[#153019]/95 via-[#1e4d2b]/90 to-[#0d1f14]/95 backdrop-blur-lg animate-in fade-in duration-500 ease-out"
+            style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
             onClick={() => {
               setShowRatingsModal(false)
               setSelectedRatingUnit(null)
             }}
           />
 
-          {/* MODAL CONTENT: Narrower & Centered */}
-          <div className="relative bg-[#faf8f5] rounded-3xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300 border-4 border-white z-50">
+          {/* MODAL CONTENT */}
+          <div 
+            className="relative w-full max-w-5xl max-h-[88vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-500 z-50 rounded-[1.75rem] shadow-[0_25px_80px_-12px_rgba(0,0,0,0.4),0_0_0_1px_rgba(255,255,255,0.1)_inset] ring-2 ring-white/20"
+            style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+          >
+            <div className="rounded-[1.75rem] overflow-hidden bg-[#faf8f5] flex flex-col h-full min-h-0">
             
             {/* Modal Header */}
-            <div className="px-6 py-5 border-b border-[#d4cdc0] flex justify-between items-center bg-[#1e4d2b] shrink-0 z-10 shadow-md">
-               <div className="flex items-center gap-3">
-                  <div className={`p-2.5 rounded-xl shadow-lg bg-white/10 border border-white/20`}>
-                    <Star size={24} className="text-[#b8a066] fill-[#b8a066]" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-black uppercase tracking-tight leading-none text-white">
-                      {selectedRatingUnit ? 'Unit Performance' : 'Satisfaction Ratings'}
-                    </h3>
-                    <p className="text-[10px] font-bold text-[#d4c4a0] tracking-[0.15em] uppercase mt-1 opacity-90">
-                      {selectedRatingUnit ? 'Detailed feedback analysis' : 'Select a unit to view metrics'}
-                    </p>
-                  </div>
-               </div>
-               <button 
-                 onClick={() => {
-                   setShowRatingsModal(false)
-                   setSelectedRatingUnit(null)
-                 }}
-                 className="p-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 hover:text-white transition-all shadow-sm hover:rotate-90 duration-300"
-               >
-                  <X size={24} />
-               </button>
+            <div className="px-6 sm:px-8 py-5 sm:py-6 flex justify-between items-center shrink-0 z-10 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(255,255,255,0.15),transparent)]" />
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              <div className="flex items-center gap-4 relative z-10">
+                <div className="p-3 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 shadow-lg">
+                  <Star size={26} className="text-[#d4c4a0] fill-[#d4c4a0]" />
+                </div>
+                <div>
+                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight text-white drop-shadow-sm">
+                    {selectedRatingUnit ? 'Unit Performance' : 'Satisfaction Ratings'}
+                  </h3>
+                  <p className="text-[11px] font-semibold text-white/80 tracking-widest uppercase mt-1.5">
+                    {selectedRatingUnit ? 'Detailed feedback analysis' : 'Select a unit to view metrics'}
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setShowRatingsModal(false)
+                  setSelectedRatingUnit(null)
+                }}
+                className="relative z-10 p-2.5 rounded-xl bg-white/10 hover:bg-white/25 text-white/90 hover:text-white transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] border border-white/20 hover:border-white/40 hover:scale-105 active:scale-95"
+              >
+                <X size={22} strokeWidth={2.5} />
+              </button>
             </div>
 
-            {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto bg-[#faf8f5] custom-scrollbar p-5 sm:p-6 relative">
+            {/* Scrollable Body — super smooth scroll */}
+            <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar ratings-modal-scroll p-5 sm:p-6 md:p-7 relative bg-[linear-gradient(180deg,#faf8f5_0%,#f5f0e8_100%)] min-h-0">
               
-              {/* === VIEW 1: MENU (ENHANCED SECTIONS) === */}
+              {/* === VIEW 1: MENU (UNIT SELECTION) === */}
               {!selectedRatingUnit && (
-                <div className="grid md:grid-cols-3 gap-5 h-full items-start">
-                  {UNIT_GROUPS.map((group, idx) => (
+                <div className="grid md:grid-cols-3 gap-6 h-full items-stretch">
+                  {UNIT_GROUPS.map((group, idx) => {
+                    const sectionRatingData = (() => {
+                      let totalSum = 0
+                      let totalCount = 0
+                      group.units.forEach((unitId) => {
+                        const u = stats.unitRatings && stats.unitRatings[unitId]
+                        if (u && u.ratedCount > 0 && u.overallAvg != null) {
+                          totalSum += u.overallAvg * u.ratedCount
+                          totalCount += u.ratedCount
+                        }
+                      })
+                      const avg = totalCount > 0 ? totalSum / totalCount : null
+                      return { avg, totalRatings: totalCount }
+                    })()
+                    const hasSectionRating = sectionRatingData.avg != null && sectionRatingData.totalRatings > 0
+
+                    return (
                     <div 
                       key={idx} 
-                      className={`group/card rounded-2xl border-2 ${group.borderColor} bg-white shadow-sm hover:shadow-2xl transition-all duration-500 overflow-hidden flex flex-col h-full animate-in slide-in-from-bottom-8 fade-in`}
-                      style={{ animationDelay: `${idx * 150}ms` }}
+                      className={`group/card rounded-2xl border-2 ${group.borderColor} bg-white shadow-lg hover:shadow-xl hover:shadow-[#2d2a26]/10 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] overflow-hidden flex flex-col min-h-[280px] animate-in slide-in-from-bottom-4 fade-in`}
+                      style={{ animationDelay: `${idx * 120}ms`, animationDuration: '0.6s', animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
                     >
                       {/* Section Header */}
-                      <div className={`px-5 py-6 ${group.bgHeader} border-b ${group.borderColor} flex flex-col items-center text-center gap-2 relative overflow-hidden`}>
-                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                        <group.icon className={`absolute -right-6 -top-6 w-24 h-24 opacity-10 ${group.textHeader} rotate-12`} />
-                        
-                        <div className={`p-3 rounded-full bg-white/20 backdrop-blur-md shadow-inner border border-white/30 text-white`}>
-                           <group.icon size={28} strokeWidth={2} />
+                      <div className={`px-5 py-4 ${group.bgHeader} flex flex-col items-center text-center gap-2 relative overflow-hidden shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover/card:scale-[1.02]`}>
+                        <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,rgba(0,0,0,0.08)_100%)] opacity-60 transition-opacity duration-500" />
+                        <group.icon className="absolute -right-4 -top-4 w-20 h-20 text-white/10 rotate-12 transition-transform duration-700 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover/card:rotate-6 group-hover/card:scale-110" size={80} strokeWidth={1.5} />
+                        <div className="relative z-10 p-3 rounded-2xl bg-white/25 backdrop-blur-sm border border-white/40 shadow-inner">
+                          <group.icon size={24} strokeWidth={2} className="text-white" />
                         </div>
-                        <h4 className={`font-black text-xs uppercase tracking-[0.2em] ${group.textHeader} relative z-10 mt-1`}>{group.title}</h4>
+                        <h4 className={`font-black text-[11px] uppercase tracking-[0.2em] ${group.textHeader} relative z-10 leading-tight`}>{group.title}</h4>
+                        {/* Overall rating per section */}
+                        <div className={`relative z-10 w-full mt-2 px-3 py-2.5 rounded-xl border backdrop-blur-sm ${hasSectionRating ? 'bg-white/25 border-white/40 shadow-inner' : 'bg-white/10 border-white/20'}`}>
+                          {hasSectionRating ? (
+                            <div className="flex flex-col items-center gap-1.5">
+                              <span className="text-[8px] font-black text-white/90 uppercase tracking-widest">Section Overall</span>
+                              <div className="flex items-center gap-2">
+                                <div className="flex gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((s) => (
+                                    <Star key={s} size={12} className={s <= Math.round(sectionRatingData.avg) ? 'text-[#fcd34d] fill-[#fcd34d]' : 'text-white/40'} />
+                                  ))}
+                                </div>
+                                <span className="text-base font-black text-white tabular-nums">{sectionRatingData.avg.toFixed(1)}</span>
+                                <span className="text-[10px] font-bold text-white/80">/ 5</span>
+                              </div>
+                              <p className="text-[8px] font-bold text-white/85">{sectionRatingData.totalRatings} rating{sectionRatingData.totalRatings !== 1 ? 's' : ''} across units</p>
+                            </div>
+                          ) : (
+                            <p className="text-[9px] font-semibold text-white/75 uppercase tracking-wider">No ratings yet</p>
+                          )}
+                        </div>
                       </div>
                       
                       {/* Units List */}
-                      <div className={`p-3 space-y-2 flex-1 ${group.softBg}`}>
-                        {group.units.map((unitId) => {
+                      <div className={`p-3 sm:p-4 space-y-2.5 flex-1 ${group.softBg} flex flex-col`}>
+                        {group.units.map((unitId, unitIdx) => {
                           const label = COLLECTIONS.find(c => c.id === unitId)?.label || unitId;
                           const hasData = stats.unitRatings && stats.unitRatings[unitId]?.totalRecords > 0;
+                          const count = hasData ? stats.unitRatings[unitId].ratedCount : 0;
 
                           return (
                             <button
                               key={unitId}
                               onClick={() => setSelectedRatingUnit(unitId)}
                               disabled={!hasData}
-                              className={`w-full flex items-center justify-between p-3.5 rounded-xl text-left transition-all border group/item relative overflow-hidden
+                              className={`w-full flex items-center justify-between gap-3 p-3.5 rounded-xl text-left transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group/item relative overflow-hidden
                                 ${hasData 
-                                  ? `bg-white border-white hover:border-current ${group.hoverBorder} hover:shadow-md cursor-pointer translate-x-0 hover:translate-x-1 shadow-sm` 
-                                  : 'bg-white/40 border-transparent opacity-60 cursor-not-allowed grayscale'
+                                  ? `bg-white border border-[#e8e0d4] hover:border-[currentColor] ${group.hoverBorder} hover:shadow-md cursor-pointer shadow-sm hover:bg-white hover:translate-x-1` 
+                                  : 'bg-[#f5f0e8]/60 border border-transparent opacity-70 cursor-not-allowed'
                                 }
                               `}
                             >
-                              <div className="flex flex-col z-10">
-                                <span className={`text-[11px] font-extrabold uppercase tracking-tight transition-colors ${
-                                  hasData ? `text-[#2d2a26] group-hover/item:${group.accentText}` : 'text-gray-400'
-                                }`}>
+                              {hasData && <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-xl ${group.bgHeader} opacity-0 group-hover/item:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] scale-y-0 group-hover/item:scale-y-100 origin-center`} />}
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <span className={`text-[11px] font-extrabold uppercase tracking-tight truncate transition-colors duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] ${hasData ? `text-[#2d2a26] group-hover/item:${group.accentText}` : 'text-[#5c574f]'}`}>
                                   {label}
                                 </span>
                                 {hasData ? (
-                                  <div className="flex items-center gap-1.5 mt-1">
-                                     <div className={`w-1.5 h-1.5 rounded-full ${group.bgHeader}`}></div>
-                                     <span className={`text-[9px] font-bold ${group.accentText} opacity-80`}>
-                                       {stats.unitRatings[unitId].ratedCount} ratings
-                                     </span>
-                                  </div>
-                                ) : (
-                                  <span className="text-[9px] text-gray-400 italic mt-1 font-medium">
-                                    No data
+                                  <span className={`inline-flex items-center gap-1.5 mt-1.5 w-fit text-[9px] font-bold ${group.accentText} opacity-90`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${group.bgHeader} shrink-0`} />
+                                    {count} rating{count !== 1 ? 's' : ''}
                                   </span>
+                                ) : (
+                                  <span className="text-[9px] text-[#8a857c] italic mt-1 font-medium">No data</span>
                                 )}
                               </div>
-                              
                               {hasData && (
-                                <div className={`p-1.5 rounded-full bg-[#faf8f5] shadow-sm border border-[#d4cdc0] ${group.accentText} group-hover/item:bg-current group-hover/item:text-white transition-all z-10`}>
-                                   <ChevronRight size={14} />
+                                <div className="p-2 rounded-lg bg-[#faf8f5] border border-[#e8e0d4] text-[#2d2a26] shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover/item:translate-x-0.5">
+                                  <ChevronRight size={16} strokeWidth={2.5} className="opacity-100" />
                                 </div>
                               )}
                             </button>
@@ -401,120 +495,122 @@ export default function DataAnalytics() {
                         })}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
-              {/* === VIEW 2: DETAILS (Drill Down) === */}
+              {/* === VIEW 2: DETAILS (Unit performance) === */}
               {selectedRatingUnit && (
-                <div className="animate-in slide-in-from-right-10 fade-in duration-500 h-full flex flex-col relative z-10">
+                <div 
+                  className="animate-in slide-in-from-right-6 fade-in h-full flex flex-col relative z-10"
+                  style={{ animationDuration: '0.5s', animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}
+                >
                   {(() => {
                     const data = stats.unitRatings[selectedRatingUnit];
                     const unitLabel = COLLECTIONS.find((c) => c.id === selectedRatingUnit)?.label || selectedRatingUnit;
                     
                     return (
-                      <div className="max-w-5xl mx-auto w-full">
+                      <div className="max-w-5xl mx-auto w-full h-full flex flex-col min-h-0">
+                        {/* Back */}
                         <button 
                           onClick={() => setSelectedRatingUnit(null)}
-                          className="group flex items-center gap-2 text-xs font-black uppercase tracking-widest text-[#5c7355] hover:text-[#1e4d2b] bg-white px-4 py-2 rounded-full shadow-sm hover:shadow-md transition-all mb-6 w-fit border border-[#d4cdc0] hover:pl-3 hover:border-[#1e4d2b]"
+                          className="group shrink-0 inline-flex items-center gap-2.5 text-[11px] font-black uppercase tracking-widest text-[#5c7355] hover:text-[#1e4d2b] bg-white px-4 py-2.5 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] border-2 border-[#e8e0d4] hover:border-[#1e4d2b] w-fit mb-4"
                         >
-                          <ArrowLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Back to Units
+                          <ArrowLeft size={16} className="transition-transform duration-300 group-hover:-translate-x-0.5" strokeWidth={2.5} />
+                          Back to Units
                         </button>
 
-                        <div className="bg-white rounded-[2rem] border border-[#d4cdc0] shadow-xl overflow-hidden">
-                           
-                           {/* Unit Header */}
-                           <div className="bg-gradient-to-r from-[#1e4d2b] to-[#153019] p-8 text-white relative overflow-hidden">
-                              <div className="absolute top-0 right-0 p-6 opacity-10">
-                                <Award size={150} />
-                              </div>
-                              <div className="relative z-10">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-[10px] font-bold uppercase tracking-widest mb-2 backdrop-blur-sm">
-                                  <BarChart2 size={12} className="text-[#b8a066]" /> Performance Metrics
-                                </div>
-                                <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tighter leading-none text-white">{unitLabel}</h2>
-                                <p className="text-[#d4c4a0] font-medium mt-2 relative z-10 flex items-center gap-2 text-xs">
-                                  <CheckCircle2 size={14} className="text-[#b8a066]" /> 
-                                  Based on <strong className="text-white">{data.ratedCount} validated</strong> records.
-                                </p>
+                        {/* Card */}
+                        <div className="flex-1 min-h-0 flex flex-col bg-white rounded-2xl border-2 border-[#e8e0d4] shadow-xl shadow-[#1e4d2b]/8 overflow-hidden">
+                           {/* Header */}
+                           <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 sm:px-6 py-5 text-white relative overflow-hidden">
+                              <div className="absolute inset-0 bg-[radial-gradient(ellipse_90%_70%_at_50%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
+                              <div className="absolute right-3 top-1/2 -translate-y-1/2 opacity-[0.07]"><Award size={96} /></div>
+                              <div className="relative z-10 flex flex-wrap items-center gap-x-5 gap-y-2">
+                                <h2 className="text-xl sm:text-2xl font-black uppercase tracking-tight text-white drop-shadow-sm">{unitLabel}</h2>
+                                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/15 border border-white/25 text-[11px] font-bold backdrop-blur-sm">
+                                  <BarChart2 size={14} className="text-[#d4c4a0]" /> Metrics
+                                </span>
+                                <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-white/90">
+                                  <CheckCircle2 size={14} className="text-[#b8a066]" /> {data.ratedCount} validated record{data.ratedCount !== 1 ? 's' : ''}
+                                </span>
                               </div>
                            </div>
 
-                           <div className="p-6 sm:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10">
+                           {/* Body */}
+                           <div className="flex-1 min-h-0 p-5 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 bg-gradient-to-b from-[#faf8f5] to-[#f2ede6]">
                               
-                              {/* Left: Overall Score Card */}
-                              <div className="flex flex-col justify-center items-center text-center p-8 bg-[#faf8f5] rounded-3xl border border-[#d4cdc0] relative overflow-hidden group hover:border-[#b8a066] transition-colors duration-500">
-                                 <div className="absolute inset-0 bg-[radial-gradient(#b8a066_1px,transparent_1px)] [background-size:16px_16px] opacity-20"></div>
-                                 <p className="relative z-10 text-[10px] font-black text-[#5c7355] uppercase tracking-[0.25em] mb-4">Overall Satisfaction</p>
-                                 <div className="relative z-10 transition-transform duration-500 group-hover:scale-105">
-                                    <div className="text-6xl sm:text-8xl font-black text-[#1e4d2b] tracking-tighter drop-shadow-sm leading-none">
-                                       {data.overallAvg.toFixed(1)}
-                                    </div>
-                                    <div className="absolute -top-3 -right-6 bg-[#b8a066] text-[#153019] text-sm font-black px-2 py-0.5 rounded-md shadow-md rotate-12 border border-[#153019]/10">
-                                       / 5.0
-                                    </div>
+                              {/* Score */}
+                              <div className="flex flex-col justify-center items-center text-center p-5 sm:p-6 bg-white rounded-2xl border-2 border-[#e8e0d4] relative overflow-hidden group hover:border-[#b8a066]/50 hover:shadow-xl hover:shadow-[#b8a066]/10 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
+                                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#b8a066_0px,transparent_60px)] opacity-[0.06] group-hover:opacity-10 transition-opacity duration-300" />
+                                 <p className="relative z-10 text-[10px] font-black text-[#5c7355] uppercase tracking-[0.2em] mb-3">Overall Satisfaction</p>
+                                 <div className="relative z-10 flex items-baseline gap-1.5">
+                                    <span className="text-5xl sm:text-6xl font-black text-[#1e4d2b] leading-none drop-shadow-sm">{data.overallAvg.toFixed(1)}</span>
+                                    <span className="text-base font-bold text-[#8a857c]">/ 5</span>
                                  </div>
-                                 <div className="relative z-10 flex gap-1 mt-4 bg-white px-3 py-1.5 rounded-full shadow-sm border border-[#d4cdc0]">
+                                 <div className="relative z-10 flex gap-1.5 mt-4 px-3 py-2 rounded-xl bg-[#faf8f5] border border-[#e8e0d4]">
                                     {[1, 2, 3, 4, 5].map((star) => (
-                                      <Star 
-                                        key={star} 
-                                        size={20} 
-                                        fill={star <= Math.round(data.overallAvg) ? "#b8a066" : "#e5e7eb"} 
-                                        className={star <= Math.round(data.overallAvg) ? "text-[#b8a066] drop-shadow-sm" : "text-gray-200"} 
-                                      />
+                                      <Star key={star} size={18} fill={star <= Math.round(data.overallAvg) ? "#b8a066" : "#e5e7eb"} className={`transition-transform duration-200 group-hover:scale-105 ${star <= Math.round(data.overallAvg) ? "text-[#b8a066]" : "text-gray-200"}`} />
                                     ))}
                                  </div>
                               </div>
 
-                              {/* Right: Breakdown & Charts */}
-                              <div className="space-y-8">
-                                 {/* Criteria Bars */}
-                                 <div>
-                                    <h4 className="text-xs font-black text-[#1e4d2b] uppercase tracking-wide mb-4 flex items-center gap-2 border-b border-[#d4cdc0] pb-2">Criteria Breakdown</h4>
-                                    <div className="space-y-4">
-                                       {Object.entries(data.averages || {}).map(([field, avg], i) => (
-                                          <div key={field} className="group" style={{ animationDelay: `${i * 100}ms` }}>
-                                             <div className="flex justify-between text-[11px] font-bold text-[#5c574f] mb-1.5 group-hover:text-[#1e4d2b] transition-colors">
-                                                <span className="uppercase tracking-tight">{RATING_FIELD_LABELS[field] || field}</span>
-                                                <span className="bg-[#1e4d2b] text-white px-2 py-0.5 rounded text-[9px] shadow-sm">{avg ?? '-'}</span>
-                                             </div>
-                                             <div className="w-full h-2.5 bg-[#e8e0d4] rounded-full overflow-hidden shadow-inner">
-                                                <div 
-                                                  className="h-full bg-gradient-to-r from-[#5c7355] to-[#1e4d2b] rounded-full transition-all duration-1000 ease-out relative" 
-                                                  style={{ width: avg ? `${(parseFloat(avg) / 5) * 100}%` : '0%' }}
-                                                >
-                                                   <div className="absolute inset-0 bg-white/20 animate-[pulse_2s_infinite]"></div>
-                                                </div>
-                                             </div>
-                                          </div>
-                                       ))}
-                                    </div>
+                              {/* Criteria */}
+                              <div className="bg-white/95 backdrop-blur-sm rounded-2xl border-2 border-[#e8e0d4] p-4 shadow-lg shadow-[#1e4d2b]/5 flex flex-col">
+                                 <h4 className="text-[10px] font-black text-[#1e4d2b] uppercase tracking-wider mb-3 flex items-center gap-2">
+                                   <span className="p-1.5 rounded-lg bg-[#1e4d2b]/10"><Activity size={14} className="text-[#1e4d2b]" /></span>
+                                   Criteria Breakdown
+                                 </h4>
+                                 <div className="space-y-2">
+                                   {Object.entries(data.averages || {}).map(([field, avg]) => {
+                                     const numAvg = avg != null ? parseFloat(avg) : 0;
+                                     const pct = (numAvg / 5) * 100;
+                                     const CritIcon = RATING_FIELD_ICONS[field];
+                                     return (
+                                       <div key={field} className="group/crit px-3 py-2 rounded-xl bg-[#faf8f5] border border-[#e8e0d4] hover:border-[#1e4d2b]/30 hover:bg-white transition-all duration-200">
+                                         <div className="flex items-center justify-between gap-2 mb-1">
+                                           <div className="flex items-center gap-2 min-w-0">
+                                             {CritIcon && <span className="p-1.5 rounded-lg bg-[#1e4d2b]/10 shrink-0"><CritIcon size={12} className="text-[#1e4d2b]" /></span>}
+                                             <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-tight text-[#2d2a26] truncate">{RATING_FIELD_LABELS[field] || field}</span>
+                                           </div>
+                                           <span className="px-2 py-0.5 rounded-lg bg-[#1e4d2b] text-white text-[10px] font-black shrink-0">{avg ?? '–'}</span>
+                                         </div>
+                                         <div className="w-full h-2 bg-[#e8e0d4] rounded-full overflow-hidden shadow-inner">
+                                           <div className="h-full bg-gradient-to-r from-[#5c7355] to-[#1e4d2b] rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]" style={{ width: `${pct}%` }} />
+                                         </div>
+                                       </div>
+                                     );
+                                   })}
                                  </div>
+                              </div>
 
-                                 {/* Histogram */}
-                                 <div>
-                                    <h4 className="text-xs font-black text-[#1e4d2b] uppercase tracking-wide mb-4 border-b border-[#d4cdc0] pb-2">Response Distribution</h4>
-                                    <div className="flex items-end gap-3 h-24 pl-2">
-                                      {[1, 2, 3, 4, 5].map((score) => {
-                                        const count = (data.byScore && data.byScore[score]) || 0
-                                        const totalRatings = data.byScore ? Object.values(data.byScore).reduce((a, b) => a + b, 0) : 0
-                                        const pct = totalRatings > 0 ? (count / totalRatings) * 100 : 0
-                                        return (
-                                          <div key={score} className="flex-1 flex flex-col justify-end items-center gap-1.5 h-full group relative">
-                                             <div className="absolute -top-7 text-[9px] font-bold text-[#1e4d2b] opacity-0 group-hover:opacity-100 transition-all bg-white px-1.5 py-0.5 rounded shadow-md border border-[#d4cdc0]">{pct.toFixed(0)}%</div>
-                                             <div 
-                                                className={`w-full rounded-t-lg transition-all duration-1000 ease-out relative group-hover:brightness-110 shadow-sm ${
-                                                  score >= 4 ? 'bg-[#1e4d2b]' : score === 3 ? 'bg-[#b8a066]' : 'bg-red-400'
-                                                }`}
-                                                style={{ height: `${pct || 2}%`, minHeight: '4px' }}
-                                             />
-                                             <div className="flex items-center gap-0.5 text-[10px] font-bold text-[#5c7355]">
-                                               {score}<Star size={8} className="fill-current" />
-                                             </div>
-                                          </div>
-                                        )
-                                      })}
-                                    </div>
+                              {/* Histogram */}
+                              <div className="bg-white/95 backdrop-blur-sm rounded-2xl border-2 border-[#e8e0d4] p-4 shadow-lg shadow-[#1e4d2b]/5 flex flex-col min-h-0">
+                                 <h4 className="text-[10px] font-black text-[#1e4d2b] uppercase tracking-wider mb-3 flex items-center gap-2 shrink-0">
+                                   <span className="p-1.5 rounded-lg bg-[#6b8e5a]/20"><BarChart2 size={14} className="text-[#6b8e5a]" /></span>
+                                   Response Distribution
+                                 </h4>
+                                 <div className="flex items-end gap-2 flex-1 min-h-[88px] h-24">
+                                   {[1, 2, 3, 4, 5].map((score) => {
+                                     const byScore = data.byScore || {};
+                                     const count = Number(byScore[score] ?? byScore[String(score)] ?? 0);
+                                     const totalRatings = Object.keys(byScore).reduce((sum, k) => sum + Number(byScore[k] || 0), 0);
+                                     const pct = totalRatings > 0 ? (count / totalRatings) * 100 : 0;
+                                     const barHeightPx = totalRatings > 0 ? Math.max((pct / 100) * 88, 6) : 6;
+                                     const isHigh = score >= 4;
+                                     const isMid = score === 3;
+                                     return (
+                                       <div key={score} className="flex-1 flex flex-col justify-end items-center gap-2 group relative h-full">
+                                         <span className="absolute -top-7 left-1/2 -translate-x-1/2 text-[9px] font-bold text-[#1e4d2b] opacity-0 group-hover:opacity-100 bg-white px-2 py-1 rounded-lg shadow-md border border-[#e8e0d4] whitespace-nowrap z-10 transition-all duration-200">{pct.toFixed(0)}% ({count})</span>
+                                         <div 
+                                           className={`w-full rounded-t-lg flex-shrink-0 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:brightness-110 ${isHigh ? 'bg-gradient-to-t from-[#153019] to-[#1e4d2b]' : isMid ? 'bg-gradient-to-t from-[#8f7a45] to-[#b8a066]' : 'bg-gradient-to-t from-[#a04a3a] to-[#c45c4a]'}`}
+                                           style={{ height: `${barHeightPx}px`, minHeight: '6px' }}
+                                         />
+                                         <span className="text-[9px] font-bold text-[#5c7355] flex items-center gap-1 shrink-0"><Star size={10} className="fill-[#b8a066] text-[#b8a066]" />{score}</span>
+                                       </div>
+                                     );
+                                   })}
                                  </div>
                               </div>
                            </div>
@@ -524,6 +620,7 @@ export default function DataAnalytics() {
                   })()}
                 </div>
               )}
+            </div>
             </div>
           </div>
         </div>,
@@ -536,17 +633,18 @@ export default function DataAnalytics() {
 // --- SUB COMPONENTS ---
 function StatCard({ title, value, icon: Icon, gradient, iconColor }) {
   return (
-    <div className={`relative bg-white p-6 rounded-2xl border border-[#d4cdc0] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group`}>
-       <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradient} opacity-[0.08] rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110`}></div>
-       <div className="flex justify-between items-start relative z-10">
-          <div>
-             <p className="text-[11px] font-black text-[#5c574f] uppercase tracking-[0.15em]">{title}</p>
-             <h3 className="text-4xl font-black mt-2 tracking-tighter text-[#1e4d2b]">{value}</h3>
-          </div>
-          <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg transform rotate-3 group-hover:rotate-12 transition-transform`}>
-             <Icon size={24} className={iconColor} />
-          </div>
-       </div>
+    <div className="relative bg-white p-4 rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/5 hover:shadow-xl hover:shadow-[#1e4d2b]/10 hover:-translate-y-0.5 hover:border-[#1e4d2b]/30 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] overflow-hidden group">
+      <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-[#1e4d2b]/40 via-[#5c7355]/30 to-[#b8a066]/20 rounded-t-xl" />
+      <div className={`absolute top-0 right-0 w-28 h-28 bg-gradient-to-br ${gradient} opacity-[0.06] rounded-bl-full -mr-8 -mt-8 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:opacity-10 group-hover:scale-110`} />
+      <div className="flex justify-between items-start relative z-10">
+        <div>
+          <p className="text-[9px] font-black text-[#5c574f] uppercase tracking-[0.18em] transition-colors duration-300 group-hover:text-[#1e4d2b]">{title}</p>
+          <h3 className="text-2xl sm:text-3xl font-black mt-1.5 tracking-tighter text-[#1e4d2b] transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-105">{value}</h3>
+        </div>
+        <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${gradient} flex items-center justify-center shadow-lg ring-2 ring-white/50 transform rotate-3 transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:rotate-6 group-hover:scale-110`}>
+          <Icon size={18} className={`${iconColor} transition-transform duration-300 group-hover:scale-110`} />
+        </div>
+      </div>
     </div>
   )
 }

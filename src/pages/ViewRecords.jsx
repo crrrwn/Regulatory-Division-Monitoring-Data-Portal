@@ -14,7 +14,6 @@ import {
   PROVINCES,
 } from '../lib/recordFilters'
 import { exportToExcel } from '../lib/exportExcel'
-import { exportToWord } from '../lib/exportWord'
 
 // --- HELPER FUNCTIONS ---
 function getDisplayName(data, collectionId) {
@@ -233,11 +232,11 @@ export default function ViewRecords() {
   ]
 
   const renderEditValue = (key, value) => {
-    const inputClass = "w-full px-3 py-2 bg-white border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary text-sm transition-shadow text-primary placeholder-text-muted"
+    const inputClass = "w-full px-3 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] text-sm font-medium text-[#1e4d2b] placeholder:text-[#8a857c] transition-all"
 
     if (RATING_FIELD_KEYS.includes(key)) {
       return (
-        <select value={value ?? ''} onChange={(e) => updateEditField(key, e.target.value)} className={inputClass}>
+        <select value={value ?? ''} onChange={(e) => updateEditField(key, e.target.value)} className={`view-records-select ${inputClass}`}>
           {RATING_OPTIONS.map((o) => <option key={o.value || 'empty'} value={o.value}>{o.label}</option>)}
         </select>
       )
@@ -265,13 +264,13 @@ export default function ViewRecords() {
         updateEditField('attachmentFileName', '')
       }
       if (!base64 || base64.length === 0) {
-        return <span className="text-sm text-text-muted">No file</span>
+        return <span className="text-sm text-[#5c7355]">No file</span>
       }
       return (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-sm text-text-muted truncate flex-1 min-w-0">File stored in record</span>
-          <button type="button" onClick={download} className="px-3 py-1.5 bg-primary text-white rounded text-sm hover:bg-primary-dark whitespace-nowrap">Download</button>
-          <button type="button" onClick={removeAttachment} className="px-3 py-1.5 border border-red-500 text-red-600 rounded text-sm hover:bg-red-50 whitespace-nowrap">Remove</button>
+          <span className="text-sm text-[#5c7355] truncate flex-1 min-w-0">File stored in record</span>
+          <button type="button" onClick={download} className="px-3 py-1.5 bg-[#1e4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#153019] whitespace-nowrap">Download</button>
+          <button type="button" onClick={removeAttachment} className="px-3 py-1.5 border-2 border-red-400 text-red-600 rounded-xl text-sm font-bold hover:bg-red-50 whitespace-nowrap">Remove</button>
         </div>
       )
     }
@@ -282,10 +281,10 @@ export default function ViewRecords() {
     
     if (typeof value === 'object' && !Array.isArray(value) && value !== null) {
       return (
-        <div className="space-y-3 pl-3 border-l-2 border-primary/20 bg-primary/5 p-3 rounded-r-lg">
+        <div className="space-y-3 pl-3 border-l-2 border-[#1e4d2b]/30 bg-[#1e4d2b]/5 p-3 rounded-r-xl">
           {Object.entries(value).map(([k, v]) => (
             <div key={k} className="flex flex-col sm:flex-row gap-2 sm:items-center">
-              <span className="text-xs font-semibold text-text-muted uppercase tracking-wide w-24">{k}</span>
+              <span className="text-xs font-bold text-[#5c7355] uppercase tracking-wider w-24">{k}</span>
               <input 
                  type="text" 
                  value={typeof v === 'object' ? JSON.stringify(v) : v} 
@@ -301,194 +300,215 @@ export default function ViewRecords() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in-up pb-10">
+    <div className="space-y-6 pb-10">
       
       {/* --- HEADER SECTION --- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
-        <div>
-          <h2 className="text-2xl font-bold text-primary tracking-tight">Master Records</h2>
-          <p className="text-sm text-text-muted mt-1">Manage, view, and update regulatory data entries.</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-            <Link 
-              to="/dashboard" 
-              className="inline-flex items-center gap-2 px-4 py-2 bg-white text-primary border border-border rounded-lg hover:bg-surface hover:text-primary-dark transition-colors shadow-sm font-medium text-sm"
-            >
-              <iconify-icon icon="mdi:arrow-left" width="18"></iconify-icon>
-              Dashboard
-            </Link>
-            <button
-              onClick={handlePrint}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark shadow-md transition-all font-medium text-sm"
-            >
-              <iconify-icon icon="mdi:printer" width="18"></iconify-icon>
-              Print List
-            </button>
-            <button
-              onClick={handleExportExcel}
-              disabled={exporting}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary-light text-white rounded-lg hover:bg-primary shadow-md transition-all font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {exporting ? <iconify-icon icon="mdi:loading" width="18" class="animate-spin"></iconify-icon> : <iconify-icon icon="mdi:microsoft-excel" width="18"></iconify-icon>}
-              {exporting ? 'Exporting...' : 'Export Excel'}
-            </button>
-            <button
-              type="button"
-              onClick={() => exportToWord(filtered, selectedCollection, collectionLabel)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 shadow-md transition-all font-medium text-sm"
-            >
-              <iconify-icon icon="mdi:microsoft-word" width="18"></iconify-icon>
-              Export Word
-            </button>
+      <div className="view-records-anim-1 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+        <div className="bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 sm:px-6 py-4 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.1),transparent_50%)] transition-opacity duration-500 group-hover:opacity-80" />
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-sm">Master Records</h2>
+              <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-1">Manage, view, and update regulatory data entries</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm"
+              >
+                <iconify-icon icon="mdi:arrow-left" width="18"></iconify-icon>
+                Dashboard
+              </Link>
+              <button
+                onClick={handlePrint}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-[#1e4d2b] rounded-xl hover:bg-[#faf8f5] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm border border-white/30"
+              >
+                <iconify-icon icon="mdi:printer" width="18"></iconify-icon>
+                Print List
+              </button>
+              <button
+                onClick={handleExportExcel}
+                disabled={exporting}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#b8a066] text-[#153019] rounded-xl hover:bg-[#d4c4a0] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border border-[#b8a066]/50"
+              >
+                {exporting ? <iconify-icon icon="mdi:loading" width="18" class="animate-spin"></iconify-icon> : <iconify-icon icon="mdi:microsoft-excel" width="18"></iconify-icon>}
+                {exporting ? 'Exporting...' : 'Export Excel'}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* --- CONTROLS BAR (FILTERS & SEARCH) --- */}
-      <div className="bg-white p-4 rounded-xl border border-border shadow-sm space-y-4 lg:space-y-0 lg:flex lg:items-end lg:gap-4">
-        
-        {/* Collection Selector */}
-        <div className="flex-1 min-w-[200px]">
-          <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5 ml-1">Select Unit</label>
-          <div className="relative">
-             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted">
-               <iconify-icon icon="mdi:folder-table-outline" width="20"></iconify-icon>
-             </div>
-             <select 
-               value={selectedCollection} 
-               onChange={(e) => setSelectedCollection(e.target.value)} 
-               className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-lg text-primary text-sm focus:ring-2 focus:ring-primary focus:border-primary font-medium appearance-none"
-             >
-               {COLLECTIONS.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
-             </select>
-             <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-text-muted">
-               <iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon>
-             </div>
-          </div>
+      {/* --- CONTROLS BAR (FILTERS & SEARCH) — khaki/gold accent (Quality Control style) --- */}
+      <div className="view-records-anim-2 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#b8a066]/10 overflow-hidden hover:shadow-xl hover:shadow-[#b8a066]/15 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+        <div className="px-4 py-3 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] relative overflow-hidden border-b-2 border-[#b8a066]/25">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
+          <span className="relative z-10 text-[10px] font-black text-white uppercase tracking-widest">Filters & Search</span>
         </div>
-
-        {/* Filters Group */}
-        <div className="flex gap-4 flex-wrap sm:flex-nowrap">
-          <div className="flex-1 sm:w-48">
-             <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5 ml-1">Month</label>
-             <select 
-               value={filterMonth} 
-               onChange={(e) => setFilterMonth(e.target.value)} 
-               className="w-full px-3 py-2.5 bg-surface border border-border rounded-lg text-primary text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-             >
-               <option value="">All Months</option>
-               {months.map((m) => <option key={m} value={m}>{formatMonthLabel(m)}</option>)}
-             </select>
-          </div>
-          <div className="flex-1 sm:w-48">
-             <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5 ml-1">Province</label>
-             <select 
-               value={filterProvince} 
-               onChange={(e) => setFilterProvince(e.target.value)} 
-               className="w-full px-3 py-2.5 bg-surface border border-border rounded-lg text-primary text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-             >
-               <option value="">All Provinces</option>
-               {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-             </select>
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div className="flex-1 min-w-[250px]">
-           <label className="block text-xs font-bold text-text-muted uppercase tracking-wider mb-1.5 ml-1">Search Records</label>
-           <div className="relative group">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted group-focus-within:text-primary">
-                 <iconify-icon icon="mdi:magnify" width="20"></iconify-icon>
+        <div className="p-4 sm:p-5 space-y-4 lg:space-y-0 lg:flex lg:items-end lg:gap-4 lg:flex-wrap border-l-4 border-[#b8a066]/25">
+          <div className="flex-1 min-w-[200px]">
+            <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5 transition-colors duration-300">Select Unit</label>
+            <div className="relative group/select">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5c7355] group-focus-within/select:text-[#1e4d2b] transition-colors duration-300">
+                <iconify-icon icon="mdi:folder-table-outline" width="20"></iconify-icon>
               </div>
-              <input 
-                 type="text" 
-                 value={search} 
-                 onChange={(e) => setSearch(e.target.value)} 
-                 placeholder="Search by name, ID, or keyword..." 
-                 className="w-full pl-10 pr-4 py-2.5 bg-surface border border-border rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary transition-shadow placeholder:text-text-muted" 
+              <select
+                value={selectedCollection}
+                onChange={(e) => setSelectedCollection(e.target.value)}
+                className="view-records-select w-full pl-10 pr-10 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-[#1e4d2b] text-sm font-semibold focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] appearance-none cursor-pointer"
+              >
+                {COLLECTIONS.map((c) => (
+                  <option key={c.id} value={c.id}>{c.label}</option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[#5c7355] group-focus-within/select:text-[#1e4d2b] transition-transform duration-300 group-focus-within/select:rotate-180">
+                <iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3 flex-wrap sm:flex-nowrap flex-1 min-w-0">
+            <div className="flex-1 min-w-[120px] sm:w-40">
+              <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Month</label>
+              <div className="relative group/select">
+                <select
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(e.target.value)}
+                  className="view-records-select w-full pl-3 pr-9 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-[#1e4d2b] text-sm font-semibold focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] appearance-none cursor-pointer"
+                >
+                  <option value="">All Months</option>
+                  {months.map((m) => (
+                    <option key={m} value={m}>{formatMonthLabel(m)}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[#5c7355] transition-transform duration-300 group-focus-within/select:rotate-180">
+                  <iconify-icon icon="mdi:calendar-month-outline" width="18"></iconify-icon>
+                </div>
+              </div>
+            </div>
+            <div className="flex-1 min-w-[120px] sm:w-40">
+              <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Province</label>
+              <div className="relative group/select">
+                <select
+                  value={filterProvince}
+                  onChange={(e) => setFilterProvince(e.target.value)}
+                  className="view-records-select w-full pl-3 pr-9 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-[#1e4d2b] text-sm font-semibold focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] appearance-none cursor-pointer"
+                >
+                  <option value="">All Provinces</option>
+                  {PROVINCES.map((p) => (
+                    <option key={p} value={p}>{p}</option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[#5c7355] transition-transform duration-300 group-focus-within/select:rotate-180">
+                  <iconify-icon icon="mdi:map-marker-outline" width="18"></iconify-icon>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="flex-1 min-w-[200px] lg:min-w-[260px]">
+            <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Search Records</label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5c7355] group-focus-within:text-[#1e4d2b] transition-colors duration-300">
+                <iconify-icon icon="mdi:magnify" width="20"></iconify-icon>
+              </div>
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Name, ID, or keyword..."
+                className="w-full pl-10 pr-10 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-[#1e4d2b] text-sm font-medium focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] hover:border-[#1e4d2b]/50 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] placeholder:text-[#8a857c]"
               />
               {search && (
-                 <button onClick={() => setSearch('')} className="absolute inset-y-0 right-0 pr-3 flex items-center text-text-muted hover:text-primary">
-                    <iconify-icon icon="mdi:close-circle" width="16"></iconify-icon>
-                 </button>
+                <button onClick={() => setSearch('')} className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#5c7355] hover:text-[#1e4d2b] hover:scale-110 transition-all duration-200">
+                  <iconify-icon icon="mdi:close-circle" width="18"></iconify-icon>
+                </button>
               )}
-           </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* --- DATA TABLE --- */}
-      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-        <div className="overflow-x-auto custom-scrollbar flex-1">
+      {/* --- DATA TABLE — green --- */}
+      <div className="view-records-anim-3 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden flex flex-col min-h-[400px] hover:shadow-xl hover:shadow-[#1e4d2b]/10 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+        <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 sm:px-6 py-3 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.08),transparent_50%)]" />
+          <div className="relative z-10 flex items-center justify-between">
+            <span className="text-sm font-black text-white uppercase tracking-tight">Records</span>
+            <span className="text-[11px] font-semibold text-white/85">{collectionLabel}</span>
+          </div>
+        </div>
+        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] min-h-0 custom-scrollbar view-records-scroll flex-1 border-l-4 border-[#1e4d2b]/25">
           <table className="w-full text-sm text-left border-collapse">
-            <thead className="bg-surface border-b border-border sticky top-0 z-10">
+            <thead className="sticky top-0 z-10 bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] border-b-2 border-[#e8e0d4]">
               <tr>
-                <th className="px-6 py-4 font-bold text-primary uppercase text-xs tracking-wider whitespace-nowrap">Primary Identifier / Name</th>
+                <th className="px-5 py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Name / Identifier</th>
                 {RATING_COLLECTIONS[selectedCollection] && (
-                  <th className="px-6 py-4 font-bold text-primary uppercase text-xs tracking-wider whitespace-nowrap">Avg. Rating</th>
+                  <th className="px-5 py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Avg. Rating</th>
                 )}
-                <th className="px-6 py-4 font-bold text-primary uppercase text-xs tracking-wider whitespace-nowrap">Record Date</th>
-                <th className="px-6 py-4 font-bold text-primary uppercase text-xs tracking-wider text-right w-32">Actions</th>
+                <th className="px-5 py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Date</th>
+                <th className="px-5 py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider text-right w-28">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-[#e8e0d4]">
               {filtered.length === 0 ? (
-                 <tr>
-                    <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-6 py-12 text-center">
-                       <div className="flex flex-col items-center justify-center text-text-muted">
-                          <iconify-icon icon="mdi:database-off-outline" width="48"></iconify-icon>
-                          <p className="mt-2 font-medium">No records found matching your filters.</p>
-                       </div>
-                    </td>
-                 </tr>
+                <tr>
+                  <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-6 py-16 text-center">
+                    <div className="flex flex-col items-center justify-center text-[#5c7355] rounded-xl border-2 border-dashed border-[#1e4d2b]/25 bg-[#f0f5ee]/80 py-12 mx-4">
+                      <iconify-icon icon="mdi:database-off-outline" width="56" class="opacity-60 animate-pulse"></iconify-icon>
+                      <p className="mt-3 font-semibold text-[#1e4d2b]">No records found</p>
+                      <p className="text-xs text-[#5c7355] mt-1">Try adjusting filters or search.</p>
+                    </div>
+                  </td>
+                </tr>
               ) : (
-                 filtered.map((docItem) => (
-                  <tr key={docItem.id} className="hover:bg-surface/80 transition-colors group">
-                    <td className="px-6 py-4">
-                       <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                             {getDisplayName(docItem, selectedCollection).charAt(0).toUpperCase()}
-                          </div>
-                          <div className="font-semibold text-primary group-hover:text-primary-dark transition-colors max-w-xs sm:max-w-md truncate" title={getDisplayName(docItem, selectedCollection)}>
-                             {getDisplayName(docItem, selectedCollection)}
-                          </div>
-                       </div>
+                filtered.map((docItem) => (
+                  <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
+                    <td className="px-5 py-3.5">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50 group-hover:scale-105 group-hover:from-[#1e4d2b]/20 group-hover:to-[#5c7355]/15 transition-all duration-300">
+                          {getDisplayName(docItem, selectedCollection).charAt(0).toUpperCase()}
+                        </div>
+                        <div className="font-bold text-[#1e4d2b] group-hover:text-[#153019] transition-colors duration-300 max-w-xs sm:max-w-md truncate" title={getDisplayName(docItem, selectedCollection)}>
+                          {getDisplayName(docItem, selectedCollection)}
+                        </div>
+                      </div>
                     </td>
                     {RATING_COLLECTIONS[selectedCollection] && (
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="px-5 py-3.5 whitespace-nowrap">
                         {(() => {
                           const avg = getAvgRating(docItem, selectedCollection)
                           return avg ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-primary/10 text-primary font-semibold text-sm">
-                              <iconify-icon icon="mdi:star" width="14"></iconify-icon>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#b8a066]/15 text-[#1e4d2b] font-bold text-xs border border-[#b8a066]/30 group-hover:bg-[#b8a066]/25 group-hover:border-[#b8a066]/50 transition-all duration-300">
+                              <iconify-icon icon="mdi:star" width="14" class="text-[#b8a066]"></iconify-icon>
                               {avg}/5
                             </span>
-                          ) : <span className="text-text-muted text-sm">—</span>
+                          ) : <span className="text-[#8a857c] text-sm">—</span>
                         })()}
                       </td>
                     )}
-                    <td className="px-6 py-4 whitespace-nowrap">
-                       <div className="text-text-muted text-xs font-medium">
-                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                       </div>
-                       <div className="text-text-muted text-[10px]">
-                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                       </div>
+                    <td className="px-5 py-3.5 whitespace-nowrap">
+                      <div className="text-[#1e4d2b] text-xs font-semibold">
+                        {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                      </div>
+                      <div className="text-[#5c7355] text-[10px] font-medium">
+                        {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="px-5 py-3.5 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
                         {canEdit(docItem) && (
-                          <button 
-                             onClick={() => openEdit(docItem)} 
-                             className="p-1.5 bg-white border border-border text-primary rounded hover:bg-primary/10 hover:border-primary/40 transition-colors tooltip"
-                             title="Edit Record"
+                          <button
+                            onClick={() => openEdit(docItem)}
+                            className="p-2 bg-white border-2 border-[#e8e0d4] text-[#1e4d2b] rounded-xl hover:bg-[#1e4d2b]/10 hover:border-[#1e4d2b]/50 hover:scale-110 active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]"
+                            title="Edit Record"
                           >
                             <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
                           </button>
                         )}
                         {canDelete() && (
-                          <button 
-                             onClick={() => handleDelete(docItem.id)} 
-                             className="p-1.5 bg-white border border-border text-red-600 rounded hover:bg-red-50 hover:border-red-200 transition-colors tooltip"
-                             title="Delete Record"
+                          <button
+                            onClick={() => handleDelete(docItem.id)}
+                            className="p-2 bg-white border-2 border-[#e8e0d4] text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 hover:scale-110 active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]"
+                            title="Delete Record"
                           >
                             <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
                           </button>
@@ -501,37 +521,31 @@ export default function ViewRecords() {
             </tbody>
           </table>
         </div>
-        <div className="bg-surface border-t border-border px-6 py-3 text-xs text-text-muted font-medium flex justify-between items-center">
-            <span>Showing {filtered.length} record(s)</span>
-            {filtered.length > 20 && <span className="text-text-muted italic">Scroll for more</span>}
+        <div className="shrink-0 bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] border-t-2 border-[#1e4d2b]/15 px-5 py-2.5 flex justify-between items-center text-[11px] font-bold text-[#5c7355] transition-colors duration-300">
+          <span>Showing {filtered.length} record(s)</span>
+          {filtered.length > 20 && <span className="italic">Scroll for more</span>}
         </div>
       </div>
 
       {/* --- EDIT MODAL --- */}
       {editing && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
-          <div 
-             className="absolute inset-0 bg-primary-dark/60 backdrop-blur-sm transition-opacity" 
-             onClick={() => setEditing(null)}
-          ></div>
-
-          {/* Modal Content */}
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-fade-in-up">
-            
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-border flex justify-between items-center bg-surface">
-               <div>
-                  <h3 className="text-lg font-bold text-primary">Edit Record</h3>
-                  <p className="text-xs text-text-muted">ID: <span className="font-mono">{editing}</span></p>
-               </div>
-               <button onClick={() => setEditing(null)} className="text-text-muted hover:text-primary transition-colors">
-                  <iconify-icon icon="mdi:close" width="24"></iconify-icon>
-               </button>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div
+            className="absolute inset-0 bg-[#153019]/80 backdrop-blur-md animate-in fade-in duration-300"
+            onClick={() => setEditing(null)}
+          />
+          <div className="relative bg-white rounded-2xl border-2 border-[#e8e0d4] shadow-2xl shadow-[#1e4d2b]/20 w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-300 ease-out" style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-6 py-4 flex justify-between items-center relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+              <div className="relative z-10">
+                <h3 className="text-lg font-black text-white uppercase tracking-tight">Edit Record</h3>
+                <p className="text-[11px] font-semibold text-white/80 mt-0.5">ID: <span className="font-mono">{editing}</span></p>
+              </div>
+              <button onClick={() => setEditing(null)} className="relative z-10 p-2 rounded-xl bg-white/15 hover:bg-white/25 hover:scale-110 active:scale-95 text-white transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
+                <iconify-icon icon="mdi:close" width="24"></iconify-icon>
+              </button>
             </div>
-
-            {/* Scrollable Form Area */}
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar view-records-scroll bg-gradient-to-b from-[#faf8f5] to-[#f2ede6] border-l-4 border-[#1e4d2b]/25">
               <div className="grid gap-5">
                 {(() => {
                   const skip = ['createdBy', 'updatedAt']
@@ -549,8 +563,8 @@ export default function ViewRecords() {
 
                   return entries.map(([key, value]) => (
                     <div key={key}>
-                      <label className="block text-xs font-bold text-primary uppercase tracking-wide mb-2 ml-1">
-                         {getLabel(key)}
+                      <label className="block text-[10px] font-black text-[#1e4d2b] uppercase tracking-wider mb-1.5">
+                        {getLabel(key)}
                       </label>
                       {renderEditValue(key, value)}
                     </div>
@@ -559,22 +573,21 @@ export default function ViewRecords() {
               </div>
             </div>
 
-            {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-border bg-surface flex justify-end gap-3">
-              <button 
-                 type="button" 
-                 onClick={() => setEditing(null)} 
-                 className="px-5 py-2.5 rounded-lg border border-border text-primary font-medium hover:bg-surface hover:text-primary-dark transition-colors text-sm"
+            <div className="shrink-0 px-6 py-4 border-t border-[#e8e0d4] bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setEditing(null)}
+                className="px-5 py-2.5 rounded-xl border-2 border-[#e8e0d4] text-[#1e4d2b] font-bold hover:bg-white hover:border-[#1e4d2b]/50 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] text-sm"
               >
-                 Cancel
+                Cancel
               </button>
-              <button 
-                 type="button" 
-                 onClick={saveEdit} 
-                 className="px-5 py-2.5 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark shadow-lg transition-all text-sm flex items-center gap-2"
+              <button
+                type="button"
+                onClick={saveEdit}
+                className="px-5 py-2.5 rounded-xl bg-[#1e4d2b] text-white font-bold hover:bg-[#153019] hover:scale-105 active:scale-[0.98] shadow-lg hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] text-sm flex items-center gap-2"
               >
-                 <iconify-icon icon="mdi:content-save-check" width="18"></iconify-icon>
-                 Save Changes
+                <iconify-icon icon="mdi:content-save-check" width="18"></iconify-icon>
+                Save Changes
               </button>
             </div>
           </div>

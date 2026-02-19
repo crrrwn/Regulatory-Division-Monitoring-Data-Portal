@@ -14,15 +14,9 @@ import {
   Scan
 } from 'lucide-react'
 import FormLayout from '../../components/FormLayout'
+import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
-
-const RATING_OPTIONS = [
-  { value: '1', label: 'Poor (1)' },
-  { value: '2', label: 'Fair (2)' },
-  { value: '3', label: 'Satisfied (3)' },
-  { value: '4', label: 'Very Satisfied (4)' },
-  { value: '5', label: 'Excellent (5)' },
-]
+import 'iconify-icon'
 
 const initialState = {
   dateOfRequestAndCollection: '',
@@ -62,30 +56,39 @@ export default function PlantPestSurveillanceForm() {
     }
   }
 
-  // --- UI Styling Classes ---
-  const sectionTitleClass = "text-lg font-bold text-primary flex items-center gap-2 mb-4 pb-2 border-b border-gray-100"
-  const labelClass = "block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide"
-  const inputClass = "w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-700 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary focus:bg-white transition-all duration-200 placeholder:text-gray-400 uppercase"
-  const textAreaClass = `${inputClass} min-h-[100px] resize-y`
-
-  // Helper for Input with Icon
-  const IconInput = ({ icon: Icon, ...props }) => (
-    <div className="relative">
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-        <Icon className="h-4 w-4 text-gray-400" />
-      </div>
-      <input {...props} className={`${inputClass} pl-10`} />
-    </div>
-  )
+  // --- Theme: green #1e4d2b, neutral #5c574f, border #e8e0d4 ---
+  const sectionTitleClass = "text-sm font-black text-[#1e4d2b] uppercase tracking-wide border-b-2 border-[#1e4d2b]/15 pb-3 mb-5 flex items-center gap-2.5 transition-colors duration-300"
+  const labelClass = "block text-[10px] font-bold text-[#5c574f] uppercase tracking-wider mb-1.5 transition-colors duration-200"
+  const inputClass = "w-full min-w-0 px-4 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-sm text-[#1e4d2b] font-medium focus:outline-none focus:ring-2 focus:ring-[#1e4d2b]/30 focus:border-[#1e4d2b] hover:border-[#1e4d2b]/50 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] placeholder:text-[#8a857c] uppercase"
+  const textAreaClass = `${inputClass} min-h-[100px] resize-y normal-case placeholder:normal-case`
 
   return (
     <FormLayout title="Plant Pest and Disease Surveillance">
-      <form onSubmit={handleSubmit} className="space-y-8 max-w-5xl mx-auto">
-        
+      <div className="max-w-5xl mx-auto pb-10 min-w-0 w-full">
+        {/* --- HEADER --- */}
+        <div className="mb-8 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+          <div className="bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 sm:px-6 py-4 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+            <div className="relative z-10 flex items-center gap-3">
+              <span className="p-2.5 bg-white/15 rounded-xl border border-white/20 shrink-0">
+                <iconify-icon icon="mdi:bug-outline" width="24" class="text-white"></iconify-icon>
+              </span>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-sm">Plant Pest & Disease Surveillance</h2>
+                <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-0.5">
+                  Farmer and crop surveillance for pests and diseases.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <form onSubmit={handleSubmit} className="space-y-8">
+
         {/* --- Section 1: Farmer & Location Profile --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="plant-pest-surveillance-section plant-pest-surveillance-section-1 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <h3 className={sectionTitleClass}>
-            <User className="w-5 h-5" /> Farmer & Location Profile
+            <User className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Farmer & Location Profile
           </h3>
           
           <div className="grid sm:grid-cols-12 gap-6">
@@ -104,65 +107,60 @@ export default function PlantPestSurveillanceForm() {
 
             <div className="sm:col-span-8">
               <label className={labelClass}>Name of Farmer</label>
-              <IconInput 
-                icon={User}
-                type="text" 
-                value={form.farmerName} 
-                onChange={updateUpper('farmerName')} 
-                placeholder="Full Name" 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <User className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.farmerName} onChange={updateUpper('farmerName')} placeholder="Full Name" className={`${inputClass} pl-10`} />
+              </div>
             </div>
 
             <div className="sm:col-span-12">
               <label className={labelClass}>Address</label>
-              <IconInput 
-                icon={MapPin}
-                type="text" 
-                value={form.address} 
-                onChange={updateUpper('address')} 
-                placeholder="Complete Farm Address" 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <MapPin className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.address} onChange={updateUpper('address')} placeholder="Complete Farm Address" className={`${inputClass} pl-10`} />
+              </div>
             </div>
 
             <div className="sm:col-span-6">
               <label className={labelClass}>Contact Number</label>
-              <IconInput 
-                icon={Phone}
-                type="text" 
-                value={form.contactNumber} 
-                onChange={updateUpper('contactNumber')} 
-                placeholder="09XX-XXX-XXXX" 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Phone className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.contactNumber} onChange={updateUpper('contactNumber')} placeholder="09XX-XXX-XXXX" className={`${inputClass} pl-10`} />
+              </div>
             </div>
 
             <div className="sm:col-span-6">
               <label className={labelClass}>GPS Location</label>
-              <IconInput 
-                icon={Scan}
-                type="text" 
-                value={form.gpsLocation} 
-                onChange={updateUpper('gpsLocation')} 
-                placeholder="Lat, Long (e.g., 13.41, 121.18)" 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Scan className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.gpsLocation} onChange={updateUpper('gpsLocation')} placeholder="Lat, Long (e.g., 13.41, 121.18)" className={`${inputClass} pl-10`} />
+              </div>
             </div>
           </div>
         </div>
 
         {/* --- Section 2: Crop Information --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="plant-pest-surveillance-section plant-pest-surveillance-section-2 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <h3 className={sectionTitleClass}>
-            <Sprout className="w-5 h-5" /> Crop Information
+            <Sprout className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Crop Information
           </h3>
           <div className="grid sm:grid-cols-4 gap-6">
             <div className="sm:col-span-2">
               <label className={labelClass}>Crop</label>
-              <IconInput 
-                icon={Sprout}
-                type="text" 
-                value={form.crop} 
-                onChange={updateUpper('crop')} 
-                placeholder="e.g. Rice" 
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Sprout className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                </div>
+                <input type="text" value={form.crop} onChange={updateUpper('crop')} placeholder="e.g. Rice" className={`${inputClass} pl-10`} />
+              </div>
             </div>
             <div className="sm:col-span-2">
               <label className={labelClass}>Variety</label>
@@ -197,23 +195,23 @@ export default function PlantPestSurveillanceForm() {
         </div>
 
         {/* --- Section 3: Pest & Disease Findings --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-amber-400">
-          <h3 className="text-lg font-bold text-amber-600 flex items-center gap-2 mb-4 pb-2 border-b border-gray-100">
-            <Bug className="w-5 h-5" /> Surveillance Findings
+        <div className="plant-pest-surveillance-section plant-pest-surveillance-section-3 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] border-l-4 border-l-amber-500 shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+          <h3 className="text-sm font-black text-[#1e4d2b] uppercase tracking-wide border-b-2 border-[#1e4d2b]/15 pb-3 mb-5 flex items-center gap-2.5">
+            <Bug className="w-5 h-5 text-amber-500" /> Surveillance Findings
           </h3>
           
           <div className="grid sm:grid-cols-12 gap-6">
             <div className="sm:col-span-12">
               <label className={labelClass}>Observed Pests / Diseases</label>
-              <div className="relative">
-                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <AlertTriangle className="h-4 w-4 text-amber-500" />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <AlertTriangle className="h-4 w-4 text-amber-500 group-focus-within:text-amber-600 transition-colors duration-300" />
                 </div>
                 <input 
                   type="text" 
                   value={form.pestsDiseases} 
                   onChange={updateUpper('pestsDiseases')} 
-                  className={`${inputClass} pl-10 border-amber-200 focus:border-amber-500 focus:ring-amber-500/20`} 
+                  className={`${inputClass} pl-10 border-amber-200/80 focus:border-amber-500 focus:ring-amber-500/20`} 
                   placeholder="e.g. Fall Armyworm, Rice Blast, Stem Borer" 
                 />
               </div>
@@ -254,102 +252,12 @@ export default function PlantPestSurveillanceForm() {
         </div>
 
         {/* --- Section 4: Customer Ratings (Styled Table) --- */}
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+        <div className="plant-pest-surveillance-section plant-pest-surveillance-section-4 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <h3 className={sectionTitleClass}>
-            <ClipboardList className="w-5 h-5" /> Feedback & Satisfaction
+            <ClipboardList className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Feedback & Satisfaction
           </h3>
           
-          <div className="overflow-hidden rounded-lg border border-gray-200 mt-2">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-bold tracking-wider">
-                <tr>
-                  <th className="py-4 px-6 w-1/2">Evaluation Criteria</th>
-                  <th className="py-4 px-4 text-center">Rating (1-5)</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {/* Row 1 */}
-                <tr className="hover:bg-gray-50/50 transition-colors">
-                  <td className="py-3 px-6 font-medium text-gray-700">1. Quantity of Goods/Services Provided</td>
-                  <td className="py-3 px-4">
-                    <select 
-                      value={form.ratingQuantity} 
-                      onChange={(e) => update('ratingQuantity', e.target.value)} 
-                      className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    >
-                      <option value="">Select...</option>
-                      {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </td>
-                </tr>
-                {/* Row 2 */}
-                <tr className="hover:bg-gray-50/50 transition-colors">
-                  <td className="py-3 px-6 font-medium text-gray-700">2. Services Rendered by Personnel</td>
-                  <td className="py-3 px-4">
-                    <select 
-                      value={form.ratingServicesPersonnel} 
-                      onChange={(e) => update('ratingServicesPersonnel', e.target.value)} 
-                      className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    >
-                      <option value="">Select...</option>
-                      {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </td>
-                </tr>
-                 {/* Row 2.1 */}
-                 <tr className="hover:bg-gray-50/50 transition-colors bg-gray-50/30">
-                  <td className="py-3 pl-10 pr-6 text-gray-600 text-xs uppercase tracking-wide flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span> 
-                    Training Relevance
-                  </td>
-                  <td className="py-3 px-4">
-                    <select 
-                      value={form.ratingTraining} 
-                      onChange={(e) => update('ratingTraining', e.target.value)} 
-                      className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    >
-                      <option value="">Select...</option>
-                      {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </td>
-                </tr>
-                {/* Row 2.2 */}
-                <tr className="hover:bg-gray-50/50 transition-colors bg-gray-50/30">
-                  <td className="py-3 pl-10 pr-6 text-gray-600 text-xs uppercase tracking-wide flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span> 
-                    Attitude / Courtesy
-                  </td>
-                  <td className="py-3 px-4">
-                    <select 
-                      value={form.ratingAttitude} 
-                      onChange={(e) => update('ratingAttitude', e.target.value)} 
-                      className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    >
-                      <option value="">Select...</option>
-                      {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </td>
-                </tr>
-                {/* Row 2.3 */}
-                <tr className="hover:bg-gray-50/50 transition-colors bg-gray-50/30">
-                  <td className="py-3 pl-10 pr-6 text-gray-600 text-xs uppercase tracking-wide flex items-center gap-2">
-                     <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span> 
-                    Promptness
-                  </td>
-                  <td className="py-3 px-4">
-                    <select 
-                      value={form.ratingPromptness} 
-                      onChange={(e) => update('ratingPromptness', e.target.value)} 
-                      className="w-full bg-white border border-gray-200 rounded px-3 py-2 text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-                    >
-                      <option value="">Select...</option>
-                      {RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-                    </select>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
 
           <div className="mt-6">
             <label className={labelClass}>Final Recommendation</label>
@@ -362,42 +270,40 @@ export default function PlantPestSurveillanceForm() {
           </div>
         </div>
 
-        {/* --- Action Buttons --- */}
-        <div className="pt-4 flex flex-col items-end gap-4">
+        {/* --- Submit Section --- */}
+        <div className="plant-pest-surveillance-section plant-pest-surveillance-section-5 pt-2 flex flex-col items-end gap-4">
           {message && (
-             <div className={`w-full p-4 rounded-lg flex items-center gap-3 animate-in fade-in slide-in-from-bottom-2 ${
+            <div className={`animal-feed-message-enter w-full max-w-2xl p-4 rounded-xl shadow-lg flex items-center gap-3 border-l-4 ${
               message.type === 'success' 
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
-                : 'bg-red-50 text-red-700 border border-red-200'
+                ? 'bg-[#1e4d2b] text-white border-[#153019]' 
+                : 'bg-red-500 text-white border-red-700'
             }`}>
-              {message.type === 'success' 
-                ? <CheckCircle2 className="w-5 h-5 flex-shrink-0"/> 
-                : <AlertCircle className="w-5 h-5 flex-shrink-0"/>
-              }
-              <p className="font-medium text-sm">{message.text}</p>
+              <iconify-icon icon={message.type === 'success' ? 'mdi:check-circle' : 'mdi:alert-circle'} width="24"></iconify-icon>
+              <p className="font-medium">{message.text}</p>
             </div>
           )}
 
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full sm:w-auto px-8 py-3 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-70 disabled:cursor-not-allowed font-semibold shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all active:scale-95 flex items-center justify-center gap-2"
+            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
           >
-             {loading ? (
+            {loading ? (
               <>
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                <span>Saving Data...</span>
+                <iconify-icon icon="mdi:loading" width="20" class="animate-spin"></iconify-icon>
+                Processing...
               </>
             ) : (
               <>
-                <Save className="w-5 h-5" />
-                <span>Submit Surveillance Report</span>
+                <iconify-icon icon="mdi:content-save-check" width="22"></iconify-icon>
+                SUBMIT SURVEILLANCE REPORT
               </>
             )}
           </button>
         </div>
 
       </form>
+      </div>
     </FormLayout>
   )
 }
