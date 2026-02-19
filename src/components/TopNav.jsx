@@ -2,22 +2,17 @@ import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 
 const navLinks = [
-  { to: '/', label: 'Home', hash: null },
-  { to: '/', label: 'About', hash: 'about' },
-  { to: '/', label: 'Features', hash: 'features' },
-  { to: '/', label: 'Contact Us', hash: 'contact' },
+  { to: '/', label: 'Home' },
+  { to: '/about', label: 'About' },
+  { to: '/features', label: 'Features' },
+  { to: '/contact', label: 'Contact Us' },
 ]
 
 export default function TopNav() {
   const [menuOpen, setMenuOpen] = useState(false)
   const location = useLocation()
-  const isHome = location.pathname === '/'
 
-  const handleNav = (e, link) => {
-    if (link.hash && isHome) {
-      e.preventDefault()
-      document.getElementById(link.hash)?.scrollIntoView({ behavior: 'smooth' })
-    }
+  const handleNav = () => {
     setMenuOpen(false)
   }
 
@@ -43,9 +38,9 @@ export default function TopNav() {
             {navLinks.map((link) => (
               <Link
                 key={link.label}
-                to={link.hash ? `/#${link.hash}` : '/'}
-                onClick={(e) => handleNav(e, link)}
-                className={`font-medium transition ${isHome && !link.hash ? 'text-accent-light' : 'text-white/90 hover:text-white'}`}
+                to={link.to}
+                onClick={handleNav}
+                className={`font-medium transition ${location.pathname === link.to ? 'text-accent-light' : 'text-white/90 hover:text-white'}`}
               >
                 {link.label}
               </Link>
@@ -57,9 +52,9 @@ export default function TopNav() {
             {navLinks.map((link) => (
               <Link
                 key={link.label}
-                to={link.hash ? `/#${link.hash}` : '/'}
-                onClick={(e) => handleNav(e, link)}
-                className={`min-h-[44px] flex items-center py-3 px-4 rounded-lg font-medium active:bg-white/20 ${isHome && !link.hash ? 'text-accent-light bg-white/10' : 'text-white/90 hover:bg-white/10'}`}
+                to={link.to}
+                onClick={handleNav}
+                className={`min-h-[44px] flex items-center py-3 px-4 rounded-lg font-medium active:bg-white/20 ${location.pathname === link.to ? 'text-accent-light bg-white/10' : 'text-white/90 hover:bg-white/10'}`}
               >
                 {link.label}
               </Link>

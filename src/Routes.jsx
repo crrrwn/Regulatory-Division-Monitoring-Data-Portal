@@ -6,6 +6,9 @@ import LandingLayout from './layouts/LandingLayout'
 import DashboardLayout from './layouts/DashboardLayout'
 
 import HomePage from './pages/HomePage'
+import AboutPage from './pages/AboutPage'
+import FeaturesPage from './pages/FeaturesPage'
+import ContactUsPage from './pages/ContactUsPage'
 import AdminLogin from './pages/AdminLogin'
 import StaffLogin from './pages/StaffLogin'
 import Dashboard from './pages/Dashboard'
@@ -41,6 +44,9 @@ export default function Routes() {
     <RR>
       <Route path="/" element={<LandingLayout />}>
         <Route index element={<HomePage />} />
+        <Route path="about" element={<AboutPage />} />
+        <Route path="features" element={<FeaturesPage />} />
+        <Route path="contact" element={<ContactUsPage />} />
         <Route path="admin-login" element={<AdminLogin />} />
         <Route path="staff-login" element={<StaffLogin />} />
       </Route>
