@@ -374,4 +374,287 @@
 .animal-disease-surveillance-section-3 { animation-delay: 0.15s; }
 .animal-disease-surveillance-section-4 { animation-delay: 0.2s; }
 
+/* ========== Home Page — entrance & hover animations ========== */
+@keyframes home-hero-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes home-hero-subtitle-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes home-portal-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes home-intro-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes home-section-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes home-core-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes home-shine {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+@keyframes home-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes home-hero-badge-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.home-hero-badge {
+  opacity: 0;
+  animation: home-hero-badge-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards;
+}
+.home-hero-title {
+  animation: home-hero-title-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards;
+}
+.home-hero-subtitle {
+  opacity: 0;
+  animation: home-hero-subtitle-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+}
+.home-portal-card-1 {
+  opacity: 0;
+  animation: home-portal-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards;
+}
+.home-portal-card-2 {
+  opacity: 0;
+  animation: home-portal-card-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards;
+}
+.home-intro-box {
+  opacity: 0;
+  animation: home-intro-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
+}
+.home-section-title {
+  opacity: 0;
+  animation: home-section-title-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+}
+.home-core-card-1 { opacity: 0; animation: home-core-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards; }
+.home-core-card-2 { opacity: 0; animation: home-core-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards; }
+.home-core-card-3 { opacity: 0; animation: home-core-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.9s forwards; }
+
+@keyframes home-footer-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.home-footer {
+  opacity: 0;
+  animation: home-footer-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 1s forwards;
+}
+
+.home-portal-shine::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.15) 45%,
+    rgba(255, 255, 255, 0.25) 50%,
+    rgba(255, 255, 255, 0.15) 55%,
+    transparent 100%
+  );
+  transform: translateX(-100%) skewX(-15deg);
+  transition: none;
+  pointer-events: none;
+}
+.home-portal-shine:hover::after {
+  animation: home-shine 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ========== TopNav — smooth transitions & mobile menu ========== */
+@keyframes topnav-menu-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes topnav-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.topnav-menu-panel {
+  animation: topnav-menu-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.topnav-backdrop {
+  animation: topnav-backdrop-in 0.25s ease-out forwards;
+}
+.topnav-link-underline {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform-origin: center;
+}
+.topnav-link:hover .topnav-link-underline {
+  transform: scaleX(1);
+}
+
+/* ========== About Page — entrance animations ========== */
+@keyframes about-section-in {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.about-hero { animation: about-section-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.about-story { opacity: 0; animation: about-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.15s forwards; }
+.about-mission-title { opacity: 0; animation: about-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.25s forwards; }
+.about-mission-card-1 { opacity: 0; animation: about-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards; }
+.about-mission-card-2 { opacity: 0; animation: about-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards; }
+.about-team-title { opacity: 0; animation: about-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards; }
+.about-team-card-1 { opacity: 0; animation: about-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards; }
+.about-team-card-2 { opacity: 0; animation: about-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.75s forwards; }
+.about-ack { opacity: 0; animation: about-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.85s forwards; }
+
+/* ========== Features Page — entrance animations ========== */
+@keyframes features-section-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.features-hero { animation: features-section-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.features-intro { opacity: 0; animation: features-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards; }
+.features-modules-title { opacity: 0; animation: features-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards; }
+.features-modules-1 { opacity: 0; animation: features-section-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards; }
+.features-modules-2 { opacity: 0; animation: features-section-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards; }
+.features-modules-3 { opacity: 0; animation: features-section-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.42s forwards; }
+.features-smart-title { opacity: 0; animation: features-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards; }
+.features-smart-1 { opacity: 0; animation: features-section-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.58s forwards; }
+.features-smart-2 { opacity: 0; animation: features-section-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.64s forwards; }
+.features-smart-3 { opacity: 0; animation: features-section-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.7s forwards; }
+.features-smart-4 { opacity: 0; animation: features-section-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.76s forwards; }
+.features-smart-5 { opacity: 0; animation: features-section-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.82s forwards; }
+
+/* ========== Contact Us Page — entrance animations ========== */
+@keyframes contact-section-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.contact-hero { animation: contact-section-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.contact-offices-title { opacity: 0; animation: contact-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s forwards; }
+.contact-office-1 { opacity: 0; animation: contact-section-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards; }
+.contact-office-2 { opacity: 0; animation: contact-section-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.28s forwards; }
+.contact-details-title { opacity: 0; animation: contact-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.38s forwards; }
+.contact-detail-1 { opacity: 0; animation: contact-section-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.48s forwards; }
+.contact-detail-2 { opacity: 0; animation: contact-section-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.54s forwards; }
+.contact-detail-3 { opacity: 0; animation: contact-section-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards; }
+
+/* ========== Admin Login — split screen & form entrance ========== */
+@keyframes login-split-left-in {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.admin-login-split-left {
+  animation: login-split-left-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes login-brand-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.admin-login-brand-1 { opacity: 0; animation: login-brand-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards; }
+.admin-login-brand-2 { opacity: 0; animation: login-brand-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards; }
+.admin-login-brand-3 { opacity: 0; animation: login-brand-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards; }
+.admin-login-brand-4 { opacity: 0; animation: login-brand-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.65s forwards; }
+.admin-login-brand-5 { opacity: 0; animation: login-brand-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards; }
+@keyframes login-card-in {
+  from { opacity: 0; transform: translateY(24px) scale(0.98) translateZ(0); }
+  to { opacity: 1; transform: translateY(0) scale(1) translateZ(0); }
+}
+.admin-login-card {
+  opacity: 0;
+  animation: login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
+  /* Glass styles in CSS so same look on first paint and after refresh (no flash/difference) */
+  background-color: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12), 0 0 0 1px rgba(255,255,255,0.1) inset, 0 25px 50px -12px rgba(0,0,0,0.2);
+  isolation: isolate;
+  transform: translateZ(0);
+  will-change: transform;
+}
+@keyframes login-admin-code-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.admin-login-admin-code {
+  animation: login-admin-code-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Admin Login — page & content transitions */
+@keyframes admin-login-page-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.admin-login-page {
+  animation: admin-login-page-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes admin-login-stagger {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.admin-login-stagger-1 { opacity: 0; animation: admin-login-stagger 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.35s forwards; }
+.admin-login-stagger-2 { opacity: 0; animation: admin-login-stagger 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.45s forwards; }
+.admin-login-stagger-3 { opacity: 0; animation: admin-login-stagger 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.55s forwards; }
+@keyframes admin-login-forgot-in {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.admin-login-forgot-in {
+  animation: admin-login-forgot-in 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes admin-login-error-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.admin-login-error-in {
+  animation: admin-login-error-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes admin-login-success-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.admin-login-success-in {
+  animation: admin-login-success-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
 /* Theme variables loaded from public/theme.css; Tailwind uses these via tailwind.config.js */

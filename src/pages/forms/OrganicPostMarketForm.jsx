@@ -268,7 +268,7 @@ export default function OrganicPostMarketForm() {
             <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
             
             <div>
-              <label className={labelClass}>Final Recommendation</label>
+              <label className={labelClass}>Recommendation</label>
               <div className="relative group">
                  <div className="absolute top-3 left-3 pointer-events-none">
                   <MessageSquare className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />

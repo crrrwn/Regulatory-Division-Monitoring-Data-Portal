@@ -214,7 +214,7 @@ export default function PlantMaterialForm() {
             <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
 
             <div className="mt-6">
-               <label className={labelClass}>Recommendation / Remarks</label>
+               <label className={labelClass}>Recommendation</label>
                <textarea 
                  value={form.recommendation} 
                  onChange={updateUpper('recommendation')} 

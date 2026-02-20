@@ -256,7 +256,7 @@ export default function OrganicAgriForm() {
             </div>
 
             <div>
-               <label className={labelClass}>Recommendation / Remarks</label>
+               <label className={labelClass}>Recommendation</label>
                <textarea value={form.recommendation} onChange={updateUpper('recommendation')} className={`${inputClass} min-h-[100px] normal-case placeholder:normal-case`} rows="3" placeholder="Enter recommendation..." />
             </div>
           </div>

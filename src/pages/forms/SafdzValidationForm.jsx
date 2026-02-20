@@ -259,7 +259,7 @@ export default function SafdzValidationForm() {
             <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
             
             <div>
-              <label className={labelClass}>Final Recommendation</label>
+              <label className={labelClass}>Recommendation</label>
               <textarea 
                 value={form.recommendation} 
                 onChange={updateUpper('recommendation')} 

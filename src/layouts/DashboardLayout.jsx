@@ -231,7 +231,7 @@ function DashboardLayout() {
               </div>
            </div>
 
-           {/* Right: Date + Notifications */}
+           {/* Right: Date */}
            <div className="flex items-center gap-1 sm:gap-4 shrink-0">
               <div className="hidden md:flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-surface rounded-full border border-border">
                  <iconify-icon icon="mdi:calendar-month-outline" width="16" class="text-text-muted"></iconify-icon>
@@ -239,10 +239,6 @@ function DashboardLayout() {
                     {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                  </span>
               </div>
-              <button className="relative min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-text-muted hover:text-primary hover:bg-surface rounded-full transition-colors touch-manipulation" aria-label="Notifications">
-                 <iconify-icon icon="mdi:bell-outline" width="22"></iconify-icon>
-                 <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full ring-2 ring-white"></span>
-              </button>
            </div>
         </header>
 

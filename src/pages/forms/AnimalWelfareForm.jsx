@@ -245,7 +245,7 @@ export default function AnimalWelfareForm() {
                 <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
                 
                 <div>
-                   <label className={labelClass}>Recommendation / Remarks</label>
+                   <label className={labelClass}>Recommendation</label>
                    <textarea 
                      value={form.recommendation} 
                      onChange={(e) => update('recommendation', (e.target.value || '').toUpperCase())} 

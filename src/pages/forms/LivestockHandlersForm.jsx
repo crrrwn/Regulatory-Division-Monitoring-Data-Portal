@@ -291,7 +291,7 @@ export default function LivestockHandlersForm() {
                <CustomerRatingsTable ratings={ratings} onChange={(k, v) => setRatings((r) => ({ ...r, [k]: v }))} />
                
                <div>
-                 <label className={labelClass}>Recommendation / Action Taken</label>
+                 <label className={labelClass}>Recommendation</label>
                  <textarea 
                    value={recommendation} 
                    onChange={(e) => setRecommendation((e.target.value || '').toUpperCase())} 

@@ -11,6 +11,18 @@ const REMARKS_OPTIONS = ['New', 'Renewal', 'Amendment']
 
 const MAX_ATTACHMENT_SIZE = 700 * 1024 // ~700 KB
 
+function buildFullName({ lastName = '', firstName = '', middleName = '', nameExt = '' }) {
+  const last = String(lastName).trim()
+  const first = String(firstName).trim()
+  const middle = String(middleName).trim()
+  const suffix = String(nameExt).trim()
+  const givenParts = [first, middle, suffix].filter(Boolean)
+  const given = givenParts.join(' ')
+  if (last && given) return `${last}, ${given}`
+  if (last) return last
+  return given
+}
+
 const initialState = {
   date: '', province: '', controlNo: '', registrationNo: '', dateOfInspection: '', dateOfMonitoring: '',
   companyName: '', lastName: '', middleName: '', firstName: '', nameExt: '', completeName: '', birthDate: '',
@@ -29,6 +41,12 @@ export default function AnimalFeedForm() {
   const { submit, loading, message, setMessage } = useFormSubmit('animalFeed')
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+
+  const updateNamePart = (key, value) => setForm((prev) => {
+    const next = { ...prev, [key]: value }
+    next.completeName = buildFullName(next)
+    return next
+  })
 
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
@@ -149,23 +167,23 @@ export default function AnimalFeedForm() {
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
                   <div>
                     <label className={labelClass}>Last Name</label>
-                    <input type="text" value={form.lastName} onChange={(e) => update('lastName', e.target.value)} className={inputClassSmall} />
+                    <input type="text" value={form.lastName} onChange={(e) => updateNamePart('lastName', e.target.value)} className={inputClassSmall} />
                   </div>
                   <div>
                     <label className={labelClass}>First Name</label>
-                    <input type="text" value={form.firstName} onChange={(e) => update('firstName', e.target.value)} className={inputClassSmall} />
+                    <input type="text" value={form.firstName} onChange={(e) => updateNamePart('firstName', e.target.value)} className={inputClassSmall} />
                   </div>
                   <div>
                     <label className={labelClass}>Middle Name</label>
-                    <input type="text" value={form.middleName} onChange={(e) => update('middleName', e.target.value)} className={inputClassSmall} />
+                    <input type="text" value={form.middleName} onChange={(e) => updateNamePart('middleName', e.target.value)} className={inputClassSmall} />
                   </div>
                   <div>
                     <label className={labelClass}>Suffix</label>
-                    <input type="text" value={form.nameExt} onChange={(e) => update('nameExt', e.target.value)} className={inputClassSmall} placeholder="e.g. Jr." />
+                    <input type="text" value={form.nameExt} onChange={(e) => updateNamePart('nameExt', e.target.value)} className={inputClassSmall} placeholder="e.g. Jr." />
                   </div>
                   <div className="sm:col-span-2">
                     <label className={labelClass}>Full Name (Auto/Manual)</label>
-                    <input type="text" value={form.completeName} onChange={(e) => update('completeName', e.target.value)} className={inputClassSmall} />
+                    <input type="text" value={form.completeName} onChange={(e) => update('completeName', e.target.value)} className={inputClassSmall} placeholder="Auto-filled from above or type here" />
                   </div>
                   <div className="sm:col-span-2">
                     <label className={labelClass}>Birth Date</label>

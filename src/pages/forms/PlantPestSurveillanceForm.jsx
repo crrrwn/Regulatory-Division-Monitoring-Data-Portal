@@ -195,9 +195,9 @@ export default function PlantPestSurveillanceForm() {
         </div>
 
         {/* --- Section 3: Pest & Disease Findings --- */}
-        <div className="plant-pest-surveillance-section plant-pest-surveillance-section-3 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] border-l-4 border-l-amber-500 shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
-          <h3 className="text-sm font-black text-[#1e4d2b] uppercase tracking-wide border-b-2 border-[#1e4d2b]/15 pb-3 mb-5 flex items-center gap-2.5">
-            <Bug className="w-5 h-5 text-amber-500" /> Surveillance Findings
+        <div className="plant-pest-surveillance-section plant-pest-surveillance-section-3 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+          <h3 className={sectionTitleClass}>
+            <Bug className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Surveillance Findings
           </h3>
           
           <div className="grid sm:grid-cols-12 gap-6">
@@ -205,13 +205,13 @@ export default function PlantPestSurveillanceForm() {
               <label className={labelClass}>Observed Pests / Diseases</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <AlertTriangle className="h-4 w-4 text-amber-500 group-focus-within:text-amber-600 transition-colors duration-300" />
+                  <AlertTriangle className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
                 </div>
                 <input 
                   type="text" 
                   value={form.pestsDiseases} 
                   onChange={updateUpper('pestsDiseases')} 
-                  className={`${inputClass} pl-10 border-amber-200/80 focus:border-amber-500 focus:ring-amber-500/20`} 
+                  className={`${inputClass} pl-10`} 
                   placeholder="e.g. Fall Armyworm, Rice Blast, Stem Borer" 
                 />
               </div>
@@ -260,7 +260,7 @@ export default function PlantPestSurveillanceForm() {
           <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
 
           <div className="mt-6">
-            <label className={labelClass}>Final Recommendation</label>
+            <label className={labelClass}>Recommendation</label>
             <textarea 
               value={form.recommendation} 
               onChange={updateUpper('recommendation')} 
