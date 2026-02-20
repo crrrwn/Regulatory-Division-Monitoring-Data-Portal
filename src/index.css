@@ -51,6 +51,31 @@
   }
 }
 
+/* Public pages: subtle fade-in and page background */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.page-content-enter {
+  animation: fade-in-up 0.6s var(--ease-out-smooth) forwards;
+}
+.page-bg-pattern {
+  background-color: rgb(248 250 252);
+  background-image:
+    radial-gradient(at 0% 0%, rgba(30, 77, 43, 0.04) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(30, 77, 43, 0.03) 0px, transparent 50%);
+}
+
 /* Smooth scroll: whole app + all scroll containers — reliable + smooth */
 .custom-scrollbar {
   scroll-behavior: smooth;

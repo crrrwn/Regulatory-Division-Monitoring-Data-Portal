@@ -1,0 +1,9 @@
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"AboutPage mount: URL and base","data":{"ABOUT_IMAGE_URL":"/ABOUTPAGE.PNG","BASE_URL_RAW":"/","aboutImageError":false},"hypothesisId":"H1","timestamp":1771550002193}
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"AboutPage mount: URL and base","data":{"ABOUT_IMAGE_URL":"/ABOUTPAGE.PNG","BASE_URL_RAW":"/","aboutImageError":false},"hypothesisId":"H1","timestamp":1771550002196}
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"AboutPage mount: URL and base","data":{"ABOUT_IMAGE_URL":"/ABOUTPAGE.PNG","BASE_URL_RAW":"/","aboutImageError":true},"hypothesisId":"H1","timestamp":1771550007972}
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"AboutPage mount: URL and base","data":{"ABOUT_IMAGE_URL":"/ABOUTPAGE.PNG","BASE_URL_RAW":"/","aboutImageError":false},"hypothesisId":"H1","timestamp":1771550028840}
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"AboutPage mount: URL and base","data":{"ABOUT_IMAGE_URL":"/ABOUTPAGE.PNG","BASE_URL_RAW":"/","aboutImageError":false},"hypothesisId":"H1","timestamp":1771550028841}
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"About image onError","data":{"src":"http://localhost:5173/ABOUTPAGE.PNG"},"hypothesisId":"H3","timestamp":1771550028914}
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"AboutPage mount: URL and base","data":{"ABOUT_IMAGE_URL":"/ABOUTPAGE.PNG","BASE_URL_RAW":"/","aboutImageError":false},"hypothesisId":"H1","timestamp":1771550035598}
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"AboutPage mount: URL and base","data":{"ABOUT_IMAGE_URL":"/ABOUTPAGE.PNG","BASE_URL_RAW":"/","aboutImageError":false},"hypothesisId":"H1","timestamp":1771550035600}
+{"sessionId":"8e8ad8","location":"AboutPage.jsx","message":"About image onError","data":{"src":"http://localhost:5173/ABOUTPAGE.PNG"},"hypothesisId":"H3","timestamp":1771550035716}

@@ -116,7 +116,7 @@ function DashboardLayout() {
             <div className="relative w-10 h-10 shrink-0">
                <div className="absolute inset-0 bg-primary blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
                <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
-                  <img src="/DA LOGO.jpg" alt="DA" className="w-full h-full object-cover rounded-xl" onError={(e) => e.target.style.display = 'none'} />
+                  <img src="/DALOGO.png" alt="DA" className="w-full h-full object-cover rounded-xl" onError={(e) => e.target.style.display = 'none'} />
                   <span className="absolute font-bold text-xs">DA</span>
                </div>
             </div>

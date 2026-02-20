@@ -12,6 +12,8 @@ export default function AdminLogin() {
   const [adminCode, setAdminCode] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showAdminCode, setShowAdminCode] = useState(false)
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
 
@@ -47,69 +49,115 @@ export default function AdminLogin() {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto py-8 sm:py-12 px-3 sm:px-4 min-h-0" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))', paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
-      <div className="bg-white rounded-xl shadow-lg border border-border p-4 sm:p-6 md:p-8 w-full min-w-0">
-        <div className="text-center mb-6">
-          <img src="/DA LOGO.jpg" alt="DA" className="h-16 w-16 rounded-full mx-auto object-cover border-2 border-primary/20 mb-4" />
-          <h1 className="text-xl font-bold text-primary">Admin Portal</h1>
-          <p className="text-sm text-[#5c574f] mt-1">Sign in or register as Administrator</p>
+    <div className="min-h-[80vh] w-full flex items-center justify-center p-4 sm:p-6" style={{ paddingTop: 'max(2rem, env(safe-area-inset-top))', paddingBottom: 'max(2rem, env(safe-area-inset-bottom))' }}>
+      <div className="bg-white rounded-2xl shadow-2xl shadow-slate-200/50 border border-slate-100 p-6 sm:p-10 w-full max-w-md relative overflow-hidden transition-all duration-300">
+        
+        {/* Subtle Accent Bar on Top */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+
+        <div className="text-center mb-8 mt-2">
+          <div className="inline-block p-1 bg-slate-50 rounded-full shadow-sm mb-4">
+            <img src="/DALOGO.png" alt="DA" className="h-20 w-20 rounded-full mx-auto object-cover border-4 border-white shadow-sm" />
+          </div>
+          <h1 className="text-2xl font-extrabold text-slate-800 tracking-tight">Admin Portal</h1>
+          <p className="text-sm text-slate-500 mt-1.5 font-medium">Sign in or register as Administrator</p>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
+
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium text-primary mb-1">Email</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+              className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 outline-none shadow-sm"
               placeholder="admin@agency.gov.ph"
             />
           </div>
+          
           <div>
-            <label className="block text-sm font-medium text-primary mb-1">Password</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-              placeholder="••••••••"
-            />
-          </div>
-          {isRegister && (
-            <div>
-              <label className="block text-sm font-medium text-primary mb-1">Admin Code</label>
+            <label className="block text-sm font-bold text-slate-700 mb-1.5">Password</label>
+            <div className="relative">
               <input
-                type="password"
-                value={adminCode}
-                onChange={(e) => setAdminCode(e.target.value)}
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
-                className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                placeholder="Enter admin registration code"
+                minLength={6}
+                className="w-full px-4 py-3 pr-12 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 outline-none shadow-sm"
+                placeholder="••••••••"
               />
-              <p className="text-xs text-[#5c574f] mt-1">Only users with the correct Admin Code can register as Admin.</p>
+              <button
+                type="button"
+                onClick={() => setShowPassword((p) => !p)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                <iconify-icon icon={showPassword ? 'mdi:eye-off-outline' : 'mdi:eye-outline'} width="22" height="22"></iconify-icon>
+              </button>
+            </div>
+          </div>
+
+          {isRegister && (
+            <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+              <label className="block text-sm font-bold text-slate-700 mb-1.5">Admin Code</label>
+              <div className="relative">
+                <input
+                  type={showAdminCode ? 'text' : 'password'}
+                  value={adminCode}
+                  onChange={(e) => setAdminCode(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 pr-12 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 placeholder-slate-400 focus:bg-white focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all duration-200 outline-none shadow-sm"
+                  placeholder="Enter admin registration code"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAdminCode((p) => !p)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                  aria-label={showAdminCode ? 'Hide admin code' : 'Show admin code'}
+                >
+                  <iconify-icon icon={showAdminCode ? 'mdi:eye-off-outline' : 'mdi:eye-outline'} width="22" height="22"></iconify-icon>
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 mt-2 font-medium">Only users with the correct Admin Code can register as Admin.</p>
             </div>
           )}
-          {error && <p className="text-sm text-red-600 bg-red-50 p-2 rounded">{error}</p>}
+
+          {error && (
+            <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-lg shadow-sm">
+              <p className="text-sm text-red-700 font-semibold">{error}</p>
+            </div>
+          )}
+
           <button
             type="submit"
             disabled={loading}
-            className="w-full min-h-[44px] py-2.5 bg-primary text-white font-medium rounded-lg hover:bg-primary-dark disabled:opacity-50"
+            className="w-full min-h-[48px] py-3 mt-4 bg-primary text-white font-bold rounded-xl shadow-md hover:bg-primary-dark hover:shadow-lg focus:ring-4 focus:ring-primary/30 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed transform active:scale-[0.98]"
           >
             {loading ? 'Please wait...' : isRegister ? 'Register as Admin' : 'Login'}
           </button>
         </form>
-        <p className="mt-4 text-center text-sm text-[#5c574f]">
-          {isRegister ? 'Already have an account?' : "Don't have an admin account?"}{' '}
-          <button type="button" onClick={() => { setIsRegister(!isRegister); setError(''); }} className="text-primary font-medium hover:underline">
-            {isRegister ? 'Login' : 'Register'}
-          </button>
-        </p>
-        <p className="mt-2 text-center">
-          <Link to="/" className="text-sm text-primary hover:underline">← Back to Home</Link>
-        </p>
+
+        <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center space-y-4">
+          <p className="text-sm text-slate-500 font-medium">
+            {isRegister ? 'Already have an account?' : "Don't have an admin account?"}{' '}
+            <button 
+              type="button" 
+              onClick={() => { setIsRegister(!isRegister); setError(''); }} 
+              className="text-primary font-bold hover:text-primary-dark hover:underline transition-colors ml-1"
+            >
+              {isRegister ? 'Login' : 'Register'}
+            </button>
+          </p>
+          
+          <Link 
+            to="/" 
+            className="text-sm font-medium text-slate-400 hover:text-primary transition-colors flex items-center"
+          >
+            ← Back to Home
+          </Link>
+        </div>
       </div>
     </div>
   )
