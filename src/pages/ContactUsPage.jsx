@@ -1,10 +1,12 @@
+import { getPublicImageUrl } from '../utils/publicAssets'
+
 export default function ContactUsPage() {
   return (
     <div className="min-h-screen flex flex-col page-bg-pattern">
       {/* Hero */}
       <section
         className="relative flex-1 flex flex-col justify-center min-h-[60vh] md:min-h-[70vh] py-20 px-4 sm:px-6 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}CONTACTUS.png)` }}
+        style={{ backgroundImage: `url(${getPublicImageUrl('CONTACTUS.png')})` }}
       >
         <div className="absolute inset-0 bg-slate-900/60" aria-hidden="true" />
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background via-background/90 to-transparent" aria-hidden="true" />

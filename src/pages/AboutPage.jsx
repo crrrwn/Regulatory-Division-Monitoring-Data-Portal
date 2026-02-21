@@ -1,10 +1,12 @@
+import { getPublicImageUrl } from '../utils/publicAssets'
+
 export default function AboutPage() {
   return (
     <div className="min-h-screen flex flex-col page-bg-pattern font-sans">
       {/* Hero — same size as Features page so background image is large */}
       <section
         className="relative flex-1 flex flex-col justify-center min-h-[60vh] md:min-h-[70vh] py-20 px-4 sm:px-6 bg-cover bg-center bg-fixed"
-        style={{ backgroundImage: 'url(/ABOUTPAGE.png)' }}
+        style={{ backgroundImage: `url(${getPublicImageUrl('ABOUTPAGE.png')})` }}
       >
         <div className="absolute inset-0 bg-gradient-to-b from-slate-900/75 via-slate-900/55 to-slate-900/85" aria-hidden="true" />
         <div className="absolute inset-0 bg-primary/5 pointer-events-none" aria-hidden="true" />
@@ -81,7 +83,7 @@ export default function AboutPage() {
             <div className="about-team-card-1 group bg-white rounded-2xl p-5 sm:p-6 border border-border shadow-md hover:shadow-lg hover:border-primary/25 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center overflow-hidden">
               <div className="relative mb-5">
                 <img
-                  src="/CERRA.png"
+                  src={getPublicImageUrl('CERRA.png')}
                   alt="Cerra Arwen D. Dela Peña"
                   className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-border shadow-md group-hover:scale-105 transition-transform duration-300"
                 />
@@ -98,7 +100,7 @@ export default function AboutPage() {
             <div className="about-team-card-2 group bg-white rounded-2xl p-5 sm:p-6 border border-border shadow-md hover:shadow-lg hover:border-primary/25 hover:-translate-y-1 transition-all duration-300 flex flex-col items-center text-center overflow-hidden">
               <div className="relative mb-5">
                 <img
-                  src="/NIÑO.png"
+                  src={getPublicImageUrl('NIÑO.png')}
                   alt="Niño Noel D. Monsanto"
                   className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-2 border-border shadow-md group-hover:scale-105 transition-transform duration-300"
                 />
@@ -123,9 +125,9 @@ export default function AboutPage() {
             Supported by the College of Computer Studies - Mindoro State University
           </p>
           <div className="flex flex-row items-center justify-center gap-8 sm:gap-12 py-4">
-            <img src="/CCS LOGO.png" alt="CCS Logo" className="h-16 sm:h-20 object-contain drop-shadow-md hover:scale-105 transition-transform duration-300" />
+            <img src={getPublicImageUrl('CCS LOGO.png')} alt="CCS Logo" className="h-16 sm:h-20 object-contain drop-shadow-md hover:scale-105 transition-transform duration-300" />
             <div className="w-px h-14 bg-gradient-to-b from-transparent via-primary/30 to-transparent hidden sm:block rounded-full" aria-hidden="true" />
-            <img src="/MINSU LOGO.png" alt="MINSU Logo" className="h-16 sm:h-20 object-contain drop-shadow-md hover:scale-105 transition-transform duration-300" />
+            <img src={getPublicImageUrl('MINSU LOGO.png')} alt="MINSU Logo" className="h-16 sm:h-20 object-contain drop-shadow-md hover:scale-105 transition-transform duration-300" />
           </div>
           <div className="mt-6 space-y-2">
             <p className="text-content font-bold text-sm sm:text-base">

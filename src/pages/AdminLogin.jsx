@@ -4,7 +4,9 @@ import { sendPasswordResetEmail } from 'firebase/auth'
 import { useAuth } from '../context/AuthContext'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase'
-import { ADMIN_REGISTRATION_CODE } from '../config'
+import { getAdminRegistrationCode } from '../lib/settings'
+import { addSystemLog } from '../lib/systemLogs'
+import { getPublicImageUrl } from '../utils/publicAssets'
 
 export default function AdminLogin() {
   const [isRegister, setIsRegister] = useState(false)
@@ -46,14 +48,16 @@ export default function AdminLogin() {
     setError('')
     setLoading(true)
     try {
+      const storedCode = await getAdminRegistrationCode()
       if (isRegister) {
-        if (adminCode.trim() !== ADMIN_REGISTRATION_CODE) {
+        if (adminCode.trim() !== storedCode) {
           setError('Invalid Admin Code. Only authorized personnel can register as Admin.')
           setLoading(false)
           return
         }
         const cred = await signUp(email, password)
         await setDoc(doc(db, 'users', cred.user.uid), { email: cred.user.email, role: 'admin', createdAt: new Date().toISOString() })
+        await addSystemLog({ action: 'login', userId: cred.user.uid, userEmail: cred.user.email, role: 'admin', details: 'Admin registered and signed in.' })
         navigate('/dashboard')
       } else {
         await signIn(email, password)
@@ -64,6 +68,7 @@ export default function AdminLogin() {
           setLoading(false)
           return
         }
+        await addSystemLog({ action: 'login', userId: auth.currentUser.uid, userEmail: auth.currentUser.email, role: 'admin', details: 'Admin signed in.' })
         navigate('/dashboard')
       }
     } catch (err) {
@@ -76,7 +81,7 @@ export default function AdminLogin() {
     <div className="min-h-screen w-full relative">
       <div className="fixed inset-0 z-0" aria-hidden="true" style={{ transform: 'translateZ(0)' }}>
         <img
-          src="/ABOUTPAGE.png"
+          src={getPublicImageUrl('ABOUTPAGE.png')}
           alt=""
           className="w-full h-full object-cover object-center"
           role="presentation"
@@ -99,7 +104,7 @@ export default function AdminLogin() {
                 className="admin-login-stagger-1 inline-flex items-center justify-center p-2.5 rounded-2xl mb-3.5 transition-all duration-500 ease-out hover:scale-105"
                 style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset' }}
               >
-                <img src="/DALOGO.png" alt="DA Logo" className="h-11 w-11 sm:h-12 sm:w-12 rounded-lg object-contain" />
+                <img src={getPublicImageUrl('DALOGO.png')} alt="DA Logo" className="h-11 w-11 sm:h-12 sm:w-12 rounded-lg object-contain" />
               </div>
               <h1 className="admin-login-stagger-2 text-xl font-extrabold text-black tracking-tight">Admin Portal</h1>
               <p className="admin-login-stagger-3 text-sm text-black/80 mt-2 font-medium">Sign in or register as Administrator</p>

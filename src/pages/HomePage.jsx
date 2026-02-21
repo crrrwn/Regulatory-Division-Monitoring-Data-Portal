@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { getPublicImageUrl } from '../utils/publicAssets'
 
 export default function HomePage() {
   return (
@@ -6,7 +7,7 @@ export default function HomePage() {
       {/* Hero */}
       <section
         className="relative flex-1 flex flex-col justify-center min-h-[72vh] py-24 sm:py-28 px-4 sm:px-6 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${import.meta.env.BASE_URL}DA%20HOMEPAGE.png)` }}
+        style={{ backgroundImage: `url(${getPublicImageUrl('DA HOMEPAGE.png')})` }}
       >
         {/* Light green fade sa TAAS lang — hindi na umaabot sa Admin/Staff portal buttons */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/12 to-transparent [mask-image:linear-gradient(to_bottom,black_0%,black_45%,transparent_70%)]" aria-hidden="true" />

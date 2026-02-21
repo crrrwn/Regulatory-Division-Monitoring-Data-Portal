@@ -1,10 +1,13 @@
 import { AuthProvider } from './context/AuthContext'
+import { NotificationProvider } from './context/NotificationContext'
 import Routes from './Routes'
 
 export default function App() {
   return (
     <AuthProvider>
-      <Routes />
+      <NotificationProvider>
+        <Routes />
+      </NotificationProvider>
     </AuthProvider>
   )
 }

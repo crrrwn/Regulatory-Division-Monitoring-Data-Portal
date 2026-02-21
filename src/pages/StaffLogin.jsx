@@ -4,6 +4,8 @@ import { sendPasswordResetEmail } from 'firebase/auth'
 import { useAuth } from '../context/AuthContext'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase'
+import { addSystemLog } from '../lib/systemLogs'
+import { getPublicImageUrl } from '../utils/publicAssets'
 
 export default function StaffLogin() {
   const [isRegister, setIsRegister] = useState(false)
@@ -46,6 +48,7 @@ export default function StaffLogin() {
       if (isRegister) {
         const cred = await signUp(email, password)
         await setDoc(doc(db, 'users', cred.user.uid), { email: cred.user.email, role: 'staff', createdAt: new Date().toISOString() })
+        await addSystemLog({ action: 'login', userId: cred.user.uid, userEmail: cred.user.email, role: 'staff', details: 'Staff registered and signed in.' })
         navigate('/dashboard')
       } else {
         await signIn(email, password)
@@ -56,6 +59,7 @@ export default function StaffLogin() {
           setLoading(false)
           return
         }
+        await addSystemLog({ action: 'login', userId: auth.currentUser.uid, userEmail: auth.currentUser.email, role: 'staff', details: 'Staff signed in.' })
         navigate('/dashboard')
       }
     } catch (err) {
@@ -69,7 +73,7 @@ export default function StaffLogin() {
       {/* Full-page background image (same as Admin Login) */}
       <div className="fixed inset-0 z-0" aria-hidden="true" style={{ transform: 'translateZ(0)' }}>
         <img
-          src="/ABOUTPAGE.png"
+          src={getPublicImageUrl('ABOUTPAGE.png')}
           alt=""
           className="w-full h-full object-cover object-center"
           role="presentation"
@@ -92,7 +96,7 @@ export default function StaffLogin() {
                 className="admin-login-stagger-1 inline-flex items-center justify-center p-2.5 rounded-2xl mb-3.5 transition-all duration-500 ease-out hover:scale-105"
                 style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset' }}
               >
-                <img src="/DALOGO.png" alt="DA Logo" className="h-11 w-11 sm:h-12 sm:w-12 rounded-lg object-contain" />
+                <img src={getPublicImageUrl('DALOGO.png')} alt="DA Logo" className="h-11 w-11 sm:h-12 sm:w-12 rounded-lg object-contain" />
               </div>
               <h1 className="admin-login-stagger-2 text-xl font-extrabold text-black tracking-tight">Staff Portal</h1>
               <p className="admin-login-stagger-3 text-sm text-black/80 mt-2 font-medium">Sign in or register as Standard User</p>

@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { collection, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
+import { useNotification } from '../context/NotificationContext'
+import { addSystemLog } from '../lib/systemLogs'
 import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, RATING_FIELD_KEYS, RATING_LABELS } from '../lib/collections'
 import {
   getMonthFromDoc,
@@ -73,6 +75,7 @@ export default function ViewRecords() {
   const [editForm, setEditForm] = useState({})
   const [exporting, setExporting] = useState(false)
   const { user, role } = useAuth()
+  const { showNotification } = useNotification()
 
   useEffect(() => {
     const colRef = collection(db, selectedCollection)
@@ -104,8 +107,9 @@ export default function ViewRecords() {
     if (!confirm('Are you sure you want to permanently delete this record?')) return
     try {
       await deleteDoc(doc(db, selectedCollection, id))
+      addSystemLog({ action: 'record_deleted', userId: user?.uid, userEmail: user?.email, role: role || 'staff', details: `${selectedCollection} record deleted.` }).catch(() => {})
     } catch (err) {
-      alert(err.message)
+      showNotification({ type: 'error', title: 'Delete failed', message: err.message || 'Failed to delete.' })
     }
   }
 
@@ -120,8 +124,10 @@ export default function ViewRecords() {
     try {
       await updateDoc(doc(db, selectedCollection, editing), { ...editForm, updatedAt: new Date().toISOString() })
       setEditing(null)
+      showNotification({ type: 'success', title: 'Changes saved', message: 'Record updated successfully.' })
+      addSystemLog({ action: 'record_updated', userId: user?.uid, userEmail: user?.email, role: role || 'staff', details: `${selectedCollection} record updated.` }).catch(() => {})
     } catch (err) {
-      alert(err.message)
+      showNotification({ type: 'error', title: 'Save failed', message: err.message || 'Failed to save changes.' })
     }
   }
 

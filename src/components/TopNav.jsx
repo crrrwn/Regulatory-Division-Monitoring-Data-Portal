@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { getPublicImageUrl } from '../utils/publicAssets'
 
 const navLinks = [
   { to: '/', label: 'Home' },
@@ -35,7 +36,7 @@ export default function TopNav() {
           >
             <span className="relative flex shrink-0 transition-transform duration-300 ease-out group-hover:scale-105">
               <img
-                src="/DALOGO.png"
+                src={getPublicImageUrl('DALOGO.png')}
                 alt="DA Logo"
                 className="h-10 w-10 sm:h-11 sm:w-11 rounded-full object-cover ring-2 ring-white/20 group-hover:ring-white/50 transition-all duration-300 shadow-lg"
               />

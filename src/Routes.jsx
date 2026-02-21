@@ -14,6 +14,8 @@ import StaffLogin from './pages/StaffLogin'
 import Dashboard from './pages/Dashboard'
 import ViewRecords from './pages/ViewRecords'
 import DataAnalytics from './pages/DataAnalytics'
+import Settings from './pages/Settings'
+import SystemLogs from './pages/SystemLogs'
 
 import AnimalFeedForm from './pages/forms/AnimalFeedForm'
 import LivestockHandlersForm from './pages/forms/LivestockHandlersForm'
@@ -55,6 +57,8 @@ export default function Routes() {
         <Route index element={<Dashboard />} />
         <Route path="analytics" element={<DataAnalytics />} />
         <Route path="records" element={<ViewRecords />} />
+        <Route path="settings" element={<Settings />} />
+        <Route path="system-logs" element={<ProtectedRoute requireAdmin><SystemLogs /></ProtectedRoute>} />
         <Route path="forms/animal-feed" element={<AnimalFeedForm />} />
         <Route path="forms/livestock-handlers" element={<LivestockHandlersForm />} />
         <Route path="forms/transport-carrier" element={<TransportCarrierForm />} />

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { getPublicImageUrl } from '../utils/publicAssets'
+import { addSystemLog } from '../lib/systemLogs'
 
 const SIDEBAR_SECTIONS = [
   {
@@ -42,6 +44,8 @@ function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [openSections, setOpenSections] = useState([])
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false)
+  const [logoutSuccess, setLogoutSuccess] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, role, signOut } = useAuth()
@@ -55,9 +59,28 @@ function DashboardLayout() {
     setOpenSections((prev) => (prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]))
   }
 
+  const openLogoutModal = () => {
+    setLogoutSuccess(false)
+    setLogoutModalOpen(true)
+  }
+
+  const closeLogoutModal = () => {
+    setLogoutModalOpen(false)
+    setLogoutSuccess(false)
+  }
+
+  const handleLogoutConfirm = () => {
+    setLogoutSuccess(true)
+    addSystemLog({ action: 'logout', userId: user?.uid, userEmail: user?.email, role: role || 'staff', details: 'User signed out.' }).catch(() => {})
+    setTimeout(() => {
+      signOut()
+      navigate('/')
+      closeLogoutModal()
+    }, 1500)
+  }
+
   const handleSignOut = () => {
-    signOut()
-    navigate('/')
+    openLogoutModal()
   }
 
   const isActive = (path) => location.pathname === path
@@ -76,6 +99,41 @@ function DashboardLayout() {
   return (
     <div className="flex h-screen min-h-[100dvh] bg-background overflow-hidden font-sans text-primary w-full min-w-0">
       
+      {/* Logout confirmation & success notification modal */}
+      {logoutModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && !logoutSuccess && closeLogoutModal()}>
+          <div className="bg-white rounded-2xl shadow-xl border border-border max-w-sm w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+            {!logoutSuccess ? (
+              <>
+                <div className="p-6 text-center">
+                  <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                    <iconify-icon icon="mdi:logout" width="28" className="text-primary"></iconify-icon>
+                  </div>
+                  <h3 className="text-lg font-bold text-content mb-2">Log out?</h3>
+                  <p className="text-text-muted text-sm">You will be signed out of the portal. Are you sure you want to continue?</p>
+                </div>
+                <div className="flex border-t border-border">
+                  <button type="button" onClick={closeLogoutModal} className="flex-1 py-3.5 text-sm font-semibold text-text-muted hover:bg-surface transition-colors">
+                    Cancel
+                  </button>
+                  <button type="button" onClick={handleLogoutConfirm} className="flex-1 py-3.5 text-sm font-semibold text-white bg-primary hover:bg-primary-dark transition-colors">
+                    Log out
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className="p-8 text-center">
+                <div className="mx-auto w-14 h-14 rounded-full bg-primary/15 flex items-center justify-center mb-4 text-primary">
+                  <iconify-icon icon="mdi:check-circle" width="36"></iconify-icon>
+                </div>
+                <h3 className="text-lg font-bold text-content mb-2">Logged out successfully</h3>
+                <p className="text-text-muted text-sm">You have been signed out. Redirecting to home...</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* --- OVERLAY: For Phones and Tablets (< 1024px) --- */}
       <div
         className={`fixed inset-0 z-40 bg-primary-dark/90 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
@@ -117,7 +175,7 @@ function DashboardLayout() {
             <div className="relative w-10 h-10 shrink-0">
                <div className="absolute inset-0 bg-primary blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
                <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
-                  <img src="/DALOGO.png" alt="DA" className="w-full h-full object-cover rounded-xl" onError={(e) => e.target.style.display = 'none'} />
+                  <img src={getPublicImageUrl('DALOGO.png')} alt="DA" className="w-full h-full object-cover rounded-xl" onError={(e) => e.target.style.display = 'none'} />
                   <span className="absolute font-bold text-xs"></span>
                </div>
             </div>
@@ -149,6 +207,10 @@ function DashboardLayout() {
               <NavItem to="/dashboard" icon="mdi:view-dashboard-variant-outline" label="Dashboard Overview" active={isActive('/dashboard')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
               <NavItem to="/dashboard/analytics" icon="mdi:chart-box-outline" label="Data Analytics" active={isActive('/dashboard/analytics')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
               <NavItem to="/dashboard/records" icon="mdi:database-search-outline" label="Master Records" active={isActive('/dashboard/records')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+              <NavItem to="/dashboard/settings" icon="mdi:cog-outline" label="Settings" active={isActive('/dashboard/settings')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+              {role === 'admin' && (
+                <NavItem to="/dashboard/system-logs" icon="mdi:clipboard-list-outline" label="System Logs" active={isActive('/dashboard/system-logs')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+              )}
             </div>
           </div>
 
@@ -226,7 +288,7 @@ function DashboardLayout() {
               
               <div className="flex flex-col justify-center min-w-0">
                  <h2 className="text-base sm:text-lg font-bold text-primary tracking-tight leading-tight truncate">
-                    {SIDEBAR_SECTIONS.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || 'Dashboard'}
+                    {({ '/dashboard': 'Dashboard', '/dashboard/analytics': 'Data Analytics', '/dashboard/records': 'Master Records', '/dashboard/settings': 'Settings', '/dashboard/system-logs': 'System Logs' }[location.pathname] || SIDEBAR_SECTIONS.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || 'Dashboard')}
                  </h2>
                  <p className="text-xs text-text-muted mt-0.5 hidden sm:block truncate">Regulatory Division Portal</p>
               </div>

@@ -2,7 +2,10 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import { preloadPublicImages } from './utils/publicAssets'
 import './index.css'
+
+preloadPublicImages()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
