@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function FormLayout({ title, children }) {
   return (
-    <div className="w-full min-w-0">
+    <div className="w-full min-w-0 max-w-full overflow-x-hidden">
       <div className="flex items-center gap-2 sm:gap-4 mb-4 sm:mb-6">
         <Link
           to="/dashboard"

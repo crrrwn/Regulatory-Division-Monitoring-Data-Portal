@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { REGIONS, PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
@@ -199,10 +200,7 @@ export default function LivestockHandlersForm() {
 
                   <div>
                     <label className={labelClass}>Type of Business</label>
-                    <select value={businessType} onChange={(e) => setBusinessType(e.target.value)} className={`${inputClass} appearance-none cursor-pointer pr-10`}>
-                      <option value="">Select Business Type</option>
-                      {BUSINESS_TYPES.map((b) => <option key={b} value={b}>{b}</option>)}
-                    </select>
+                    <AppSelect value={businessType} onChange={setBusinessType} placeholder="Select Business Type" options={[{ value: '', label: 'Select Business Type' }, ...BUSINESS_TYPES.map((b) => ({ value: b, label: b }))]} aria-label="Business Type" />
                   </div>
                 </div>
               )}
@@ -216,8 +214,8 @@ export default function LivestockHandlersForm() {
               Location & Contact
             </h3>
             <div className="grid sm:grid-cols-2 gap-5 mb-5">
-              <div><label className={labelClass}>Region</label><select value={address.region} onChange={(e) => setAddress((a) => ({ ...a, region: e.target.value }))} className={`${inputClass} appearance-none cursor-pointer pr-10`}><option value="">Select Region</option>{REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}</select></div>
-              <div><label className={labelClass}>Province</label><select value={address.province} onChange={(e) => setAddress((a) => ({ ...a, province: e.target.value }))} className={`${inputClass} appearance-none cursor-pointer pr-10`}><option value="">Select Province</option>{provinces.map((p) => <option key={p} value={p}>{p}</option>)}</select></div>
+              <div><label className={labelClass}>Region</label><AppSelect value={address.region} onChange={(v) => setAddress((a) => ({ ...a, region: v }))} placeholder="Select Region" options={[{ value: '', label: 'Select Region' }, ...REGIONS.map((r) => ({ value: r, label: r }))]} aria-label="Region" /></div>
+              <div><label className={labelClass}>Province</label><AppSelect value={address.province} onChange={(v) => setAddress((a) => ({ ...a, province: v }))} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...provinces.map((p) => ({ value: p, label: p }))]} aria-label="Province" /></div>
               <div><label className={labelClass}>City / Municipality</label><input type="text" value={address.cityMuni} onChange={(e) => setAddress((a) => ({ ...a, cityMuni: e.target.value }))} className={inputClass} /></div>
               <div><label className={labelClass}>Barangay</label><input type="text" value={address.barangay} onChange={(e) => setAddress((a) => ({ ...a, barangay: e.target.value }))} className={inputClass} /></div>
             </div>
@@ -238,23 +236,11 @@ export default function LivestockHandlersForm() {
             <div className="grid sm:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>Type of Applicant</label>
-                <div className="relative">
-                  <select value={applicantType} onChange={(e) => setApplicantType(e.target.value)} className={`${inputClass} appearance-none cursor-pointer pr-10`}>
-                    <option value="">Select Applicant Type</option>
-                    {APPLICANT_TYPES.map((a) => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#5c574f]"><iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon></div>
-                </div>
+                <AppSelect value={applicantType} onChange={setApplicantType} placeholder="Select Applicant Type" options={[{ value: '', label: 'Select Applicant Type' }, ...APPLICANT_TYPES.map((a) => ({ value: a, label: a }))]} aria-label="Applicant Type" />
               </div>
               <div>
                 <label className={labelClass}>Handler Category</label>
-                <div className="relative">
-                  <select value={category} onChange={(e) => setCategory(e.target.value)} className={`${inputClass} appearance-none cursor-pointer pr-10`}>
-                    <option value="">Select Category</option>
-                    {CATEGORY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#5c574f]"><iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon></div>
-                </div>
+                <AppSelect value={category} onChange={setCategory} placeholder="Select Category" options={[{ value: '', label: 'Select Category' }, ...CATEGORY_OPTIONS.map((c) => ({ value: c, label: c }))]} aria-label="Category" />
               </div>
             </div>
           </div>
@@ -274,10 +260,7 @@ export default function LivestockHandlersForm() {
 
             <div className="mt-6">
                <label className={labelClass}>Origin / Area Coverage (Region)</label>
-               <select value={region} onChange={(e) => setRegion(e.target.value)} className={`${inputClass} appearance-none cursor-pointer pr-10`}>
-                 <option value="">Select Region Coverage</option>
-                 {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-               </select>
+               <AppSelect value={region} onChange={setRegion} placeholder="Select Region Coverage" options={[{ value: '', label: 'Select Region Coverage' }, ...REGIONS.map((r) => ({ value: r, label: r }))]} aria-label="Region Coverage" />
             </div>
           </div>
 

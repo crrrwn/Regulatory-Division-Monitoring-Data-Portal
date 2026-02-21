@@ -14,6 +14,7 @@ import {
   PROVINCES,
 } from '../lib/recordFilters'
 import { exportToExcel } from '../lib/exportExcel'
+import AppSelect from '../components/AppSelect'
 
 // --- HELPER FUNCTIONS ---
 function getDisplayName(data, collectionId) {
@@ -48,6 +49,7 @@ const RATING_COLLECTIONS = {
   animalDiseaseSurveillance: RATING_FIELD_KEYS,
   safdzValidation: RATING_FIELD_KEYS,
 }
+
 function getAvgRating(docItem, collectionId) {
   const keys = RATING_COLLECTIONS[collectionId] || []
   if (keys.length === 0) return null
@@ -125,7 +127,8 @@ export default function ViewRecords() {
 
   const updateEditField = (key, value) => setEditForm((f) => ({ ...f, [key]: value }))
 
-  // --- PRINT LOGIC (column order = same as Edit Record: COLLECTION_FIELD_ORDER then rest) ---
+  // --- PRINT LOGIC: exclude ratings and recommendation from print ---
+  const printExcludeKeys = [...RATING_FIELD_KEYS, 'recommendation']
   const handlePrint = () => {
     const esc = (s) => {
       if (s == null || s === '') return ''
@@ -139,8 +142,8 @@ export default function ViewRecords() {
       Object.keys(doc).filter((k) => !excludeKeys.includes(k)).forEach((k) => allKeys.add(k))
     })
     const order = COLLECTION_FIELD_ORDER[selectedCollection] || []
-    const orderedFromConfig = order.filter((k) => allKeys.has(k) && !skip.includes(k))
-    const restKeys = Array.from(allKeys).filter((k) => !order.includes(k) && !skip.includes(k))
+    const orderedFromConfig = order.filter((k) => allKeys.has(k) && !skip.includes(k) && !printExcludeKeys.includes(k))
+    const restKeys = Array.from(allKeys).filter((k) => !order.includes(k) && !skip.includes(k) && !printExcludeKeys.includes(k))
     const columnKeys = [...orderedFromConfig, ...restKeys]
     const headers = ['No.', 'Name / Title', ...columnKeys]
     const headerLabels = ['No.', 'Name / Title', ...columnKeys.map(toTitleCase)]
@@ -174,23 +177,52 @@ export default function ViewRecords() {
           <meta charset="utf-8">
           <title>Records - ${esc(collectionLabel)}</title>
           <style>
-            @page { size: landscape; margin: 10mm; }
+            /* 1. Set specific size to LONG Paper in Landscape, Pinaliit ang Margin */
+            @page { 
+              size: 13in 8.5in; 
+              margin: 5mm; 
+            }
             @media print {
               body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
               thead { display: table-header-group; }
+              /* Prevent rows from being cut in half across pages */
+              tr { page-break-inside: avoid; }
               table, th, td { border-color: #000 !important; }
               th, td { border: 1px solid #000 !important; }
               th { font-weight: 700 !important; }
             }
-            body { font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; color: #1e293b; margin: 0; }
-            .print-header { margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-            .print-title { color: #064e3b; font-size: 19px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
-            .print-unit { color: #059669; font-size: 15px; font-weight: 600; margin: 4px 0; }
-            .print-meta { color: #64748b; font-size: 12px; margin: 0; }
-            table { width: 100%; border-collapse: collapse; font-size: 11px; table-layout: auto; border: 1px solid #000; }
-            th, td { border: 1px solid #000; padding: 6px 8px; text-align: left; vertical-align: top; }
-            th { background: #065f46; color: #fff; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.5px; }
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; margin: 0; padding: 10px; }
+            .print-header { margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 8px; }
+            .print-title { color: #064e3b; font-size: 16px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+            .print-unit { color: #059669; font-size: 13px; font-weight: 600; margin: 4px 0; }
+            .print-meta { color: #64748b; font-size: 10px; margin: 0; }
+            
+            /* 2. AUTO Layout at mas maliit na font para magkasya lahat ng columns */
+            table { 
+              width: 100%; 
+              border-collapse: collapse; 
+              font-size: 9px; /* Binabaan yung font para magkasya ang madaming columns */
+              table-layout: auto; /* Hahayaan yung browser mag-adjust ng saktong lapad */
+            }
+            th, td { 
+              border: 1px solid #000; 
+              padding: 4px 4px; /* Binawasan ang padding */
+              text-align: left; 
+              vertical-align: top; 
+              word-wrap: break-word; 
+            }
+            th { 
+              background: #065f46; 
+              color: #fff; 
+              font-weight: 700; 
+              text-transform: uppercase; 
+              font-size: 8px; /* Mas maliit ng konti ang header para hindi maputol */
+              letter-spacing: 0.2px; 
+            }
             tr:nth-child(even) td { background: #f0fdf4; }
+
+            /* 3. I-lock lang yung No. column na maliit, the rest is auto */
+            th:nth-child(1) { width: 2%; white-space: nowrap; } 
           </style>
         </head>
         <body>
@@ -236,9 +268,13 @@ export default function ViewRecords() {
 
     if (RATING_FIELD_KEYS.includes(key)) {
       return (
-        <select value={value ?? ''} onChange={(e) => updateEditField(key, e.target.value)} className={`view-records-select ${inputClass}`}>
-          {RATING_OPTIONS.map((o) => <option key={o.value || 'empty'} value={o.value}>{o.label}</option>)}
-        </select>
+        <AppSelect
+          options={RATING_OPTIONS}
+          value={value ?? ''}
+          onChange={(v) => updateEditField(key, v)}
+          placeholder="Select rating..."
+          aria-label={key}
+        />
       )
     }
 
@@ -300,7 +336,7 @@ export default function ViewRecords() {
   }
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-10 min-w-0 w-full max-w-full overflow-x-hidden">
       
       {/* --- HEADER SECTION --- */}
       <div className="view-records-anim-1 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
@@ -312,13 +348,6 @@ export default function ViewRecords() {
               <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-1">Manage, view, and update regulatory data entries</p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
-              <Link
-                to="/dashboard"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm"
-              >
-                <iconify-icon icon="mdi:arrow-left" width="18"></iconify-icon>
-                Dashboard
-              </Link>
               <button
                 onClick={handlePrint}
                 className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-[#1e4d2b] rounded-xl hover:bg-[#faf8f5] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm border border-white/30"
@@ -334,74 +363,67 @@ export default function ViewRecords() {
                 {exporting ? <iconify-icon icon="mdi:loading" width="18" class="animate-spin"></iconify-icon> : <iconify-icon icon="mdi:microsoft-excel" width="18"></iconify-icon>}
                 {exporting ? 'Exporting...' : 'Export Excel'}
               </button>
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm"
+              >
+                <iconify-icon icon="mdi:arrow-left" width="18"></iconify-icon>
+                Dashboard
+              </Link>
             </div>
           </div>
         </div>
       </div>
 
       {/* --- CONTROLS BAR (FILTERS & SEARCH) — khaki/gold accent (Quality Control style) --- */}
-      <div className="view-records-anim-2 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#b8a066]/10 overflow-hidden hover:shadow-xl hover:shadow-[#b8a066]/15 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
-        <div className="px-4 py-3 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] relative overflow-hidden border-b-2 border-[#b8a066]/25">
+      <div className="view-records-anim-2 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#b8a066]/10 overflow-visible hover:shadow-xl hover:shadow-[#b8a066]/15 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+        <div className="px-4 py-3 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] relative border-b-2 border-[#b8a066]/25 rounded-t-2xl overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
           <span className="relative z-10 text-[10px] font-black text-white uppercase tracking-widest">Filters & Search</span>
         </div>
         <div className="p-4 sm:p-5 space-y-4 lg:space-y-0 lg:flex lg:items-end lg:gap-4 lg:flex-wrap border-l-4 border-[#b8a066]/25">
-          <div className="flex-1 min-w-[200px]">
+          <div className="flex-1 min-w-[240px] sm:min-w-[280px]">
             <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5 transition-colors duration-300">Select Unit</label>
-            <div className="relative group/select">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5c7355] group-focus-within/select:text-[#1e4d2b] transition-colors duration-300">
-                <iconify-icon icon="mdi:folder-table-outline" width="20"></iconify-icon>
-              </div>
-              <select
-                value={selectedCollection}
-                onChange={(e) => setSelectedCollection(e.target.value)}
-                className="view-records-select w-full pl-10 pr-10 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-[#1e4d2b] text-sm font-semibold focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] appearance-none cursor-pointer"
-              >
-                {COLLECTIONS.map((c) => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[#5c7355] group-focus-within/select:text-[#1e4d2b] transition-transform duration-300 group-focus-within/select:rotate-180">
-                <iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon>
-              </div>
-            </div>
+            <AppSelect
+              value={selectedCollection}
+              onChange={(v) => setSelectedCollection(v)}
+              options={COLLECTIONS.map((c) => ({ value: c.id, label: c.label }))}
+              leftIcon={<iconify-icon icon="mdi:folder-table-outline" width="20"></iconify-icon>}
+              aria-label="Select Unit"
+            />
           </div>
           <div className="flex gap-3 flex-wrap sm:flex-nowrap flex-1 min-w-0">
-            <div className="flex-1 min-w-[120px] sm:w-40">
+            <div className="flex-1 min-w-[140px] sm:min-w-[180px]">
               <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Month</label>
-              <div className="relative group/select">
-                <select
-                  value={filterMonth}
-                  onChange={(e) => setFilterMonth(e.target.value)}
-                  className="view-records-select w-full pl-3 pr-9 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-[#1e4d2b] text-sm font-semibold focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] appearance-none cursor-pointer"
-                >
-                  <option value="">All Months</option>
-                  {months.map((m) => (
-                    <option key={m} value={m}>{formatMonthLabel(m)}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[#5c7355] transition-transform duration-300 group-focus-within/select:rotate-180">
-                  <iconify-icon icon="mdi:calendar-month-outline" width="18"></iconify-icon>
-                </div>
-              </div>
+              <AppSelect
+                value={filterMonth}
+                onChange={setFilterMonth}
+                placeholder="All Months"
+                options={[
+                  { value: '', label: 'All Months' },
+                  { value: 'test_value', label: 'Test Month' },
+                  ...months.map((m) => ({ value: m, label: formatMonthLabel(m) })),
+                ]}
+                leftIcon={<iconify-icon icon="mdi:calendar-month-outline" width="18"></iconify-icon>}
+                aria-label="Month"
+                className="min-w-0"
+              />
             </div>
-            <div className="flex-1 min-w-[120px] sm:w-40">
+            <div className="flex-1 min-w-[140px] sm:min-w-[180px]">
               <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Province</label>
-              <div className="relative group/select">
-                <select
-                  value={filterProvince}
-                  onChange={(e) => setFilterProvince(e.target.value)}
-                  className="view-records-select w-full pl-3 pr-9 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-[#1e4d2b] text-sm font-semibold focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] appearance-none cursor-pointer"
-                >
-                  <option value="">All Provinces</option>
-                  {PROVINCES.map((p) => (
-                    <option key={p} value={p}>{p}</option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[#5c7355] transition-transform duration-300 group-focus-within/select:rotate-180">
-                  <iconify-icon icon="mdi:map-marker-outline" width="18"></iconify-icon>
-                </div>
-              </div>
+              <AppSelect
+                value={filterProvince}
+                onChange={setFilterProvince}
+                placeholder="All Provinces"
+                options={[
+                  { value: '', label: 'All Provinces' },
+                  { value: 'Bulacan', label: 'Bulacan' },
+                  ...PROVINCES.map((p) => ({ value: p, label: p })),
+                ]}
+                leftIcon={<iconify-icon icon="mdi:map-marker-outline" width="18"></iconify-icon>}
+                aria-label="Province"
+                className="min-w-0"
+              />
             </div>
           </div>
           <div className="flex-1 min-w-[200px] lg:min-w-[260px]">
@@ -551,12 +573,9 @@ export default function ViewRecords() {
                   const skip = ['createdBy', 'updatedAt']
                   const order = COLLECTION_FIELD_ORDER[selectedCollection]
                   const labels = COLLECTION_FIELD_LABELS?.[selectedCollection]
-                  // Same fields as form: all keys from order, then any extra on document
+                  // Same fields as forms only: form field order, no extra doc keys
                   const entries = order
-                    ? [
-                        ...order.filter((k) => !skip.includes(k)).map((k) => [k, editForm[k]]),
-                        ...Object.entries(editForm).filter(([k]) => !order.includes(k) && !skip.includes(k)),
-                      ]
+                    ? order.filter((k) => !skip.includes(k)).map((k) => [k, editForm[k]])
                     : Object.entries(editForm).filter(([k]) => !skip.includes(k))
 
                   const getLabel = (key) => (labels && labels[key]) ? labels[key] : toTitleCase(key)

@@ -141,10 +141,11 @@ export default function DataAnalytics() {
                   View Ratings
                 </button>
                 <button
-                  onClick={refresh}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#1e4d2b] rounded-xl hover:bg-[#faf8f5] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs border border-white/30"
+                  type="button"
+                  onClick={() => refresh()}
+                  className="group/ref inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#1e4d2b] rounded-xl hover:bg-[#faf8f5] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs border border-white/30"
                 >
-                  <RefreshCw size={16} />
+                  <RefreshCw size={16} className="shrink-0 transition-transform duration-300 group-hover/ref:rotate-[-30deg]" />
                   Refresh
                 </button>
                 <Link

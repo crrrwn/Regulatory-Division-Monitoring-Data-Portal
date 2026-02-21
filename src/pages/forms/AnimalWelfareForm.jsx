@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import 'iconify-icon'
 
@@ -134,21 +135,9 @@ export default function AnimalWelfareForm() {
                   </div>
                </div>
 
-               <div className="relative group/select">
+               <div>
                   <label className={labelClass}>Facility Type</label>
-                  <div className={selectWrapperClass}>
-                    <select 
-                      value={form.facilityType} 
-                      onChange={(e) => update('facilityType', e.target.value)} 
-                      className={`${inputClass} appearance-none cursor-pointer pr-10`}
-                    >
-                      <option value="">Select Type...</option>
-                      {FACILITY_TYPES.map((o) => <option key={o} value={o}>{o}</option>)}
-                    </select>
-                    <div className={selectArrowClass}>
-                       <iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon>
-                    </div>
-                  </div>
+                  <AppSelect value={form.facilityType} onChange={(v) => update('facilityType', v)} placeholder="Select Type..." options={[{ value: '', label: 'Select Type...' }, ...FACILITY_TYPES.map((o) => ({ value: o, label: o }))]} aria-label="Facility Type" />
                </div>
 
                <div>
@@ -213,24 +202,9 @@ export default function AnimalWelfareForm() {
                     className={inputClass} 
                   />
                </div>
-               <div className="relative group/select">
+               <div>
                   <label className={labelClass}>Current Status</label>
-                  <div className={selectWrapperClass}>
-                     <select 
-                       value={form.status} 
-                       onChange={(e) => update('status', e.target.value)} 
-                       className={`${inputClass} appearance-none cursor-pointer pr-10 ${
-                          form.status === 'Registered' ? 'text-[#1e4d2b] bg-[#f0f5ee] border-[#1e4d2b]/30' : 
-                          form.status === 'Expired' ? 'text-red-600 bg-red-50 border-red-200' : ''
-                       }`}
-                     >
-                       <option value="">Select Status...</option>
-                       {STATUS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                     </select>
-                     <div className={selectArrowClass}>
-                        <iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon>
-                     </div>
-                  </div>
+                  <AppSelect value={form.status} onChange={(v) => update('status', v)} placeholder="Select Status..." options={[{ value: '', label: 'Select Status...' }, ...STATUS_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Status" />
                </div>
             </div>
           </div>

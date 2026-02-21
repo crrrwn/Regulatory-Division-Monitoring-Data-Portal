@@ -139,25 +139,94 @@
   min-height: 0;
 }
 
-/* View Records — dropdown (select) design + options */
+/* ========== App-wide dropdown (select) design — all pages ========== */
+/* Removes browser default blue; uses theme green #1e4d2b and cream #faf8f5 */
+#root select,
+#root .app-select,
 .view-records-select {
-  transition: border-color 0.3s cubic-bezier(0.33, 1, 0.68, 1),
-    box-shadow 0.3s cubic-bezier(0.33, 1, 0.68, 1),
-    background-color 0.25s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: #fff !important;
+  color: #1e4d2b !important;
+  border: 2px solid #e8e0d4;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: 'Poppins', sans-serif;
+  cursor: pointer;
+  transition: border-color 0.25s cubic-bezier(0.33, 1, 0.68, 1),
+    box-shadow 0.25s cubic-bezier(0.33, 1, 0.68, 1),
+    background-color 0.2s ease;
+  accent-color: #1e4d2b;
 }
+#root select:hover,
+#root .app-select:hover,
 .view-records-select:hover {
   border-color: rgba(30, 77, 43, 0.5);
-  background-color: #faf8f5;
+  background-color: #faf8f5 !important;
 }
+#root select:focus,
+#root .app-select:focus,
 .view-records-select:focus {
+  outline: none;
+  border-color: #1e4d2b;
   box-shadow: 0 0 0 3px rgba(30, 77, 43, 0.2);
 }
+#root select option,
+#root .app-select option,
 .view-records-select option {
-  background: #faf8f5;
-  color: #1e4d2b;
-  padding: 10px 12px;
+  background: #faf8f5 !important;
+  color: #1e4d2b !important;
+  padding: 10px 14px;
   font-weight: 600;
   font-size: 0.875rem;
+}
+
+/* ========== AppSelect custom dropdown — premium animations ========== */
+@keyframes app-select-panel-open {
+  from {
+    opacity: 0;
+    transform: scale(0.92) translateY(-12px);
+    filter: drop-shadow(0 4px 6px rgba(30, 77, 43, 0.08));
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: drop-shadow(0 20px 25px rgba(30, 77, 43, 0.15));
+  }
+}
+@keyframes app-select-option-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes app-select-chevron-bounce {
+  0% { transform: translateY(-50%) rotate(0deg); }
+  50% { transform: translateY(-50%) scale(1.2) rotate(90deg); }
+  100% { transform: translateY(-50%) scale(1) rotate(180deg); }
+}
+.app-select-panel-open {
+  animation: app-select-panel-open 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.app-select-panel-closed {
+  opacity: 0;
+  transform: scale(0.96) translateY(-8px);
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.33, 1, 0.68, 1);
+}
+.app-select-option {
+  animation: app-select-option-in 0.3s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+}
+.app-select-trigger-open {
+  box-shadow: 0 0 0 3px rgba(30, 77, 43, 0.2);
+  border-color: #1e4d2b;
+  background-color: #faf8f5 !important;
 }
 
 /* Stagger fade-in for View Records sections */

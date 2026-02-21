@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { REGIONS, PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
@@ -174,8 +175,8 @@ export default function TransportCarrierForm() {
               Business Address
             </h3>
             <div className="grid sm:grid-cols-2 gap-5">
-               <div><label className={labelClass}>Region</label><select value={businessAddress.region} onChange={(e) => setBusinessAddress((a) => ({ ...a, region: e.target.value }))} className={`${inputClass} appearance-none cursor-pointer pr-10`}><option value="">Select Region</option>{REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}</select></div>
-               <div><label className={labelClass}>Province</label><select value={businessAddress.province} onChange={(e) => setBusinessAddress((a) => ({ ...a, province: e.target.value }))} className={`${inputClass} appearance-none cursor-pointer pr-10`}><option value="">Select Province</option>{PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}</select></div>
+               <div><label className={labelClass}>Region</label><AppSelect value={businessAddress.region} onChange={(v) => setBusinessAddress((a) => ({ ...a, region: v }))} placeholder="Select Region" options={[{ value: '', label: 'Select Region' }, ...REGIONS.map((r) => ({ value: r, label: r }))]} aria-label="Region" /></div>
+               <div><label className={labelClass}>Province</label><AppSelect value={businessAddress.province} onChange={(v) => setBusinessAddress((a) => ({ ...a, province: v }))} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" /></div>
                <div><label className={labelClass}>City / Municipality</label><input type="text" value={businessAddress.cityMuni} onChange={(e) => setBusinessAddress((a) => ({ ...a, cityMuni: e.target.value }))} className={inputClass} /></div>
                <div><label className={labelClass}>Barangay</label><input type="text" value={businessAddress.barangay} onChange={(e) => setBusinessAddress((a) => ({ ...a, barangay: e.target.value }))} className={inputClass} /></div>
             </div>

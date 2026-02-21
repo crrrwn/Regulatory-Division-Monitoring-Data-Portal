@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import 'iconify-icon'
 
 const STATUS_OPTIONS = ['Pending', 'On-Process', 'Approved', 'Denied', 'Certified']
 
 const RATING_OPTIONS = [
+  { value: '', label: 'Select...' },
   { value: '1', label: 'Poor (1)' },
   { value: '2', label: 'Fair (2)' },
   { value: '3', label: 'Satisfied (3)' },
@@ -171,23 +173,7 @@ export default function OrganicAgriForm() {
              <div className="grid sm:grid-cols-2 gap-5 mb-5">
                 <div>
                    <label className={labelClass}>Current Status</label>
-                   <div className="relative">
-                      <select 
-                        value={form.status} 
-                        onChange={updateUpper('status')} 
-                        className={`${inputClass} appearance-none cursor-pointer pr-10 font-bold ${
-                            form.status === 'CERTIFIED' ? 'text-white bg-[#1e4d2b] border-[#1e4d2b]' :
-                            form.status === 'DENIED' ? 'text-white bg-red-500 border-red-500' :
-                            ''
-                        }`}
-                      >
-                        <option value="">Select Status</option>
-                        {STATUS_OPTIONS.map((o) => <option key={o} value={o.toUpperCase()}>{o}</option>)}
-                      </select>
-                      <div className={`absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none ${form.status === 'CERTIFIED' || form.status === 'DENIED' ? 'text-white' : 'text-[#5c574f]'}`}>
-                         <iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon>
-                      </div>
-                   </div>
+                   <AppSelect value={form.status} onChange={(v) => update('status', (v || '').toUpperCase())} placeholder="Select Status" options={[{ value: '', label: 'Select Status' }, ...STATUS_OPTIONS.map((o) => ({ value: o.toUpperCase(), label: o }))]} aria-label="Status" />
                 </div>
                 <div>
                    <label className={labelClass}>Date Certificate Issued</label>
@@ -232,23 +218,23 @@ export default function OrganicAgriForm() {
                   <tbody className="divide-y divide-[#e8e0d4]">
                     <tr className="hover:bg-[#faf8f5]/80 transition-colors duration-200">
                       <td className="py-3 px-4 font-medium text-[#1e4d2b]">1. Quantity of Services Provided</td>
-                      <td className="py-2 px-2"><select value={form.ratingQuantity} onChange={(e) => update('ratingQuantity', e.target.value)} className="w-full px-3 py-2 border-2 border-[#e8e0d4] rounded-lg text-sm bg-white focus:border-[#1e4d2b] focus:ring-2 focus:ring-[#1e4d2b]/20 outline-none transition-all duration-300"><option value="">Select...</option>{RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
+                      <td className="py-2 px-2"><AppSelect options={RATING_OPTIONS} value={form.ratingQuantity} onChange={(v) => update('ratingQuantity', v)} placeholder="Select..." className="min-w-[140px]" aria-label="Score" /></td>
                     </tr>
                     <tr className="hover:bg-[#faf8f5]/80 transition-colors duration-200">
                       <td className="py-3 px-4 font-medium text-[#1e4d2b]">2. Personnel Service Quality</td>
-                      <td className="py-2 px-2"><select value={form.ratingServicesPersonnel} onChange={(e) => update('ratingServicesPersonnel', e.target.value)} className="w-full px-3 py-2 border-2 border-[#e8e0d4] rounded-lg text-sm bg-white focus:border-[#1e4d2b] focus:ring-2 focus:ring-[#1e4d2b]/20 outline-none transition-all duration-300"><option value="">Select...</option>{RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
+                      <td className="py-2 px-2"><AppSelect options={RATING_OPTIONS} value={form.ratingServicesPersonnel} onChange={(v) => update('ratingServicesPersonnel', v)} placeholder="Select..." className="min-w-[140px]" aria-label="Score" /></td>
                     </tr>
                     <tr className="hover:bg-[#faf8f5]/80 transition-colors duration-200">
                       <td className="py-3 px-4 pl-8 text-[#5c574f] italic">2.1 Relevance of training</td>
-                      <td className="py-2 px-2"><select value={form.ratingTraining} onChange={(e) => update('ratingTraining', e.target.value)} className="w-full px-3 py-2 border-2 border-[#e8e0d4] rounded-lg text-sm bg-white focus:border-[#1e4d2b] focus:ring-2 focus:ring-[#1e4d2b]/20 outline-none transition-all duration-300"><option value="">Select...</option>{RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
+                      <td className="py-2 px-2"><AppSelect options={RATING_OPTIONS} value={form.ratingTraining} onChange={(v) => update('ratingTraining', v)} placeholder="Select..." className="min-w-[140px]" aria-label="Score" /></td>
                     </tr>
                     <tr className="hover:bg-[#faf8f5]/80 transition-colors duration-200">
                       <td className="py-3 px-4 pl-8 text-[#5c574f] italic">2.2 Attitude (Courteousness)</td>
-                      <td className="py-2 px-2"><select value={form.ratingAttitude} onChange={(e) => update('ratingAttitude', e.target.value)} className="w-full px-3 py-2 border-2 border-[#e8e0d4] rounded-lg text-sm bg-white focus:border-[#1e4d2b] focus:ring-2 focus:ring-[#1e4d2b]/20 outline-none transition-all duration-300"><option value="">Select...</option>{RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
+                      <td className="py-2 px-2"><AppSelect options={RATING_OPTIONS} value={form.ratingAttitude} onChange={(v) => update('ratingAttitude', v)} placeholder="Select..." className="min-w-[140px]" aria-label="Score" /></td>
                     </tr>
                     <tr className="hover:bg-[#faf8f5]/80 transition-colors duration-200">
                       <td className="py-3 px-4 pl-8 text-[#5c574f] italic">2.3 Promptness</td>
-                      <td className="py-2 px-2"><select value={form.ratingPromptness} onChange={(e) => update('ratingPromptness', e.target.value)} className="w-full px-3 py-2 border-2 border-[#e8e0d4] rounded-lg text-sm bg-white focus:border-[#1e4d2b] focus:ring-2 focus:ring-[#1e4d2b]/20 outline-none transition-all duration-300"><option value="">Select...</option>{RATING_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}</select></td>
+                      <td className="py-2 px-2"><AppSelect options={RATING_OPTIONS} value={form.ratingPromptness} onChange={(v) => update('ratingPromptness', v)} placeholder="Select..." className="min-w-[140px]" aria-label="Score" /></td>
                     </tr>
                   </tbody>
                 </table>

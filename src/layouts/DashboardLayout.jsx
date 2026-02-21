@@ -46,6 +46,7 @@ function DashboardLayout() {
   const navigate = useNavigate()
   const { user, role, signOut } = useAuth()
 
+  // Close mobile menu when route changes
   useEffect(() => {
     setMobileMenuOpen(false)
   }, [location.pathname])
@@ -75,33 +76,33 @@ function DashboardLayout() {
   return (
     <div className="flex h-screen min-h-[100dvh] bg-background overflow-hidden font-sans text-primary w-full min-w-0">
       
-      {/* --- MOBILE OVERLAY (only when sidebar is drawer) --- */}
+      {/* --- OVERLAY: For Phones and Tablets (< 1024px) --- */}
       <div
-        className={`fixed inset-0 z-40 bg-primary-dark/90 backdrop-blur-sm md:hidden transition-opacity duration-300 ${
+        className={`fixed inset-0 z-40 bg-primary-dark/90 backdrop-blur-sm lg:hidden transition-opacity duration-300 ${
           mobileMenuOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
         onClick={() => setMobileMenuOpen(false)}
       />
 
-      {/* --- SIDEBAR: drawer < md, always visible >= md --- */}
+      {/* --- SIDEBAR: Drawer for Phones/Tablets, Permanent for Laptops/Desktops --- */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 flex flex-col bg-primary-dark text-accent-light shadow-2xl border-r border-primary relative
+        className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col bg-primary-dark text-accent-light shadow-2xl border-r border-primary shrink-0
           pt-[env(safe-area-inset-top)]
-          w-[min(280px,85vw)] ${sidebarOpen || mobileMenuOpen ? 'md:w-[280px]' : 'md:w-[88px]'}
-          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+          w-[min(280px,85vw)] ${sidebarOpen || mobileMenuOpen ? 'lg:w-[280px] lg:min-w-[280px]' : 'lg:w-[88px] lg:min-w-[88px]'}
+          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           max-w-full
         `}
         style={{ 
           backgroundImage: 'radial-gradient(circle at top left, #1e4d2b, #153019, #0d1f12)',
           paddingLeft: 'env(safe-area-inset-left)',
-          transition: 'width 0.35s cubic-bezier(0.33, 1, 0.68, 1), transform 0.3s cubic-bezier(0.33, 1, 0.68, 1)',
+          transition: 'width 0.35s cubic-bezier(0.33, 1, 0.68, 1), min-width 0.35s cubic-bezier(0.33, 1, 0.68, 1), transform 0.3s cubic-bezier(0.33, 1, 0.68, 1)',
         }}
       >
-        {/* --- FLOATING TOGGLE BUTTON (DESKTOP) --- */}
+        {/* --- FLOATING TOGGLE BUTTON (Visible only on Desktop >= 1024px) --- */}
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className={`absolute -right-3 top-6 sm:top-9 z-50 hidden md:flex h-8 w-8 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-background text-primary shadow-[0_2px_8px_rgba(0,0,0,0.15)] ring-1 ring-primary/20 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-accent-light hover:text-primary hover:scale-110 focus:outline-none active:scale-95
-             ${!sidebarOpen ? 'rotate-180' : 'rotate-0'}
+          className={`absolute -right-3 top-6 lg:top-9 z-50 hidden lg:flex h-8 w-8 lg:h-7 lg:w-7 items-center justify-center rounded-full bg-background text-primary shadow-[0_2px_8px_rgba(0,0,0,0.15)] ring-1 ring-primary/20 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] hover:bg-accent-light hover:text-primary hover:scale-110 focus:outline-none active:scale-95
+              ${!sidebarOpen ? 'rotate-180' : 'rotate-0'}
           `}
           style={{ transition: 'transform 0.35s cubic-bezier(0.33, 1, 0.68, 1), background-color 0.2s, box-shadow 0.2s' }}
           title={sidebarOpen ? "Collapse Sidebar" : "Expand Sidebar"}
@@ -111,30 +112,30 @@ function DashboardLayout() {
         </button>
 
         {/* Brand Header */}
-        <div className={`min-h-[72px] sm:h-24 flex items-center px-4 sm:px-6 border-b border-white/5 relative overflow-hidden shrink-0 ${!sidebarOpen && !mobileMenuOpen ? 'justify-center px-0' : 'justify-between'}`} style={{ transition: 'padding 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}>
+        <div className={`min-h-[72px] lg:h-24 flex items-center px-4 lg:px-6 border-b border-white/5 relative overflow-hidden shrink-0 ${!sidebarOpen && !mobileMenuOpen ? 'justify-center px-0' : 'justify-between'}`} style={{ transition: 'padding 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}>
           <Link to="/dashboard" className="flex items-center gap-4 overflow-hidden min-w-0 z-10 group">
             <div className="relative w-10 h-10 shrink-0">
                <div className="absolute inset-0 bg-primary blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
                <div className="relative w-full h-full rounded-xl bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center text-white shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
                   <img src="/DALOGO.png" alt="DA" className="w-full h-full object-cover rounded-xl" onError={(e) => e.target.style.display = 'none'} />
-                  <span className="absolute font-bold text-xs">DA</span>
+                  <span className="absolute font-bold text-xs"></span>
                </div>
             </div>
             
             <div className={`flex flex-col min-w-0 overflow-hidden ${sidebarOpen || mobileMenuOpen ? 'opacity-100 translate-x-0 w-auto' : 'opacity-0 -translate-x-4 w-0'}`} style={{ transition: 'opacity 0.3s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, transform 0.35s cubic-bezier(0.33, 1, 0.68, 1) 0.05s, width 0.35s cubic-bezier(0.33, 1, 0.68, 1)' }}>
-              <h1 className="font-bold text-white text-sm sm:text-[15px] leading-tight tracking-wide truncate">REGULATORY</h1>
+              <h1 className="font-bold text-white text-sm lg:text-[15px] leading-tight tracking-wide truncate">REGULATORY</h1>
               <p className="text-[10px] text-accent-light font-bold tracking-wider uppercase truncate">Division Portal</p>
             </div>
           </Link>
           
-          {/* Mobile Close Button (only when sidebar is drawer) */}
-          <button onClick={() => setMobileMenuOpen(false)} className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-accent-light/80 hover:text-white transition-colors -mr-2" aria-label="Close menu">
+          {/* Close button (only when sidebar is drawer on Phones/Tablets) */}
+          <button onClick={() => setMobileMenuOpen(false)} className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 text-accent-light/80 hover:text-white transition-colors -mr-2" aria-label="Close menu">
             <iconify-icon icon="mdi:close" width="24"></iconify-icon>
           </button>
         </div>
 
         {/* Navigation Scroll Area */}
-        <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-4 sm:py-6 px-3 sm:px-4 space-y-6 sm:space-y-8 custom-scrollbar">
+        <nav className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden py-4 lg:py-6 px-3 lg:px-4 space-y-6 lg:space-y-8 custom-scrollbar">
           
           {/* Main Module */}
           <div>
@@ -211,13 +212,13 @@ function DashboardLayout() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full bg-background relative">
         {/* Header */}
         <header
-          className="h-14 sm:h-16 min-h-[44px] sticky top-0 z-30 flex items-center justify-between gap-2 px-3 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top)] pr-[max(0.75rem,env(safe-area-inset-right))] bg-white/90 backdrop-blur-md border-b border-border shadow-sm shrink-0"
+          className="h-14 sm:h-16 min-h-[44px] sticky top-0 z-30 flex items-center justify-between gap-2 px-3 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top)] pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] bg-white/90 backdrop-blur-md border-b border-border shadow-sm shrink-0"
         >
-           {/* Hamburger + Title */}
+           {/* Hamburger (Visible on < 1024px) --- */}
            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
               <button
                 onClick={() => setMobileMenuOpen(true)}
-                className="md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 -ml-1 text-primary hover:bg-surface active:bg-border rounded-lg transition-colors touch-manipulation"
+                className="lg:hidden min-w-[44px] min-h-[44px] flex items-center justify-center p-2 -ml-1 text-primary hover:bg-surface active:bg-border rounded-lg transition-colors touch-manipulation"
                 aria-label="Open menu"
               >
                 <iconify-icon icon="mdi:menu" width="24"></iconify-icon>
@@ -231,9 +232,9 @@ function DashboardLayout() {
               </div>
            </div>
 
-           {/* Right: Date */}
+           {/* Right: Date (Visible on tablets and up) */}
            <div className="flex items-center gap-1 sm:gap-4 shrink-0">
-              <div className="hidden md:flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-surface rounded-full border border-border">
+              <div className="hidden sm:flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-surface rounded-full border border-border">
                  <iconify-icon icon="mdi:calendar-month-outline" width="16" class="text-text-muted"></iconify-icon>
                  <span className="text-xs font-semibold text-primary whitespace-nowrap">
                     {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -242,8 +243,8 @@ function DashboardLayout() {
            </div>
         </header>
 
-        {/* Content Body */}
-        <main className="flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto custom-scrollbar view-records-scroll p-3 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))]">
+        {/* Content Body — responsive padding and safe-area for all devices */}
+        <main className="flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto custom-scrollbar view-records-scroll p-3 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] pr-[max(0.75rem,env(safe-area-inset-right))]">
            <div className="w-full max-w-7xl mx-auto min-w-0 animate-fade-in-up">
               <Outlet />
            </div>
@@ -284,9 +285,9 @@ function NavItem({ to, icon, label, active, sidebarOpen }) {
          {label}
       </span>
 
-      {/* Tooltip (Only when collapsed) */}
+      {/* Tooltip (Only when collapsed on Desktop) */}
       {!sidebarOpen && (
-        <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 px-3 py-1.5 bg-primary-dark text-white text-xs font-medium rounded-md shadow-xl border border-primary opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-2 group-hover:translate-x-0 z-[60] whitespace-nowrap">
+        <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 px-3 py-1.5 bg-primary-dark text-white text-xs font-medium rounded-md shadow-xl border border-primary opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-2 group-hover:translate-x-0 z-[60] whitespace-nowrap hidden lg:block">
           {label}
           <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 bg-primary-dark border-l border-b border-primary transform rotate-45"></div>
         </div>
@@ -338,9 +339,9 @@ function AccordionItem({ section, isOpen, onToggle, isActiveRoute, sidebarOpen, 
            ></iconify-icon>
         )}
 
-        {/* Tooltip for Parent Item when collapsed */}
+        {/* Tooltip for Parent Item when collapsed on Desktop */}
         {!showText && (
-           <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 px-3 py-1.5 bg-primary-dark text-white text-xs font-medium rounded-md shadow-xl border border-primary opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-2 group-hover:translate-x-0 z-[60] whitespace-nowrap">
+           <div className="absolute left-[calc(100%+10px)] top-1/2 -translate-y-1/2 px-3 py-1.5 bg-primary-dark text-white text-xs font-medium rounded-md shadow-xl border border-primary opacity-0 group-hover:opacity-100 pointer-events-none transition-all duration-200 translate-x-2 group-hover:translate-x-0 z-[60] whitespace-nowrap hidden lg:block">
              {section.title}
              <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 w-2 h-2 bg-primary-dark border-l border-b border-primary transform rotate-45"></div>
            </div>

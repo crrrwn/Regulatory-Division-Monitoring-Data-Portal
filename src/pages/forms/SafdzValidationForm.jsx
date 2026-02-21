@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import 'iconify-icon'
 
@@ -230,10 +231,7 @@ export default function SafdzValidationForm() {
             
             <div>
               <label className={labelClass}>Current Status</label>
-              <select value={form.status} onChange={updateUpper('status')} className={inputClass}>
-                <option value="">Select Application Status</option>
-                {STATUS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-              </select>
+              <AppSelect value={form.status} onChange={(v) => update('status', v)} placeholder="Select Application Status" options={[{ value: '', label: 'Select Application Status' }, ...STATUS_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Status" />
             </div>
 
             <div className="sm:col-span-2">

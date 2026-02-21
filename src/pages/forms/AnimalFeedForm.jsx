@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
@@ -122,10 +123,7 @@ export default function AnimalFeedForm() {
               </div>
               <div>
                 <label className={labelClass}>Province Scope</label>
-                <select value={form.province} onChange={(e) => update('province', e.target.value)} className={inputClass}>
-                  <option value="">Select Province</option>
-                  {PROVINCES.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
+                <AppSelect value={form.province} onChange={(v) => update('province', v)} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" />
               </div>
               <div>
                 <label className={labelClass}>Control No.</label>
@@ -248,17 +246,11 @@ export default function AnimalFeedForm() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
               <div>
                 <label className={labelClass}>Nature of Business</label>
-                <select value={form.natureOfBusiness} onChange={(e) => update('natureOfBusiness', e.target.value)} className={inputClass}>
-                  <option value="">Select Nature</option>
-                  {NATURE_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
+                <AppSelect value={form.natureOfBusiness} onChange={(v) => update('natureOfBusiness', v)} placeholder="Select Nature" options={[{ value: '', label: 'Select Nature' }, ...NATURE_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Nature of Business" />
               </div>
               <div>
                 <label className={labelClass}>Business Organization</label>
-                <select value={form.businessOrg} onChange={(e) => update('businessOrg', e.target.value)} className={inputClass}>
-                  <option value="">Select Organization</option>
-                  {ORG_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                </select>
+                <AppSelect value={form.businessOrg} onChange={(v) => update('businessOrg', v)} placeholder="Select Organization" options={[{ value: '', label: 'Select Organization' }, ...ORG_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Business Organization" />
               </div>
               <div>
                 <label className={labelClass}>Product Line(s)</label>
@@ -393,10 +385,7 @@ export default function AnimalFeedForm() {
                 </div>
                 <div>
                    <label className={labelClass}>Status / Remarks</label>
-                   <select value={form.remarks} onChange={(e) => update('remarks', e.target.value)} className={inputClass}>
-                     <option value="">Select Status</option>
-                     {REMARKS_OPTIONS.map((o) => <option key={o} value={o}>{o}</option>)}
-                   </select>
+                   <AppSelect value={form.remarks} onChange={(v) => update('remarks', v)} placeholder="Select Status" options={[{ value: '', label: 'Select Status' }, ...REMARKS_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Status" />
                 </div>
              </div>
           </div>

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import 'iconify-icon'
 
@@ -206,25 +207,7 @@ export default function GoodAgriPracticesForm() {
           <div className="grid gap-6">
              <div className="w-full sm:max-w-md">
               <label className={labelClass}>Current Status</label>
-              <div className="relative">
-                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-                    <Award className={`h-4 w-4 transition-colors duration-300 ${form.status === 'APPROVED' || form.status === 'CERTIFIED' ? 'text-[#1e4d2b]' : form.status === 'DENIED' ? 'text-red-500' : 'text-[#5c574f]'}`} />
-                 </div>
-                <select 
-                  value={form.status} 
-                  onChange={updateUpper('status')} 
-                  className={`${inputClass} pl-10 appearance-none cursor-pointer pr-10 font-bold ${
-                    form.status === 'APPROVED' || form.status === 'CERTIFIED' ? 'text-[#1e4d2b] bg-[#f0f5ee] border-[#1e4d2b]/30' :
-                    form.status === 'DENIED' ? 'text-red-600 bg-red-50 border-red-200' : ''
-                  }`}
-                >
-                  <option value="">Select Application Status</option>
-                  {STATUS_OPTIONS.map((o) => <option key={o} value={o.toUpperCase()}>{o}</option>)}
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-[#5c574f]">
-                  <iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon>
-                </div>
-              </div>
+              <AppSelect value={form.status} onChange={(v) => update('status', (v || '').toUpperCase())} placeholder="Select Application Status" options={[{ value: '', label: 'Select Application Status' }, ...STATUS_OPTIONS.map((o) => ({ value: o.toUpperCase(), label: o }))]} leftIcon={<Award className="h-4 w-4 text-[#5c574f]" />} aria-label="Status" />
             </div>
 
             <div>

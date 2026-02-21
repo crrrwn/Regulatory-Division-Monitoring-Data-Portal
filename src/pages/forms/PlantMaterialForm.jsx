@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import 'iconify-icon'
 
@@ -187,15 +188,7 @@ export default function PlantMaterialForm() {
              <div className="grid sm:grid-cols-2 gap-5">
                 <div>
                    <label className={labelClass}>Accreditation Status</label>
-                   <div className="relative">
-                      <select value={form.status} onChange={updateUpper('status')} className={`${inputClass} appearance-none cursor-pointer pr-10 font-bold ${form.status === 'APPROVED' ? 'text-[#1e4d2b] bg-[#f0f5ee] border-[#1e4d2b]/30' : ''}`}>
-                        <option value="">Select Status</option>
-                        {STATUS_OPTIONS.map((o) => <option key={o} value={o.toUpperCase()}>{o}</option>)}
-                      </select>
-                      <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-[#5c574f]">
-                         <iconify-icon icon="mdi:chevron-down" width="20"></iconify-icon>
-                      </div>
-                   </div>
+                   <AppSelect value={form.status} onChange={(v) => update('status', (v || '').toUpperCase())} placeholder="Select Status" options={[{ value: '', label: 'Select Status' }, ...STATUS_OPTIONS.map((o) => ({ value: o.toUpperCase(), label: o }))]} aria-label="Status" />
                 </div>
                 <div>
                    <label className={labelClass}>Validity Date</label>
