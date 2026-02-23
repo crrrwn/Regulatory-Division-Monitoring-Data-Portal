@@ -1,4 +1,24 @@
 // Firestore collection IDs and labels for View Records
+
+// Collection IDs that have a form in pages/forms — Edit in ViewRecords uses COLLECTION_FIELD_ORDER & COLLECTION_FIELD_LABELS below so each form’s fields are what you see/edit.
+export const FORM_COLLECTION_IDS = [
+  'animalFeed',
+  'animalWelfare',
+  'livestockHandlers',
+  'transportCarrier',
+  'plantMaterial',
+  'organicAgri',
+  'goodAgriPractices',
+  'goodAnimalHusbandry',
+  'organicPostMarket',
+  'landUseMatter',
+  'foodSafety',
+  'plantPestSurveillance',
+  'cfsAdmcc',
+  'animalDiseaseSurveillance',
+  'safdzValidation',
+]
+
 export const COLLECTIONS = [
   { id: 'animalFeed', label: 'Animal Feeds Unit' },
   { id: 'animalWelfare', label: 'Animal Welfare' },
@@ -21,8 +41,8 @@ export const COLLECTIONS = [
 export const COLLECTION_TITLE_FIELD = {
   animalFeed: 'companyName',
   animalWelfare: 'facilityName',
-  livestockHandlers: 'ownershipType',
-  transportCarrier: 'ownerName',
+  livestockHandlers: 'nameOfEstablishment',
+  transportCarrier: 'nameOfEstablishment',
   plantMaterial: 'applicant',
   organicAgri: 'nameOfApplicant',
   goodAgriPractices: 'nameOfApplicant',
@@ -36,15 +56,15 @@ export const COLLECTION_TITLE_FIELD = {
   safdzValidation: 'nameOfApplicant',
 }
 
-// Edit modal: same order as in each form (do not change order)
+// Edit modal in ViewRecords: same order as in each form in pages/forms (keep in sync with form payloads).
 export const COLLECTION_FIELD_ORDER = {
   animalFeed: ['date', 'province', 'controlNo', 'registrationNo', 'dateOfInspection', 'dateOfMonitoring', 'companyName', 'lastName', 'middleName', 'firstName', 'nameExt', 'completeName', 'birthDate', 'barangay', 'municipality', 'completeAddress', 'officeAddress', 'plantAddress', 'cellphone', 'email', 'natureOfBusiness', 'businessOrg', 'productLines', 'type', 'orNo', 'orDate', 'fee', 'dateIssued', 'dateOfFeedSampling1stSem', 'dateOfFeedSampling2ndSem', 'noOfFeedSamples1stSem', 'noOfFeedSamples2ndSem', 'attachmentFileName', 'attachmentData', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
   animalWelfare: ['dateApplied', 'facilityName', 'ownerName', 'address', 'facilityType', 'speciesHandled', 'headVet', 'prcLicenseNo', 'certificateNo', 'validityDate', 'status', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
-  livestockHandlers: ['ownershipType', 'singleName', 'companyName', 'repName', 'address', 'businessType', 'contact', 'applicantType', 'category', 'livestock', 'poultry', 'byProducts', 'region', 'province', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
-  transportCarrier: ['ownerName', 'businessAddress', 'businessOrg', 'typeOfApplicant', 'contactNo', 'email', 'applicantTin', 'companyTin', 'typeOfServices', 'applicationType', 'speciesCargoBirds', 'speciesAnimals', 'byProducts', 'typeOfVehicle', 'bodyType', 'fleet', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
+  livestockHandlers: ['controlNo', 'registrationNo', 'nameOfEstablishment', 'nameOfApplicant', 'address', 'typeOfApplication', 'dateOfApplicationReceivedAndEvaluated', 'orNumber', 'orDate', 'amountOfFeeCollected', 'dateOfInspection', 'validity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
+  transportCarrier: ['controlNo', 'registrationNo', 'nameOfEstablishment', 'nameOfApplicant', 'address', 'typeOfApplication', 'dateOfApplicationReceivedAndEvaluated', 'orNumber', 'orDate', 'amountOfFeeCollected', 'dateOfInspectionAndMonitoring', 'dateOfCertification', 'transmittalDateToBAI', 'validity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
   plantMaterial: ['applicant', 'operator', 'location', 'cropsVariety', 'submissionOfApplicationForm', 'evaluationOfDocumentary', 'paymentOfApplicationFee', 'amountOfFee', 'dateOfInspectionAndEvaluation', 'approvedValidatedResult', 'endorsementToBPI', 'dateOfInspection1stSem', 'dateOfInspection2ndSem', 'status', 'validity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
   organicAgri: ['application', 'nameOfGroup', 'nameOfApplicant', 'location', 'area', 'dateOfEvaluation', 'remarks', 'dateOfEndorsement', 'finalInspection', 'status', 'issuanceOfCertificate', 'finalRemarks', 'linkFile', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
-  goodAgriPractices: ['dateOfRequest', 'nameOfApplicant', 'location', 'area', 'crop', 'dateOfPreAssessment', 'remarks', 'dateOfEndorsementToBPI', 'dateOfFinalInspection', 'status', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
+  goodAgriPractices: ['formType', 'controlNo', 'dateOfRequest', 'nameOfApplicant', 'location', 'area', 'crop', 'dateOfPreAssessment', 'remarks', 'dateOfEndorsementToBPI', 'dateOfFinalInspection', 'status', 'dateOfMonitoring', 'nameOfFarmer', 'certificateNumber', 'certificateValidity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
   goodAnimalHusbandry: ['ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
   organicPostMarket: ['requestLetterDate', 'identifiedMarketOutlet', 'dateOfCommunicationLetter', 'nameOfProduct', 'commodity', 'certification', 'nameOfOwnerManager', 'location', 'dateOfSurveillance', 'remarks', 'linkFile', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
   landUseMatter: ['controlNo', 'nameOfApplicant', 'purposeOfApplication', 'sizeOfArea', 'location', 'dateOfRequest', 'dateReceivedAndEvaluated', 'dateOfReplyToRequest', 'dateReceivedByApplicant', 'fieldInvestigation', 'dateOfEndorsement', 'issuanceOfCertificate', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
@@ -53,6 +73,12 @@ export const COLLECTION_FIELD_ORDER = {
   cfsAdmcc: ['clientName', 'typeOfDiseaseSurveillance', 'purpose', 'address', 'dateOfRequest', 'dateOfSurveillance', 'numberOfSamples', 'dateSubmittedToLab', 'dateOfEndorsementToDA', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
   animalDiseaseSurveillance: ['clientName', 'typeOfDiseaseSurveillance', 'purpose', 'address', 'dateOfRequest', 'dateOfSurveillance', 'numberOfSamples', 'dateSubmittedToLab', 'dateOfEndorsementToDA', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
   safdzValidation: ['explorationPermitApplicationNo', 'nameOfApplicant', 'dateReceived', 'location', 'area', 'dateOfReplyToRequest', 'endorsementToBSWM', 'endorsementToMGB', 'fieldValidation', 'remarks', 'rescheduledDate', 'fieldValidationReport', 'issuanceOfCertificateAndEndorsementToMGB', 'status', 'findings', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
+}
+
+// GoodAgriPractices: which fields to show in ViewRecords Edit per form type (only that form’s fields)
+export const GOOD_AGRI_PRACTICES_FORM_FIELDS = {
+  gapCertification: ['formType', 'controlNo', 'dateOfRequest', 'nameOfApplicant', 'location', 'area', 'crop', 'dateOfPreAssessment', 'remarks', 'dateOfEndorsementToBPI', 'dateOfFinalInspection', 'status', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
+  monitoring: ['formType', 'controlNo', 'dateOfMonitoring', 'nameOfFarmer', 'location', 'area', 'certificateNumber', 'certificateValidity', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation'],
 }
 
 // Rating fields for Plant Pest Surveillance (1-5 scale)
@@ -134,20 +160,18 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
   },
   livestockHandlers: {
-    ownershipType: 'Ownership Type',
-    singleName: 'Proprietor Name (Last, First, Middle Initial)',
-    companyName: 'Registered Company Name',
-    repName: 'Company Representative (Last, First, MI)',
-    address: 'Address (Region, Province, City/Municipality, Barangay)',
-    businessType: 'Type of Business',
-    contact: 'Contact (TIN, Contact No., Email)',
-    applicantType: 'Type of Applicant',
-    category: 'Handler Category',
-    livestock: 'Livestock (Volume / Frequency)',
-    poultry: 'Poultry (Volume / Frequency)',
-    byProducts: 'By-Products (Volume / Frequency)',
-    region: 'Origin / Area Coverage (Region)',
-    province: 'Province',
+    controlNo: 'No.',
+    registrationNo: 'Registration No.',
+    nameOfEstablishment: 'Name of Establishment',
+    nameOfApplicant: 'Name of Applicant',
+    address: 'Address',
+    typeOfApplication: 'Type of Application',
+    dateOfApplicationReceivedAndEvaluated: 'Date of Application Received & Evaluated',
+    orNumber: 'OR Number',
+    orDate: 'OR Date',
+    amountOfFeeCollected: 'Amount of Fee Collected',
+    dateOfInspection: 'Date of Inspection',
+    validity: 'Validity',
     ratingQuantity: '1. Quantity of Goods/Services Provided',
     ratingServicesPersonnel: '2. Services Rendered by Personnel',
     ratingTraining: '2.1 For training consider its relevance',
@@ -156,22 +180,20 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
   },
   transportCarrier: {
-    ownerName: 'Owner Name (Last, First, M.I.)',
-    businessAddress: 'Business Address (Region, Province, City/Muni, Barangay)',
-    businessOrg: 'Business Organization',
-    typeOfApplicant: 'Type of Applicant',
-    contactNo: 'Contact Number',
-    email: 'Email Address',
-    applicantTin: 'Applicant TIN',
-    companyTin: 'Company TIN',
-    typeOfServices: 'Type of Services',
-    applicationType: 'Application Type',
-    speciesCargoBirds: 'Species / Cargo Handled (Birds)',
-    speciesAnimals: 'Species Handled (Animals)',
-    byProducts: 'By-Products Handled',
-    typeOfVehicle: 'Type of Vehicle',
-    bodyType: 'Body Type',
-    fleet: 'Fleet (Accreditation No., Make/Series, Plate No., etc.)',
+    controlNo: 'No.',
+    registrationNo: 'Registration No.',
+    nameOfEstablishment: 'Name of Establishment',
+    nameOfApplicant: 'Name of Applicant',
+    address: 'Address',
+    typeOfApplication: 'Type of Application',
+    dateOfApplicationReceivedAndEvaluated: 'Date of Application Received & Evaluated',
+    orNumber: 'OR Number',
+    orDate: 'OR Date',
+    amountOfFeeCollected: 'Amount of Fee Collected',
+    dateOfInspectionAndMonitoring: 'Date of Inspection and Monitoring',
+    dateOfCertification: 'Date of Certification',
+    transmittalDateToBAI: 'Transmittal Date to BAI',
+    validity: 'Validity',
     ratingQuantity: '1. Quantity of Goods/Services Provided',
     ratingServicesPersonnel: '2. Services Rendered by Personnel',
     ratingTraining: '2.1 For training consider its relevance',
@@ -264,6 +286,8 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
   },
   goodAgriPractices: {
+    formType: 'Form Type',
+    controlNo: 'No.',
     dateOfRequest: 'Date of Request',
     nameOfApplicant: 'Name of Applicant',
     location: 'Location',
@@ -274,6 +298,10 @@ export const COLLECTION_FIELD_LABELS = {
     dateOfEndorsementToBPI: 'Date of Endorsement to BPI',
     dateOfFinalInspection: 'Date of Final Inspection',
     status: 'Status',
+    dateOfMonitoring: 'Date of Monitoring',
+    nameOfFarmer: 'Name of Farmer',
+    certificateNumber: 'Certificate Number',
+    certificateValidity: 'Certificate Validity',
     ratingQuantity: '1. Quantity of Goods/Services Provided',
     ratingServicesPersonnel: '2. Services Rendered by Personnel',
     ratingTraining: '2.1 For training consider its relevance',

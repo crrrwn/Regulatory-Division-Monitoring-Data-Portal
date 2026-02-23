@@ -5,7 +5,7 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
-import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, RATING_FIELD_KEYS, RATING_LABELS } from '../lib/collections'
+import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS } from '../lib/collections'
 import {
   getMonthFromDoc,
   getProvinceFromDoc,
@@ -20,6 +20,12 @@ import AppSelect from '../components/AppSelect'
 
 // --- HELPER FUNCTIONS ---
 function getDisplayName(data, collectionId) {
+  // GoodAgriPractices: show nameOfFarmer (Monitoring) or nameOfApplicant (GAP Certification)
+  if (collectionId === 'goodAgriPractices') {
+    const name = data?.nameOfFarmer ?? data?.nameOfApplicant
+    if (name != null && name !== '') return String(name)
+    return '—'
+  }
   const key = COLLECTION_TITLE_FIELD[collectionId]
   if (!key) return '—'
   const val = data[key]
@@ -74,6 +80,7 @@ export default function ViewRecords() {
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [exporting, setExporting] = useState(false)
+  const [deleteConfirming, setDeleteConfirming] = useState(null) // { id, name } or null
   const { user, role } = useAuth()
   const { showNotification } = useNotification()
 
@@ -100,13 +107,20 @@ export default function ViewRecords() {
     filtered = filtered.filter((d) => getProvinceFromDoc(d) === filterProvince)
   }
 
+  // GoodAgriPractices: split for separate GAP Certification vs Monitoring sections in table and print
+  const isGAP = selectedCollection === 'goodAgriPractices'
+  const filteredGapCert = isGAP ? filtered.filter((d) => d.formType === 'gapCertification') : []
+  const filteredGapMonitoring = isGAP ? filtered.filter((d) => d.formType === 'monitoring') : []
+  const filteredGapOther = isGAP ? filtered.filter((d) => d.formType !== 'gapCertification' && d.formType !== 'monitoring') : []
+
   const canEdit = (docItem) => role === 'admin' || docItem.createdBy === user?.uid
   const canDelete = () => role === 'admin'
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to permanently delete this record?')) return
     try {
       await deleteDoc(doc(db, selectedCollection, id))
+      setDeleteConfirming(null)
+      showNotification({ type: 'success', title: 'Record deleted', message: 'The record has been permanently deleted.' })
       addSystemLog({ action: 'record_deleted', userId: user?.uid, userEmail: user?.email, role: role || 'staff', details: `${selectedCollection} record deleted.` }).catch(() => {})
     } catch (err) {
       showNotification({ type: 'error', title: 'Delete failed', message: err.message || 'Failed to delete.' })
@@ -115,7 +129,22 @@ export default function ViewRecords() {
 
   const openEdit = (docItem) => {
     const { id, createdAt, createdBy, ...rest } = docItem
-    setEditForm(rest)
+    const skip = ['createdBy', 'updatedAt']
+    // GoodAgriPractices: use only the fields for this record’s form type (GAP Certification or Monitoring)
+    let order = COLLECTION_FIELD_ORDER[selectedCollection]
+    if (selectedCollection === 'goodAgriPractices' && GOOD_AGRI_PRACTICES_FORM_FIELDS) {
+      const formType = rest.formType
+      const formFields = formType && GOOD_AGRI_PRACTICES_FORM_FIELDS[formType]
+      if (formFields?.length) order = formFields
+    }
+    if (order && order.length) {
+      const formKeys = order.filter((k) => !skip.includes(k))
+      const onlyFormFields = {}
+      formKeys.forEach((k) => { onlyFormFields[k] = rest[k] })
+      setEditForm(onlyFormFields)
+    } else {
+      setEditForm(rest)
+    }
     setEditing(id)
   }
 
@@ -153,19 +182,32 @@ export default function ViewRecords() {
     const columnKeys = [...orderedFromConfig, ...restKeys]
     const headers = ['No.', 'Name / Title', ...columnKeys]
     const headerLabels = ['No.', 'Name / Title', ...columnKeys.map(toTitleCase)]
+    const numCols = headers.length
 
-    let tableRows = ''
-    filtered.forEach((doc, idx) => {
+    const rowToTr = (doc, idx) => {
       const row = docToRow(doc)
       const name = getDisplayName(doc, selectedCollection)
-      tableRows += '<tr>'
-      tableRows += `<td>${esc(idx + 1)}</td>`
-      tableRows += `<td>${esc(name)}</td>`
-      columnKeys.forEach((key) => {
-        tableRows += `<td>${esc(row[key] ?? '')}</td>`
-      })
-      tableRows += '</tr>'
-    })
+      let tr = '<tr><td>' + esc(idx + 1) + '</td><td>' + esc(name) + '</td>'
+      columnKeys.forEach((key) => { tr += '<td>' + esc(row[key] ?? '') + '</td>' })
+      return tr + '</tr>'
+    }
+
+    let tableRows = ''
+    if (selectedCollection === 'goodAgriPractices') {
+      const gapCert = filtered.filter((d) => d.formType === 'gapCertification')
+      const gapMonitoring = filtered.filter((d) => d.formType === 'monitoring')
+      const gapOther = filtered.filter((d) => d.formType !== 'gapCertification' && d.formType !== 'monitoring')
+      tableRows += '<tr><td colspan="' + numCols + '" style="background:#065f46;color:#fff;font-weight:700;padding:6px 8px;">GAP CERTIFICATION' + (gapCert.length ? ' (' + gapCert.length + ' record(s))' : '') + '</td></tr>'
+      gapCert.forEach((doc, idx) => { tableRows += rowToTr(doc, idx + 1) })
+      tableRows += '<tr><td colspan="' + numCols + '" style="background:#065f46;color:#fff;font-weight:700;padding:6px 8px;">MONITORING OF GAP CERTIFIED FARMER' + (gapMonitoring.length ? ' (' + gapMonitoring.length + ' record(s))' : '') + '</td></tr>'
+      gapMonitoring.forEach((doc, idx) => { tableRows += rowToTr(doc, idx + 1) })
+      if (gapOther.length) {
+        tableRows += '<tr><td colspan="' + numCols + '" style="background:#78716c;color:#fff;font-weight:700;padding:6px 8px;">OTHER (' + gapOther.length + ' record(s))</td></tr>'
+        gapOther.forEach((doc, idx) => { tableRows += rowToTr(doc, idx + 1) })
+      }
+    } else {
+      filtered.forEach((doc, idx) => { tableRows += rowToTr(doc, idx + 1) })
+    }
 
     const thCells = headerLabels.map((l) => `<th>${esc(l)}</th>`).join('')
     const metaParts = []
@@ -487,6 +529,177 @@ export default function ViewRecords() {
                     </div>
                   </td>
                 </tr>
+              ) : isGAP ? (
+                <>
+                  {/* GAP Certification section */}
+                  <tr className="bg-[#1e4d2b]/10 border-y-2 border-[#1e4d2b]/20">
+                    <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-5 py-2.5">
+                      <span className="text-xs font-black text-[#1e4d2b] uppercase tracking-wider">GAP Certification</span>
+                      {filteredGapCert.length > 0 && <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapCert.length} record(s))</span>}
+                    </td>
+                  </tr>
+                  {filteredGapCert.map((docItem) => (
+                    <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50 group-hover:scale-105 group-hover:from-[#1e4d2b]/20 group-hover:to-[#5c7355]/15 transition-all duration-300">
+                            {getDisplayName(docItem, selectedCollection).charAt(0).toUpperCase()}
+                          </div>
+                          <div className="font-bold text-[#1e4d2b] group-hover:text-[#153019] transition-colors duration-300 max-w-xs sm:max-w-md truncate" title={getDisplayName(docItem, selectedCollection)}>
+                            {getDisplayName(docItem, selectedCollection)}
+                          </div>
+                        </div>
+                      </td>
+                      {RATING_COLLECTIONS[selectedCollection] && (
+                        <td className="px-5 py-3.5 whitespace-nowrap">
+                          {(() => {
+                            const avg = getAvgRating(docItem, selectedCollection)
+                            return avg ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#b8a066]/15 text-[#1e4d2b] font-bold text-xs border border-[#b8a066]/30 group-hover:bg-[#b8a066]/25 group-hover:border-[#b8a066]/50 transition-all duration-300">
+                                <iconify-icon icon="mdi:star" width="14" class="text-[#b8a066]"></iconify-icon>
+                                {avg}/5
+                              </span>
+                            ) : <span className="text-[#8a857c] text-sm">—</span>
+                          })()}
+                        </td>
+                      )}
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <div className="text-[#1e4d2b] text-xs font-semibold">
+                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                        </div>
+                        <div className="text-[#5c7355] text-[10px] font-medium">
+                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {canEdit(docItem) && (
+                            <button onClick={() => openEdit(docItem)} className="p-2 bg-white border-2 border-[#e8e0d4] text-[#1e4d2b] rounded-xl hover:bg-[#1e4d2b]/10 hover:border-[#1e4d2b]/50 hover:scale-110 active:scale-95 transition-all duration-300" title="Edit Record">
+                              <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
+                            </button>
+                          )}
+                          {canDelete() && (
+                            <button onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })} className="p-2 bg-white border-2 border-[#e8e0d4] text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 hover:scale-110 active:scale-95 transition-all duration-300" title="Delete Record">
+                              <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {/* GAP Monitoring section */}
+                  <tr className="bg-[#1e4d2b]/10 border-y-2 border-[#1e4d2b]/20">
+                    <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-5 py-2.5">
+                      <span className="text-xs font-black text-[#1e4d2b] uppercase tracking-wider">Monitoring of GAP Certified Farmer</span>
+                      {filteredGapMonitoring.length > 0 && <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapMonitoring.length} record(s))</span>}
+                    </td>
+                  </tr>
+                  {filteredGapMonitoring.map((docItem) => (
+                    <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50 group-hover:scale-105 group-hover:from-[#1e4d2b]/20 group-hover:to-[#5c7355]/15 transition-all duration-300">
+                            {getDisplayName(docItem, selectedCollection).charAt(0).toUpperCase()}
+                          </div>
+                          <div className="font-bold text-[#1e4d2b] group-hover:text-[#153019] transition-colors duration-300 max-w-xs sm:max-w-md truncate" title={getDisplayName(docItem, selectedCollection)}>
+                            {getDisplayName(docItem, selectedCollection)}
+                          </div>
+                        </div>
+                      </td>
+                      {RATING_COLLECTIONS[selectedCollection] && (
+                        <td className="px-5 py-3.5 whitespace-nowrap">
+                          {(() => {
+                            const avg = getAvgRating(docItem, selectedCollection)
+                            return avg ? (
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#b8a066]/15 text-[#1e4d2b] font-bold text-xs border border-[#b8a066]/30 group-hover:bg-[#b8a066]/25 group-hover:border-[#b8a066]/50 transition-all duration-300">
+                                <iconify-icon icon="mdi:star" width="14" class="text-[#b8a066]"></iconify-icon>
+                                {avg}/5
+                              </span>
+                            ) : <span className="text-[#8a857c] text-sm">—</span>
+                          })()}
+                        </td>
+                      )}
+                      <td className="px-5 py-3.5 whitespace-nowrap">
+                        <div className="text-[#1e4d2b] text-xs font-semibold">
+                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                        </div>
+                        <div className="text-[#5c7355] text-[10px] font-medium">
+                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                        </div>
+                      </td>
+                      <td className="px-5 py-3.5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {canEdit(docItem) && (
+                            <button onClick={() => openEdit(docItem)} className="p-2 bg-white border-2 border-[#e8e0d4] text-[#1e4d2b] rounded-xl hover:bg-[#1e4d2b]/10 hover:border-[#1e4d2b]/50 hover:scale-110 active:scale-95 transition-all duration-300" title="Edit Record">
+                              <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
+                            </button>
+                          )}
+                          {canDelete() && (
+                            <button onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })} className="p-2 bg-white border-2 border-[#e8e0d4] text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 hover:scale-110 active:scale-95 transition-all duration-300" title="Delete Record">
+                              <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredGapOther.length > 0 && (
+                    <>
+                      <tr className="bg-[#b8a066]/10 border-y-2 border-[#b8a066]/20">
+                        <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-5 py-2.5">
+                          <span className="text-xs font-black text-[#5c574f] uppercase tracking-wider">Other</span>
+                          <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapOther.length} record(s))</span>
+                        </td>
+                      </tr>
+                      {filteredGapOther.map((docItem) => (
+                        <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
+                          <td className="px-5 py-3.5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50">
+                                {getDisplayName(docItem, selectedCollection).charAt(0).toUpperCase()}
+                              </div>
+                              <div className="font-bold text-[#1e4d2b] max-w-xs sm:max-w-md truncate" title={getDisplayName(docItem, selectedCollection)}>
+                                {getDisplayName(docItem, selectedCollection)}
+                              </div>
+                            </div>
+                          </td>
+                          {RATING_COLLECTIONS[selectedCollection] && (
+                            <td className="px-5 py-3.5 whitespace-nowrap">
+                              {getAvgRating(docItem, selectedCollection) ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#b8a066]/15 text-[#1e4d2b] font-bold text-xs border border-[#b8a066]/30">
+                                  <iconify-icon icon="mdi:star" width="14" class="text-[#b8a066]"></iconify-icon>
+                                  {getAvgRating(docItem, selectedCollection)}/5
+                                </span>
+                              ) : <span className="text-[#8a857c] text-sm">—</span>}
+                            </td>
+                          )}
+                          <td className="px-5 py-3.5 whitespace-nowrap">
+                            <div className="text-[#1e4d2b] text-xs font-semibold">
+                              {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
+                            </div>
+                            <div className="text-[#5c7355] text-[10px] font-medium">
+                              {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <div className="flex items-center justify-end gap-1.5">
+                              {canEdit(docItem) && (
+                                <button onClick={() => openEdit(docItem)} className="p-2 bg-white border-2 border-[#e8e0d4] text-[#1e4d2b] rounded-xl hover:bg-[#1e4d2b]/10 hover:border-[#1e4d2b]/50 hover:scale-110 active:scale-95 transition-all duration-300" title="Edit Record">
+                                  <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
+                                </button>
+                              )}
+                              {canDelete() && (
+                                <button onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })} className="p-2 bg-white border-2 border-[#e8e0d4] text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 hover:scale-110 active:scale-95 transition-all duration-300" title="Delete Record">
+                                  <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </>
+                  )}
+                </>
               ) : (
                 filtered.map((docItem) => (
                   <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
@@ -534,7 +747,7 @@ export default function ViewRecords() {
                         )}
                         {canDelete() && (
                           <button
-                            onClick={() => handleDelete(docItem.id)}
+                            onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })}
                             className="p-2 bg-white border-2 border-[#e8e0d4] text-red-600 rounded-xl hover:bg-red-50 hover:border-red-300 hover:scale-110 active:scale-95 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]"
                             title="Delete Record"
                           >
@@ -554,6 +767,55 @@ export default function ViewRecords() {
           {filtered.length > 20 && <span className="italic">Scroll for more</span>}
         </div>
       </div>
+
+      {/* --- DELETE CONFIRMATION MODAL --- */}
+      {deleteConfirming && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in duration-300">
+          <div
+            className="absolute inset-0 bg-[#153019]/80 backdrop-blur-md animate-in fade-in duration-300"
+            onClick={() => setDeleteConfirming(null)}
+          />
+          <div className="relative bg-white rounded-2xl border-2 border-[#e8e0d4] shadow-2xl shadow-[#1e4d2b]/20 w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-300 ease-out" style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
+            <div className="shrink-0 bg-gradient-to-r from-red-600 via-red-700 to-red-800 px-6 py-4 flex items-center gap-3 relative overflow-hidden border-b-2 border-red-900/30">
+              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+              <span className="relative z-10 p-2 rounded-xl bg-white/15 border border-white/20">
+                <iconify-icon icon="mdi:alert-circle-outline" width="24" class="text-white"></iconify-icon>
+              </span>
+              <div className="relative z-10">
+                <h3 className="text-lg font-black text-white uppercase tracking-tight">Delete Record</h3>
+                <p className="text-[11px] font-semibold text-white/90 mt-0.5">This action cannot be undone.</p>
+              </div>
+            </div>
+            <div className="p-6 border-l-4 border-red-500/30 bg-gradient-to-b from-[#fef2f2] to-[#faf8f5]">
+              <p className="text-sm font-medium text-[#1e293b] mb-1">
+                Are you sure you want to permanently delete this record?
+              </p>
+              {deleteConfirming.name && deleteConfirming.name !== '—' && (
+                <p className="text-xs text-[#64748b] mt-2 px-3 py-2 rounded-lg bg-white/80 border border-[#e8e0d4]">
+                  <span className="font-semibold text-[#1e4d2b]">{deleteConfirming.name}</span>
+                </p>
+              )}
+            </div>
+            <div className="shrink-0 px-6 py-4 border-t border-[#e8e0d4] bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirming(null)}
+                className="px-5 py-2.5 rounded-xl border-2 border-[#e8e0d4] text-[#1e4d2b] font-bold hover:bg-white hover:border-[#1e4d2b]/50 hover:scale-105 active:scale-[0.98] transition-all duration-300 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(deleteConfirming.id)}
+                className="px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 hover:scale-105 active:scale-[0.98] shadow-lg hover:shadow-xl transition-all duration-300 text-sm flex items-center gap-2"
+              >
+                <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* --- EDIT MODAL --- */}
       {editing && (
@@ -577,10 +839,15 @@ export default function ViewRecords() {
               <div className="grid gap-5">
                 {(() => {
                   const skip = ['createdBy', 'updatedAt']
-                  const order = COLLECTION_FIELD_ORDER[selectedCollection]
+                  let order = COLLECTION_FIELD_ORDER[selectedCollection]
+                  // GoodAgriPractices: show only fields for the record’s form type (GAP Certification vs Monitoring)
+                  if (selectedCollection === 'goodAgriPractices' && GOOD_AGRI_PRACTICES_FORM_FIELDS) {
+                    const formType = editForm.formType
+                    const formFields = formType && GOOD_AGRI_PRACTICES_FORM_FIELDS[formType]
+                    if (formFields?.length) order = formFields
+                  }
                   const labels = COLLECTION_FIELD_LABELS?.[selectedCollection]
-                  // Same fields as forms only: form field order, no extra doc keys
-                  const entries = order
+                  const entries = order?.length
                     ? order.filter((k) => !skip.includes(k)).map((k) => [k, editForm[k]])
                     : Object.entries(editForm).filter(([k]) => !skip.includes(k))
 

@@ -11,11 +11,19 @@ function getDisplayName(data, collectionId) {
   return String(val)
 }
 
+// Excel worksheet names cannot contain: * ? : \ / [ ] and max 31 chars
+function safeSheetName(name) {
+  if (!name || typeof name !== 'string') return 'Sheet'
+  const sanitized = name.replace(/[*?:\\\/[\]]/g, ' ').replace(/\s+/g, ' ').trim()
+  return (sanitized || 'Sheet').slice(0, 31)
+}
+
 /** Export records to Excel with styled header and columns */
 export async function exportToExcel(records, collectionId, collectionLabel) {
   const workbook = new ExcelJS.Workbook()
   workbook.creator = 'Regulatory Division Portal'
-  const sheet = workbook.addWorksheet(collectionLabel || collectionId, {
+  const sheetName = safeSheetName(collectionLabel || collectionId)
+  const sheet = workbook.addWorksheet(sheetName, {
     pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true },
   })
 
