@@ -182,8 +182,66 @@ export default function ViewRecords() {
 
   const updateEditField = (key, value) => setEditForm((f) => ({ ...f, [key]: value }))
 
-  // --- PRINT LOGIC: exclude ratings and recommendation from print ---
-  const printExcludeKeys = [...RATING_FIELD_KEYS, 'recommendation']
+  // --- PRINT LOGIC: exclude ratings, recommendation, and attachment/file columns from print ---
+  const printExcludeKeys = [
+    ...RATING_FIELD_KEYS,
+    'recommendation',
+    'attachmentData',
+    'attachmentFileName',
+    'attachmentUrl',
+    'linkFile',
+  ]
+
+  // Shorten header label for print so table fits A4/Legal; optional line break for 2-line header
+  const shortenHeaderForPrint = (label, maxLen = 20, allowTwoLines = true) => {
+    if (!label || typeof label !== 'string') return ''
+    const abbrev = label
+      .replace(/\bDate of Application\/Valuated\b/gi, 'Date Appl./Val.')
+      .replace(/\bDate of Application Received & Evaluated\b/gi, 'Date Recv. & Eval.')
+      .replace(/\bDate of Application Received and Evaluated\b/gi, 'Date Recv. & Eval.')
+      .replace(/\bName of Establishment\b/gi, 'Establishment')
+      .replace(/\bName of Applicant\b/gi, 'Applicant')
+      .replace(/\bComplete Address\b/gi, 'Address')
+      .replace(/\bDate of Inspection\b/gi, 'Date Insp.')
+      .replace(/\bDate of Monitoring\b/gi, 'Date Mon.')
+      .replace(/\bDate of Certification\b/gi, 'Date Cert.')
+      .replace(/\bDate of Endorsement\b/gi, 'Date Endors.')
+      .replace(/\bAmount of Fee Collected\b/gi, 'Fee Collected')
+      .replace(/\bType of Application\b/gi, 'App Type')
+      .replace(/\bDate of Inspection and Monitoring\b/gi, 'Date Insp. & Mon.')
+      .replace(/\bTransmittal Date to BAI\b/gi, 'Transmittal to BAI')
+      .replace(/\bSubmission of Client's Filled Application Form to DA-Regulatory Division\b/gi, 'Submission of Appl. Form')
+      .replace(/\bEvaluation of Submitted Documentary Requirements\b/gi, 'Eval. of Documentary Req.')
+      .replace(/\bPayment of Application Fee\b/gi, 'Payment of Fee')
+      .replace(/\bDate of Inspection and Evaluation of Nursery\b/gi, 'Date Insp. & Eval.')
+      .replace(/\bApproved Validated Result of Inspection and Validation of Areas\b/gi, 'Approved Validated Result')
+      .replace(/\bEndorsement of Application to BPI\b/gi, 'Endorsement to BPI')
+      .replace(/\bDate of Request and Collection\b/gi, 'Date Req. & Coll.')
+      .replace(/\bDate of Request\b/gi, 'Date Req.')
+      .replace(/\bDate of Pre-assessment\b/gi, 'Date Pre-assess.')
+      .replace(/\bDate of Endorsement to BPI\b/gi, 'Date Endors. BPI')
+      .replace(/\bDate of Final Inspection\b/gi, 'Date Final Insp.')
+      .replace(/\bDate of Surveillance\b/gi, 'Date Surveill.')
+      .replace(/\bDate Received and Evaluated\b/gi, 'Date Recv. & Eval.')
+      .replace(/\bDate of Reply to the Request\b/gi, 'Date Reply')
+      .replace(/\bDate Received by the Applicant\b/gi, 'Date Recv. by Applicant')
+      .replace(/\bIssuance of Certificate\b/gi, 'Issuance Cert.')
+      .replace(/\bQuantity of Goods\/Services Provided\b/gi, 'Quantity')
+      .replace(/\bServices Rendered by Personnel\b/gi, 'Services/Personnel')
+      .replace(/\bFor training consider its relevance\b/gi, 'Training')
+      .replace(/\bAttitude \(courteousness\)\b/gi, 'Attitude')
+      .replace(/\bPromptness in attending the request\b/gi, 'Promptness')
+      .replace(/\bGood Agricultural Practices\b/gi, 'GAP')
+      .trim()
+    let out = abbrev.length > maxLen ? abbrev.slice(0, maxLen - 1).trim() + '.' : abbrev
+    if (allowTwoLines && out.length > 14) {
+      const lastSpace = out.lastIndexOf(' ', 14)
+      const brAt = lastSpace > 6 ? lastSpace : 14
+      out = out.slice(0, brAt) + '<br>' + out.slice(brAt).trim()
+    }
+    return out
+  }
+
   const handlePrint = () => {
     const esc = (s) => {
       if (s == null || s === '') return ''
@@ -199,10 +257,20 @@ export default function ViewRecords() {
     const order = COLLECTION_FIELD_ORDER[selectedCollection] || []
     const orderedFromConfig = order.filter((k) => allKeys.has(k) && !skip.includes(k) && !printExcludeKeys.includes(k))
     const restKeys = Array.from(allKeys).filter((k) => !order.includes(k) && !skip.includes(k) && !printExcludeKeys.includes(k))
-    const columnKeys = [...orderedFromConfig, ...restKeys]
-    const headers = ['No.', 'Name / Title', ...columnKeys]
-    const headerLabels = ['No.', 'Name / Title', ...columnKeys.map(toTitleCase)]
-    const numCols = headers.length
+    let columnKeys = [...orderedFromConfig, ...restKeys]
+    if (selectedCollection === 'animalFeed') {
+      const animalFeedPrintExclude = [
+        'companyName',
+        'lastName', 'middleName', 'firstName', 'nameExt',
+        'barangay', 'municipality', 'officeAddress', 'plantAddress'
+      ]
+      columnKeys = columnKeys.filter((k) => !animalFeedPrintExclude.includes(k))
+    }
+    const labels = COLLECTION_FIELD_LABELS?.[selectedCollection]
+    const getLabel = (key) => (labels && labels[key] ? labels[key] : toTitleCase(key))
+    const rawLabels = ['No.', 'Name / Title', ...columnKeys.map(getLabel)]
+    const headerLabels = rawLabels.map((l) => shortenHeaderForPrint(l, 20, true))
+    const numCols = headerLabels.length
 
     const rowToTr = (doc, idx) => {
       const row = docToRow(doc)
@@ -218,18 +286,21 @@ export default function ViewRecords() {
       const gapMonitoring = filtered.filter((d) => d.formType === 'monitoring')
       const gapOther = filtered.filter((d) => d.formType !== 'gapCertification' && d.formType !== 'monitoring')
       tableRows += '<tr><td colspan="' + numCols + '" style="background:#065f46;color:#fff;font-weight:700;padding:6px 8px;">GAP CERTIFICATION' + (gapCert.length ? ' (' + gapCert.length + ' record(s))' : '') + '</td></tr>'
-      gapCert.forEach((doc, idx) => { tableRows += rowToTr(doc, idx + 1) })
+      gapCert.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
       tableRows += '<tr><td colspan="' + numCols + '" style="background:#065f46;color:#fff;font-weight:700;padding:6px 8px;">MONITORING OF GAP CERTIFIED FARMER' + (gapMonitoring.length ? ' (' + gapMonitoring.length + ' record(s))' : '') + '</td></tr>'
-      gapMonitoring.forEach((doc, idx) => { tableRows += rowToTr(doc, idx + 1) })
+      gapMonitoring.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
       if (gapOther.length) {
         tableRows += '<tr><td colspan="' + numCols + '" style="background:#78716c;color:#fff;font-weight:700;padding:6px 8px;">OTHER (' + gapOther.length + ' record(s))</td></tr>'
-        gapOther.forEach((doc, idx) => { tableRows += rowToTr(doc, idx + 1) })
+        gapOther.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
       }
     } else {
-      filtered.forEach((doc, idx) => { tableRows += rowToTr(doc, idx + 1) })
+      filtered.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
     }
 
-    const thCells = headerLabels.map((l) => `<th>${esc(l)}</th>`).join('')
+    const thCells = headerLabels.map((l) => {
+      const parts = l.split('<br>').map((p) => esc(p))
+      return '<th>' + parts.join('<br>') + '</th>'
+    }).join('')
     const metaParts = []
     if (filterMonth) metaParts.push(`Month: ${formatMonthLabel(filterMonth)}`)
     if (filterProvince) metaParts.push(`Province: ${filterProvince}`)
@@ -245,70 +316,111 @@ export default function ViewRecords() {
           <meta charset="utf-8">
           <title>Records - ${esc(collectionLabel)}</title>
           <style>
-            /* 1. Set specific size to LONG Paper in Landscape, Pinaliit ang Margin */
+            /* A4 Landscape - magkasya lahat; puwede rin Legal sa print dialog */
             @page { 
-              size: 13in 8.5in; 
-              margin: 5mm; 
+              size: A4 landscape; 
+              margin: 8mm; 
             }
             @media print {
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+              html, body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                overflow: visible !important;
+                height: auto !important;
+                max-width: 100% !important;
+              }
+              .print-body { overflow: visible !important; }
               thead { display: table-header-group; }
-              /* Prevent rows from being cut in half across pages */
               tr { page-break-inside: avoid; }
               table, th, td { border-color: #000 !important; }
               th, td { border: 1px solid #000 !important; }
               th { font-weight: 700 !important; }
+              .print-table-wrapper { overflow: visible !important; transform-origin: top left; }
             }
-            body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; margin: 0; padding: 10px; }
-            .print-header { margin-bottom: 15px; border-bottom: 2px solid #000; padding-bottom: 8px; }
-            .print-title { color: #064e3b; font-size: 16px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
-            .print-unit { color: #059669; font-size: 13px; font-weight: 600; margin: 4px 0; }
-            .print-meta { color: #64748b; font-size: 10px; margin: 0; }
-            
-            /* 2. AUTO Layout at mas maliit na font para magkasya lahat ng columns */
+            body { font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; margin: 0; padding: 10px; overflow-x: auto; }
+            .print-header { margin-bottom: 12px; border-bottom: 2px solid #000; padding-bottom: 6px; flex-shrink: 0; }
+            .print-title { color: #064e3b; font-size: 22px; font-weight: 800; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+            .print-unit { color: #059669; font-size: 19px; font-weight: 600; margin: 2px 0; }
+            .print-meta { color: #64748b; font-size: 14px; margin: 0; }
+            .print-table-wrapper { width: fit-content; max-width: 100%; margin: 0 auto; }
             table { 
-              width: 100%; 
               border-collapse: collapse; 
-              font-size: 9px; /* Binabaan yung font para magkasya ang madaming columns */
-              table-layout: auto; /* Hahayaan yung browser mag-adjust ng saktong lapad */
+              font-size: 16px; 
+              table-layout: auto; 
+              width: max-content; 
+              min-width: 100%;
             }
             th, td { 
               border: 1px solid #000; 
-              padding: 4px 4px; /* Binawasan ang padding */
-              text-align: left; 
+              padding: 8px 10px; 
               vertical-align: top; 
               word-wrap: break-word; 
+              word-break: break-word; 
+              overflow-wrap: break-word;
+              max-width: 95px;
+              line-height: 1.45;
             }
+            td { text-align: left; }
             th { 
               background: #065f46; 
               color: #fff; 
               font-weight: 700; 
-              text-transform: uppercase; 
-              font-size: 8px; /* Mas maliit ng konti ang header para hindi maputol */
-              letter-spacing: 0.2px; 
+              font-size: 15px; 
+              letter-spacing: 0.1px; 
+              text-align: center; 
+              white-space: normal; 
+              line-height: 1.45;
             }
+            tr { min-height: 2.2em; }
             tr:nth-child(even) td { background: #f0fdf4; }
-
-            /* 3. I-lock lang yung No. column na maliit, the rest is auto */
-            th:nth-child(1) { width: 2%; white-space: nowrap; } 
+            th:nth-child(1), td:nth-child(1) { width: 2%; min-width: 28px; white-space: nowrap; }
+            td:nth-child(1) { text-align: center; }
+            th:nth-child(2), td:nth-child(2) { max-width: 100px; }
           </style>
         </head>
-        <body>
+        <body class="print-body">
           <div class="print-header">
             <p class="print-title">Regulatory Division Data Report</p>
             <p class="print-unit">${esc(collectionLabel)}</p>
             <p class="print-meta">${esc(metaLine)}</p>
           </div>
-          <table>
-            <thead><tr>${thCells}</tr></thead>
-            <tbody>${tableRows}</tbody>
-          </table>
+          <div class="print-table-wrapper" id="printTableWrapper">
+            <table id="printTable">
+              <thead><tr>${thCells}</tr></thead>
+              <tbody>${tableRows}</tbody>
+            </table>
+          </div>
+          <script>
+            (function() {
+              function fitTableToPage() {
+                var wrapper = document.getElementById('printTableWrapper');
+                var table = document.getElementById('printTable');
+                if (!wrapper || !table) return;
+                var marginMm = 16;
+                var a4LandscapeMm = 297;
+                var legalLandscapeMm = 356;
+                var contentWidthMm = a4LandscapeMm - marginMm;
+                var contentWidthPx = contentWidthMm * 96 / 25.4;
+                var tableWidth = table.scrollWidth || table.offsetWidth;
+                if (tableWidth > contentWidthPx && tableWidth > 0) {
+                  var scale = (contentWidthPx - 30) / tableWidth;
+                  if (scale < 1) {
+                    wrapper.style.transform = 'scale(' + Math.min(scale, 0.98) + ')';
+                    wrapper.style.transformOrigin = 'top left';
+                  }
+                }
+              }
+              if (document.readyState === 'complete') fitTableToPage();
+              else window.addEventListener('load', fitTableToPage);
+              setTimeout(fitTableToPage, 150);
+            })();
+          <\/script>
         </body>
       </html>
     `)
     win.document.close()
     win.focus()
-    setTimeout(() => { win.print(); win.close(); }, 300)
+    setTimeout(() => { win.print(); win.close(); }, 600)
   }
 
   const handleExportExcel = async () => {
@@ -331,16 +443,47 @@ export default function ViewRecords() {
     { value: '5', label: 'Excellent (5)' },
   ]
 
+  // Keys that should use date input (settable date picker)
+  const isDateField = (k) => {
+    if (!k || typeof k !== 'string') return false
+    const lower = k.toLowerCase()
+    return lower.includes('date')
+  }
+
+  const toDateInputValue = (val) => {
+    if (val == null || val === '') return ''
+    if (typeof val === 'string') return val.slice(0, 10)
+    if (val && typeof val.toDate === 'function') return val.toDate().toISOString().slice(0, 10)
+    return ''
+  }
+
   const renderEditValue = (key, value) => {
     const inputClass = "w-full px-3 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl focus:outline-none focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] text-sm font-medium text-[#1e4d2b] placeholder:text-[#8a857c] transition-all"
 
     if (RATING_FIELD_KEYS.includes(key)) {
+      const ratingValue = value != null && value !== '' ? String(value) : ''
       return (
-        <AppSelect
-          options={RATING_OPTIONS}
-          value={value ?? ''}
-          onChange={(v) => updateEditField(key, v)}
-          placeholder="Select rating..."
+        <div className="view-records-edit-rating-select">
+          <AppSelect
+            options={RATING_OPTIONS}
+            value={ratingValue}
+            onChange={(v) => updateEditField(key, v)}
+            placeholder="Select rating..."
+            aria-label={key}
+            className="w-full"
+          />
+        </div>
+      )
+    }
+
+    if (isDateField(key)) {
+      const dateVal = toDateInputValue(value)
+      return (
+        <input
+          type="date"
+          value={dateVal}
+          onChange={(e) => updateEditField(key, e.target.value)}
+          className={inputClass}
           aria-label={key}
         />
       )
@@ -498,7 +641,6 @@ export default function ViewRecords() {
               placeholder="All Months"
               options={[
                 { value: '', label: 'All Months' },
-                { value: 'test_value', label: 'Test Month' },
                 ...months.map((m) => ({ value: m, label: formatMonthLabel(m) })),
               ]}
               leftIcon={<iconify-icon icon="mdi:calendar-month-outline" width="18"></iconify-icon>}

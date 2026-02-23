@@ -74,7 +74,7 @@ export default function AppSelect({
       {...(isOpen ? {} : { inert: '' })}
       className={isOpen ? 'app-select-panel-open' : 'app-select-panel-closed'}
       style={{
-        zIndex: 9999,
+        zIndex: 10001,
         position: 'fixed',
         top: panelRect.top,
         left: panelRect.left,

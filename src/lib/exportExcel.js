@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs'
 import { docToRow, toTitleCase } from './recordFilters'
-import { COLLECTION_TITLE_FIELD } from './collections'
+import { COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, RATING_FIELD_KEYS } from './collections'
 
 function getDisplayName(data, collectionId) {
   const key = COLLECTION_TITLE_FIELD[collectionId]
@@ -34,13 +34,21 @@ export async function exportToExcel(records, collectionId, collectionLabel) {
     return
   }
 
+  const excludeMeta = ['id', 'createdAt', 'createdBy', 'updatedAt']
+  const excludeFromExport = [...RATING_FIELD_KEYS, 'recommendation']
   const allKeys = new Set()
   records.forEach((doc) => {
-    Object.keys(doc).filter((k) => !['createdBy', 'updatedAt'].includes(k)).forEach((k) => allKeys.add(k))
+    Object.keys(doc).filter((k) => !excludeMeta.includes(k)).forEach((k) => allKeys.add(k))
   })
-  const rawHeaders = ['No.', 'Name / Title', ...Array.from(allKeys).filter((k) => k !== 'id')]
-  const headers = rawHeaders.map((h) => (h === 'No.' || h === 'Name / Title' ? h : toTitleCase(h)))
-  const headerKeys = ['No.', 'Name/Title', ...Array.from(allKeys).filter((k) => k !== 'id')]
+  // Same column order as Edit modal; exclude ratings and recommendation
+  const order = COLLECTION_FIELD_ORDER[collectionId] || []
+  const orderedFromConfig = order.filter((k) => allKeys.has(k) && !excludeFromExport.includes(k))
+  const restKeys = Array.from(allKeys).filter((k) => !order.includes(k) && !excludeFromExport.includes(k))
+  const columnKeys = [...orderedFromConfig, ...restKeys]
+  const labels = COLLECTION_FIELD_LABELS?.[collectionId]
+  const getHeaderLabel = (key) => (labels && labels[key] ? labels[key] : toTitleCase(key))
+  const headers = ['No.', 'Name / Title', ...columnKeys.map(getHeaderLabel)]
+  const headerKeys = ['No.', 'Name/Title', ...columnKeys]
 
   const headerRow = sheet.addRow(headers)
   headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' } }
