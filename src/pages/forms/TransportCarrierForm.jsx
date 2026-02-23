@@ -3,6 +3,7 @@ import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
 const TYPE_OF_APPLICATION_OPTIONS = ['New', 'Renewal', 'Amendment', 'Others']
@@ -13,6 +14,7 @@ export default function TransportCarrierForm() {
   const [nameOfEstablishment, setNameOfEstablishment] = useState('')
   const [nameOfApplicant, setNameOfApplicant] = useState('')
   const [address, setAddress] = useState('')
+  const [province, setProvince] = useState('')
   const [typeOfApplication, setTypeOfApplication] = useState('')
   const [typeOfApplicationOther, setTypeOfApplicationOther] = useState('')
   const [dateOfApplicationReceivedAndEvaluated, setDateOfApplicationReceivedAndEvaluated] = useState('')
@@ -34,6 +36,7 @@ export default function TransportCarrierForm() {
     nameOfEstablishment,
     nameOfApplicant,
     address,
+    province,
     typeOfApplication: typeOfApplication === 'Others' ? (typeOfApplicationOther.trim() || 'Others') : typeOfApplication,
     dateOfApplicationReceivedAndEvaluated,
     orNumber,
@@ -55,6 +58,7 @@ export default function TransportCarrierForm() {
     setNameOfEstablishment('')
     setNameOfApplicant('')
     setAddress('')
+    setProvince('')
     setTypeOfApplication('')
     setTypeOfApplicationOther('')
     setDateOfApplicationReceivedAndEvaluated('')
@@ -118,6 +122,10 @@ export default function TransportCarrierForm() {
                 <label className={labelClass}>Name of Applicant</label>
                 <input type="text" value={nameOfApplicant} onChange={(e) => setNameOfApplicant(e.target.value)} className={inputClass} placeholder="Name of Applicant" />
               </div>
+              <div>
+                <label className={labelClass}>Province</label>
+                <AppSelect value={province} onChange={setProvince} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" />
+              </div>
               <div className="sm:col-span-2">
                 <label className={labelClass}>Address</label>
                 <input type="text" value={address} onChange={(e) => setAddress(e.target.value)} className={inputClass} placeholder="Complete Address" />
@@ -171,7 +179,7 @@ export default function TransportCarrierForm() {
               </div>
               <div>
                 <label className={labelClass}>Validity</label>
-                <input type="text" value={validity} onChange={(e) => setValidity(e.target.value)} className={inputClass} placeholder="Validity period" />
+                <input type="date" value={validity} onChange={(e) => setValidity(e.target.value)} className={inputClass} />
               </div>
             </div>
           </div>
@@ -209,7 +217,7 @@ export default function TransportCarrierForm() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
+                className="w-full sm:w-auto min-h-[44px] px-6 sm:px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] touch-manipulation transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
               >
                 {loading ? (
                   <>

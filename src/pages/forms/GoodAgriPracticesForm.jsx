@@ -3,6 +3,7 @@ import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
 const FORM_TYPES = [
@@ -19,6 +20,7 @@ export default function GoodAgriPracticesForm() {
   const [dateOfRequest, setDateOfRequest] = useState('')
   const [nameOfApplicant, setNameOfApplicant] = useState('')
   const [location, setLocation] = useState('')
+  const [province, setProvince] = useState('')
   const [area, setArea] = useState('')
   const [crop, setCrop] = useState('')
   const [dateOfPreAssessment, setDateOfPreAssessment] = useState('')
@@ -38,7 +40,7 @@ export default function GoodAgriPracticesForm() {
   const { submit, loading, message } = useFormSubmit('goodAgriPractices')
 
   const buildPayload = () => {
-    const base = { formType, controlNo, location, area, remarks, ...ratings, recommendation }
+    const base = { formType, controlNo, location, province, area, remarks, ...ratings, recommendation }
     if (formType === 'gapCertification') {
       return {
         ...base,
@@ -68,6 +70,7 @@ export default function GoodAgriPracticesForm() {
     setDateOfRequest('')
     setNameOfApplicant('')
     setLocation('')
+    setProvince('')
     setArea('')
     setCrop('')
     setDateOfPreAssessment('')
@@ -154,6 +157,7 @@ export default function GoodAgriPracticesForm() {
                     <div><label className={labelClass}>No.</label><input type="text" value={controlNo} onChange={(e) => setControlNo(e.target.value)} className={inputClass} placeholder="Control / Reference No." /></div>
                     <div><label className={labelClass}>Date of Request</label><input type="date" value={dateOfRequest} onChange={(e) => setDateOfRequest(e.target.value)} className={inputClass} /></div>
                     <div className="sm:col-span-2"><label className={labelClass}>Name of Applicant</label><input type="text" value={nameOfApplicant} onChange={(e) => setNameOfApplicant(e.target.value)} className={inputClass} placeholder="Full Name" /></div>
+                    <div><label className={labelClass}>Province</label><AppSelect value={province} onChange={setProvince} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" /></div>
                     <div className="sm:col-span-2"><label className={labelClass}>Location</label><input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} placeholder="Farm / Address" /></div>
                     <div><label className={labelClass}>Area (ha)</label><input type="text" value={area} onChange={(e) => setArea(e.target.value)} className={inputClass} placeholder="e.g. 5.00" /></div>
                     <div><label className={labelClass}>Crop</label><input type="text" value={crop} onChange={(e) => setCrop(e.target.value)} className={inputClass} placeholder="Crop / Commodity" /></div>
@@ -161,7 +165,7 @@ export default function GoodAgriPracticesForm() {
                     <div><label className={labelClass}>Date of Endorsement to BPI</label><input type="date" value={dateOfEndorsementToBPI} onChange={(e) => setDateOfEndorsementToBPI(e.target.value)} className={inputClass} /></div>
                     <div><label className={labelClass}>Date of Final Inspection</label><input type="date" value={dateOfFinalInspection} onChange={(e) => setDateOfFinalInspection(e.target.value)} className={inputClass} /></div>
                     <div><label className={labelClass}>Status</label><AppSelect value={status} onChange={setStatus} placeholder="Select Status" options={[{ value: '', label: 'Select Status' }, ...STATUS_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Status" /></div>
-                    <div className="sm:col-span-2"><label className={labelClass}>Remarks</label><textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} className={textAreaClass} rows={3} placeholder="Remarks..." /></div>
+                    <div className="sm:col-span-2"><label className={labelClass}>Remarks</label><textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} rows={2} placeholder="Remarks..." /></div>
                   </div>
                 </div>
               )}
@@ -177,11 +181,12 @@ export default function GoodAgriPracticesForm() {
                     <div><label className={labelClass}>No.</label><input type="text" value={controlNo} onChange={(e) => setControlNo(e.target.value)} className={inputClass} placeholder="Control / Reference No." /></div>
                     <div><label className={labelClass}>Date of Monitoring</label><input type="date" value={dateOfMonitoring} onChange={(e) => setDateOfMonitoring(e.target.value)} className={inputClass} /></div>
                     <div className="sm:col-span-2"><label className={labelClass}>Name of Farmer</label><input type="text" value={nameOfFarmer} onChange={(e) => setNameOfFarmer(e.target.value)} className={inputClass} placeholder="Name of Farmer" /></div>
+                    <div><label className={labelClass}>Province</label><AppSelect value={province} onChange={setProvince} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" /></div>
                     <div className="sm:col-span-2"><label className={labelClass}>Location</label><input type="text" value={location} onChange={(e) => setLocation(e.target.value)} className={inputClass} placeholder="Location" /></div>
                     <div><label className={labelClass}>Area (ha)</label><input type="text" value={area} onChange={(e) => setArea(e.target.value)} className={inputClass} placeholder="e.g. 5.00" /></div>
                     <div><label className={labelClass}>Certificate Number</label><input type="text" value={certificateNumber} onChange={(e) => setCertificateNumber(e.target.value)} className={inputClass} placeholder="Certificate No." /></div>
                     <div><label className={labelClass}>Certificate Validity</label><input type="text" value={certificateValidity} onChange={(e) => setCertificateValidity(e.target.value)} className={inputClass} placeholder="Validity date or period" /></div>
-                    <div className="sm:col-span-2"><label className={labelClass}>Remarks</label><textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} className={textAreaClass} rows={3} placeholder="Remarks..." /></div>
+                    <div className="sm:col-span-2"><label className={labelClass}>Remarks</label><textarea value={remarks} onChange={(e) => setRemarks(e.target.value)} className={`${inputClass} min-h-[80px] resize-y`} rows={2} placeholder="Remarks..." /></div>
                   </div>
                 </div>
               )}
@@ -214,7 +219,7 @@ export default function GoodAgriPracticesForm() {
               <button
                 type="submit"
                 disabled={loading || !formType}
-                className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
+                className="w-full sm:w-auto min-h-[44px] px-6 sm:px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] touch-manipulation transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
               >
                 {loading ? (
                   <>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { useDisabledUnits } from '../context/DisabledUnitsContext'
+import { pathToCollectionId } from '../lib/collections'
 import { getPublicImageUrl } from '../utils/publicAssets'
 import { addSystemLog } from '../lib/systemLogs'
 
@@ -84,6 +86,8 @@ function DashboardLayout() {
   }
 
   const isActive = (path) => location.pathname === path
+
+  const { disabledUnitIds } = useDisabledUnits()
 
   // Auto-expand sidebar section if a child is active
   useEffect(() => {
@@ -233,6 +237,8 @@ function DashboardLayout() {
                   sidebarOpen={sidebarOpen}
                   mobileMenuOpen={mobileMenuOpen}
                   setSidebarOpen={setSidebarOpen}
+                  disabledUnitIds={disabledUnitIds}
+                  pathToCollectionId={pathToCollectionId}
                 />
               ))}
             </div>
@@ -358,7 +364,7 @@ function NavItem({ to, icon, label, active, sidebarOpen }) {
   )
 }
 
-function AccordionItem({ section, isOpen, onToggle, isActiveRoute, sidebarOpen, mobileMenuOpen, setSidebarOpen }) {
+function AccordionItem({ section, isOpen, onToggle, isActiveRoute, sidebarOpen, mobileMenuOpen, setSidebarOpen, disabledUnitIds = [], pathToCollectionId }) {
   const isChildActive = section.items.some(item => isActiveRoute(item.path));
   const showText = sidebarOpen || mobileMenuOpen;
 
@@ -418,6 +424,19 @@ function AccordionItem({ section, isOpen, onToggle, isActiveRoute, sidebarOpen, 
           <div className="ml-5 pl-4 border-l border-white/10 space-y-1 py-1">
             {section.items.map((item) => {
                const active = isActiveRoute(item.path);
+               const isDisabled = pathToCollectionId && disabledUnitIds.includes(pathToCollectionId(item.path));
+               if (isDisabled) {
+                 return (
+                   <div
+                     key={item.path}
+                     className="flex items-center gap-2 py-2 px-3 min-h-[44px] md:min-h-0 rounded-md text-[12.5px] text-accent-light/50 cursor-not-allowed relative"
+                   >
+                     <span className="absolute -left-[17px] top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-accent-light/30" />
+                     <span className="flex-1 truncate">{item.label}</span>
+                     <span className="text-[10px] font-bold uppercase text-red-400/90 shrink-0">Disabled</span>
+                   </div>
+                 );
+               }
                return (
                   <Link
                     key={item.path}

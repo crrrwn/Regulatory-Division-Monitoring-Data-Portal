@@ -1,5 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useDisabledUnits } from '../context/DisabledUnitsContext';
+import { pathToCollectionId } from '../lib/collections';
 
 const SECTIONS = [
   {
@@ -56,9 +58,11 @@ const SECTIONS = [
 ];
 
 export default function Dashboard() {
+  const { disabledUnitIds } = useDisabledUnits();
+
   return (
-    <div className="min-w-0 w-full max-w-full overflow-x-hidden pb-10">
-      <div className="w-full max-w-7xl mx-auto min-w-0 space-y-6">
+    <div className="min-w-0 w-full max-w-full overflow-x-hidden px-3 sm:px-4 md:px-5 lg:px-6 pb-10 sm:pb-12">
+      <div className="w-full max-w-7xl mx-auto min-w-0 space-y-4 sm:space-y-6">
 
         {/* --- HEADER --- */}
         <div className="dashboard-section rounded-xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden" style={{ animationDelay: '0ms' }}>
@@ -73,19 +77,19 @@ export default function Dashboard() {
                   Welcome back! Select a module below to manage records and forms.
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 shrink-0">
+              <div className="flex flex-wrap gap-2 sm:gap-3 shrink-0">
                 <Link
                   to="/dashboard/analytics"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 min-h-[44px] bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs sm:text-sm touch-manipulation"
                 >
-                  <iconify-icon icon="mdi:chart-box-outline" width="18"></iconify-icon>
+                  <iconify-icon icon="mdi:chart-box-outline" width="18" className="shrink-0"></iconify-icon>
                   Data Analytics
                 </Link>
                 <Link
                   to="/dashboard/records"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-[#b8a066] text-[#153019] rounded-xl border border-[#b8a066]/50 hover:bg-[#d4c4a0] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-sm"
+                  className="inline-flex items-center gap-2 px-3 py-2.5 sm:px-4 sm:py-2 min-h-[44px] bg-[#b8a066] text-[#153019] rounded-xl border border-[#b8a066]/50 hover:bg-[#d4c4a0] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs sm:text-sm touch-manipulation"
                 >
-                  <iconify-icon icon="mdi:database-search-outline" width="18"></iconify-icon>
+                  <iconify-icon icon="mdi:database-search-outline" width="18" className="shrink-0"></iconify-icon>
                   View Masterlist
                 </Link>
               </div>
@@ -121,30 +125,55 @@ export default function Dashboard() {
             {/* Unit cards grid */}
             <div className="p-4 sm:p-5 bg-gradient-to-b from-[#faf8f5] to-[#f2ede6]">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 min-w-0">
-                {section.units.map((unit, unitIdx) => (
-                  <Link
-                    key={unit.path}
-                    to={unit.path}
-                    className="dashboard-card group relative bg-white rounded-xl border-2 border-[#e8e0d4] p-4 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-[#1e4d2b]/40 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] flex items-start gap-3 overflow-hidden min-w-0"
-                    style={{ animationDelay: `${180 + idx * 120 + unitIdx * 40}ms` }}
-                  >
-                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-[0.04] transition-opacity duration-300 bg-gradient-to-br ${section.gradient}`} />
-                    <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-110 ${section.iconBg} border border-[#e8e0d4]`}>
-                      <iconify-icon icon="mdi:file-document-edit-outline" width="20"></iconify-icon>
-                    </div>
-                    <div className="flex-1 min-w-0 z-10">
-                      <p className="font-bold text-[#1e4d2b] group-hover:text-[#153019] text-sm leading-snug transition-colors duration-300">
-                        {unit.label}
-                      </p>
-                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5c7355] mt-1.5 group-hover:text-[#1e4d2b] transition-colors duration-300">
-                        <span>Open Form</span>
-                        <span className="inline-block transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:translate-x-0.5">
-                          <iconify-icon icon="mdi:arrow-right" width="14"></iconify-icon>
-                        </span>
+                {section.units.map((unit, unitIdx) => {
+                  const unitId = pathToCollectionId(unit.path)
+                  const isUnitDisabled = disabledUnitIds.includes(unitId)
+                  if (isUnitDisabled) {
+                    return (
+                      <div
+                        key={unit.path}
+                        className="dashboard-card group relative bg-gray-100 rounded-xl border-2 border-[#e8e0d4] p-4 shadow-sm flex items-start gap-3 overflow-hidden min-w-0 cursor-not-allowed opacity-75"
+                        style={{ animationDelay: `${180 + idx * 120 + unitIdx * 40}ms` }}
+                      >
+                        <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center bg-gray-200 border border-[#e8e0d4] text-[#8a857c]">
+                          <iconify-icon icon="mdi:file-document-edit-outline" width="20"></iconify-icon>
+                        </div>
+                        <div className="flex-1 min-w-0 z-10">
+                          <p className="font-bold text-[#5c574f] text-sm leading-snug">
+                            {unit.label}
+                          </p>
+                          <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold uppercase text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
+                            Disabled
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
-                ))}
+                    )
+                  }
+                  return (
+                    <Link
+                      key={unit.path}
+                      to={unit.path}
+                      className="dashboard-card group relative bg-white rounded-xl border-2 border-[#e8e0d4] p-4 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:border-[#1e4d2b]/40 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] flex items-start gap-3 overflow-hidden min-w-0"
+                      style={{ animationDelay: `${180 + idx * 120 + unitIdx * 40}ms` }}
+                    >
+                      <div className={`absolute inset-0 opacity-0 group-hover:opacity-[0.04] transition-opacity duration-300 bg-gradient-to-br ${section.gradient}`} />
+                      <div className={`shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-110 ${section.iconBg} border border-[#e8e0d4]`}>
+                        <iconify-icon icon="mdi:file-document-edit-outline" width="20"></iconify-icon>
+                      </div>
+                      <div className="flex-1 min-w-0 z-10">
+                        <p className="font-bold text-[#1e4d2b] group-hover:text-[#153019] text-sm leading-snug transition-colors duration-300">
+                          {unit.label}
+                        </p>
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold text-[#5c7355] mt-1.5 group-hover:text-[#1e4d2b] transition-colors duration-300">
+                          <span>Open Form</span>
+                          <span className="inline-block transition-transform duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:translate-x-0.5">
+                            <iconify-icon icon="mdi:arrow-right" width="14"></iconify-icon>
+                          </span>
+                        </div>
+                      </div>
+                    </Link>
+                  )
+                })}
               </div>
             </div>
           </div>

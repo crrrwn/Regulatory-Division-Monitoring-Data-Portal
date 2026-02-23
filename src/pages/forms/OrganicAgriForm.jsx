@@ -2,6 +2,7 @@ import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
 const STATUS_OPTIONS = ['Pending', 'On-Process', 'Approved', 'Denied', 'Certified']
@@ -19,6 +20,7 @@ const initialState = {
   application: '',
   nameOfGroup: '',
   nameOfApplicant: '',
+  province: '',
   location: '',
   area: '',
   dateOfEvaluation: '',
@@ -115,6 +117,10 @@ export default function OrganicAgriForm() {
 
             <div className="grid sm:grid-cols-2 gap-5">
                <div>
+                 <label className={labelClass}>Province</label>
+                 <AppSelect value={form.province} onChange={(v) => update('province', v)} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" />
+               </div>
+               <div>
                  <label className={labelClass}>Location</label>
                  <div className="relative group">
                     <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300">
@@ -183,8 +189,8 @@ export default function OrganicAgriForm() {
 
              <div className="grid sm:grid-cols-2 gap-5">
                 <div>
-                   <label className={labelClass}>Final Remarks</label>
-                   <textarea value={form.finalRemarks} onChange={updateUpper('finalRemarks')} className={`${inputClass} min-h-[60px] normal-case placeholder:normal-case`} rows="2" placeholder="Final conclusion..." />
+                   <label className={labelClass}>Remarks</label>
+                   <textarea value={form.finalRemarks} onChange={updateUpper('finalRemarks')} className={`${inputClass} min-h-[80px] resize-none overflow-y-auto normal-case placeholder:normal-case`} rows={2} placeholder="Remarks..." />
                 </div>
                 <div>
                    <label className={labelClass}>Digital File Link</label>
@@ -260,7 +266,7 @@ export default function OrganicAgriForm() {
                 <button 
                   type="submit" 
                   disabled={loading} 
-                  className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
+                  className="w-full sm:w-auto min-h-[44px] px-6 sm:px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl touch-manipulation font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
                 >
                   {loading ? (
                     <>

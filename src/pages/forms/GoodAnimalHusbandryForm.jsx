@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import { PROVINCES } from '../../lib/regions'
 
 const initialState = {
+  province: '',
   ratingQuantity: '',
   ratingServicesPersonnel: '',
   ratingTraining: '',
@@ -30,6 +33,10 @@ export default function GoodAnimalHusbandryForm() {
   return (
     <FormLayout title="Good Animal Husbandry Practices (GAHP) Unit">
       <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
+        <div>
+          <label className={labelClass}>Province</label>
+          <AppSelect value={form.province} onChange={(v) => update('province', v)} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" />
+        </div>
         <CustomerRatingsTable ratings={form} onChange={(k, v) => update(k, v)} />
 
         <div>
@@ -40,7 +47,7 @@ export default function GoodAnimalHusbandryForm() {
         {message && (
           <p className={`p-3 rounded ${message.type === 'success' ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-red-50 text-red-700 border border-red-200'}`}>{message.text}</p>
         )}
-        <button type="submit" disabled={loading} className="px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 font-semibold">
+        <button type="submit" disabled={loading} className="min-h-[44px] px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 font-semibold touch-manipulation">
           {loading ? 'Saving...' : 'Submit'}
         </button>
       </form>

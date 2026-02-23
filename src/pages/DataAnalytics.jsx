@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { COLLECTIONS } from '../lib/collections'
@@ -99,6 +99,27 @@ export default function DataAnalytics() {
   const { stats, refresh } = useAnalytics()
   const [showRatingsModal, setShowRatingsModal] = useState(false)
   const [selectedRatingUnit, setSelectedRatingUnit] = useState(null)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [lastRefreshedAt, setLastRefreshedAt] = useState(() => new Date())
+  const [showReloadedSign, setShowReloadedSign] = useState(false)
+
+  const handleRefresh = () => {
+    if (isRefreshing) return
+    setIsRefreshing(true)
+    setShowReloadedSign(false)
+    refresh()
+      .then(() => {
+        setLastRefreshedAt(new Date())
+        setShowReloadedSign(true)
+      })
+      .finally(() => setIsRefreshing(false))
+  }
+
+  useEffect(() => {
+    if (!showReloadedSign) return
+    const t = setTimeout(() => setShowReloadedSign(false), 3500)
+    return () => clearTimeout(t)
+  }, [showReloadedSign])
 
   // Helpers
   const getPercentage = (value, total) => {
@@ -119,7 +140,7 @@ export default function DataAnalytics() {
 
   return (
     <>
-      <div className="space-y-5 pb-8 relative font-sans text-[#2d2a26]">
+      <div className="space-y-4 sm:space-y-5 pb-8 sm:pb-10 relative font-sans text-[#2d2a26]">
         
         {/* --- DASHBOARD HEADER (same style as Dashboard Overview & Master Records) --- */}
         <div className="analytics-section rounded-xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden" style={{ animationDelay: '0ms' }}>
@@ -128,31 +149,43 @@ export default function DataAnalytics() {
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-sm">Analytics Dashboard</h2>
-                <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-1">
-                  Live system data · Updated: {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </p>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <p className="text-[11px] font-semibold text-white/85 tracking-wider">
+                    Live system data · Updated: {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                  </p>
+                  {showReloadedSign && (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/25 backdrop-blur-sm border border-white/40 text-white text-[11px] font-bold animate-in fade-in zoom-in-95 duration-300">
+                      <CheckCircle2 size={14} className="text-emerald-300 shrink-0" />
+                      Data reloaded
+                    </span>
+                  )}
+                </div>
               </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
                 <button
                   onClick={() => setShowRatingsModal(true)}
-                  className="group inline-flex items-center gap-1.5 px-4 py-2 bg-[#b8a066] text-[#153019] rounded-xl hover:bg-[#d4c4a0] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs border border-[#b8a066]/50"
+                  className="group inline-flex items-center gap-1.5 px-3 py-2.5 sm:px-4 min-h-[44px] bg-[#b8a066] text-[#153019] rounded-xl hover:bg-[#d4c4a0] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs border border-[#b8a066]/50 touch-manipulation"
                 >
-                  <Star size={16} className="fill-[#153019] transition-transform duration-300 group-hover:scale-110" />
+                  <Star size={16} className="fill-[#153019] transition-transform duration-300 group-hover:scale-110 shrink-0" />
                   View Ratings
                 </button>
                 <button
                   type="button"
-                  onClick={() => refresh()}
-                  className="group/ref inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#1e4d2b] rounded-xl hover:bg-[#faf8f5] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs border border-white/30"
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className="group/ref inline-flex items-center gap-2 px-3 py-2.5 sm:px-4 min-h-[44px] bg-white text-[#1e4d2b] rounded-xl hover:bg-[#faf8f5] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-lg transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs sm:text-sm border-2 border-white/40 disabled:opacity-70 disabled:cursor-wait disabled:hover:scale-100 touch-manipulation"
                 >
-                  <RefreshCw size={16} className="shrink-0 transition-transform duration-300 group-hover/ref:rotate-[-30deg]" />
-                  Refresh
+                  <RefreshCw
+                    size={18}
+                    className={`shrink-0 transition-transform duration-300 ${isRefreshing ? 'animate-spin' : 'group-hover/ref:rotate-[-360deg]'}`}
+                  />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
                 </button>
                 <Link
                   to="/dashboard"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs"
+                  className="inline-flex items-center gap-1.5 px-3 py-2.5 sm:px-4 min-h-[44px] bg-white/15 backdrop-blur-sm text-white border border-white/25 rounded-xl hover:bg-white/25 hover:border-white/40 hover:scale-105 active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs touch-manipulation"
                 >
-                  <ArrowLeft size={16} />
+                  <ArrowLeft size={16} className="shrink-0" />
                   Dashboard
                 </Link>
               </div>
@@ -371,17 +404,52 @@ export default function DataAnalytics() {
             <div className="px-6 sm:px-8 py-5 sm:py-6 flex justify-between items-center shrink-0 z-10 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(255,255,255,0.15),transparent)]" />
               <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <div className="flex items-center gap-4 relative z-10">
+              <div className="flex items-center gap-4 relative z-10 flex-1 min-w-0">
                 <div className="p-3 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 shadow-lg">
                   <Star size={26} className="text-[#d4c4a0] fill-[#d4c4a0]" />
                 </div>
-                <div>
+                <div className="min-w-0 flex-1">
                   <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight text-white drop-shadow-sm">
                     {selectedRatingUnit ? 'Unit Performance' : 'Satisfaction Ratings'}
                   </h3>
-                  <p className="text-[11px] font-semibold text-white/80 tracking-widest uppercase mt-1.5">
-                    {selectedRatingUnit ? 'Detailed feedback analysis' : 'Select a unit to view metrics'}
-                  </p>
+                  {selectedRatingUnit ? (
+                    <p className="text-[11px] font-semibold text-white/80 tracking-widest uppercase mt-1.5">
+                      Detailed feedback analysis
+                    </p>
+                  ) : (
+                    <div className="mt-3">
+                      {(() => {
+                        let totalSum = 0
+                        let totalCount = 0
+                        UNIT_GROUPS.forEach((group) => {
+                          group.units.forEach((unitId) => {
+                            const u = stats.unitRatings && stats.unitRatings[unitId]
+                            if (u && u.ratedCount > 0 && u.overallAvg != null) {
+                              totalSum += u.overallAvg * u.ratedCount
+                              totalCount += u.ratedCount
+                            }
+                          })
+                        })
+                        const overallAvg = totalCount > 0 ? totalSum / totalCount : null
+                        const hasOverall = overallAvg != null && totalCount > 0
+                        return hasOverall ? (
+                          <div className="inline-flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/25 backdrop-blur-md border border-white/40 shadow-md ring-1 ring-white/20">
+                            <span className="text-[10px] font-black text-white/95 uppercase tracking-widest">Overall</span>
+                            <div className="flex gap-0.5">
+                              {[1, 2, 3, 4, 5].map((s) => (
+                                <Star key={s} size={14} className={`${s <= Math.round(overallAvg) ? 'text-amber-300 fill-amber-300' : 'text-white/35'}`} strokeWidth={1.5} />
+                              ))}
+                            </div>
+                            <span className="text-sm font-black text-white tabular-nums">{overallAvg.toFixed(1)}</span>
+                            <span className="text-[10px] font-bold text-white/80">/ 5</span>
+                            <span className="text-[9px] font-semibold text-white/75">{totalCount} rating{totalCount !== 1 ? 's' : ''}</span>
+                          </div>
+                        ) : (
+                          <p className="text-[11px] font-semibold text-white/70 uppercase tracking-widest">No ratings yet</p>
+                        )
+                      })()}
+                    </div>
+                  )}
                 </div>
               </div>
               <button 

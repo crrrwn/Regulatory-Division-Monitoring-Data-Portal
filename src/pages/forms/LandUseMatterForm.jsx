@@ -16,7 +16,9 @@ import {
 } from 'lucide-react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
+import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
 const initialState = {
@@ -24,6 +26,7 @@ const initialState = {
   nameOfApplicant: '',
   purposeOfApplication: '',
   sizeOfArea: '',
+  province: '',
   location: '',
   dateOfRequest: '',
   dateReceivedAndEvaluated: '',
@@ -140,6 +143,10 @@ export default function LandUseMatterForm() {
               </div>
             </div>
             <div className="sm:col-span-8">
+              <label className={labelClass}>Province</label>
+              <AppSelect value={form.province} onChange={(v) => update('province', v)} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" />
+            </div>
+            <div className="sm:col-span-6">
               <label className={labelClass}>Location</label>
               <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -246,7 +253,7 @@ export default function LandUseMatterForm() {
           <button 
             type="submit" 
             disabled={loading} 
-            className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
+            className="w-full sm:w-auto min-h-[44px] px-6 sm:px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] touch-manipulation transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
           >
             {loading ? (
               <>
