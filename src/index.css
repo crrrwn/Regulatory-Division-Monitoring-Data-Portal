@@ -39,6 +39,9 @@
   --ease-in-out-smooth: cubic-bezier(0.65, 0, 0.35, 1);
   --duration-smooth: 400ms;
   --duration-smooth-slow: 600ms;
+  /* Sidebar collapse/expand — one smooth curve */
+  --sidebar-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --sidebar-duration: 0.38s;
 }
 
 @layer utilities {
@@ -49,6 +52,54 @@
     transition-duration: var(--duration-smooth-slow);
     transition-timing-function: var(--ease-out-smooth);
   }
+}
+
+/* Login/button spinner — guaranteed rotation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.login-spinner {
+  animation: spin 0.8s linear infinite;
+}
+/* Toast notification — slide in from right + fade */
+@keyframes toast-enter {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+.toast-enter {
+  animation: toast-enter 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+@keyframes toast-exit {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+.toast-exit {
+  animation: toast-exit 0.35s cubic-bezier(0.4, 0, 0.6, 1) forwards;
+}
+
+/* Login button loading state — spinner + text */
+.login-loading-inner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+.login-loading-text {
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 /* Public pages: subtle fade-in and page background */
@@ -839,7 +890,7 @@
 .admin-login-card {
   opacity: 0;
   animation: login-card-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s forwards;
-  /* Glass styles in CSS so same look on first paint and after refresh (no flash/difference) */
+  /* Glass styles in index.css so same look on refresh */
   background-color: rgba(255, 255, 255, 0.70);
   backdrop-filter: blur(40px) saturate(180%);
   -webkit-backdrop-filter: blur(40px) saturate(180%);

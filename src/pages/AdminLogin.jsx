@@ -97,7 +97,6 @@ export default function AdminLogin() {
         />
       </div>
       <div className="admin-login-page relative z-10 min-h-[80vh] pt-14 pb-10 px-4 sm:px-6 flex flex-col items-center justify-center">
-        {/* Frosted glass — styles in index.css so same look on refresh */}
         <div className="admin-login-card relative w-full max-w-[420px] rounded-3xl overflow-hidden p-0 transition-all duration-500 ease-out">
           <Link
             to="/"
@@ -188,7 +187,7 @@ export default function AdminLogin() {
                     >
                       {forgotLoading ? (
                         <span className="inline-flex items-center justify-center gap-1.5">
-                          <iconify-icon icon="mdi:loading" className="animate-spin" width="18" height="18"></iconify-icon>
+                          <span className="inline-flex login-spinner"><iconify-icon icon="mdi:loading" width="18" height="18"></iconify-icon></span>
                           Sending...
                         </span>
                       ) : (
@@ -246,12 +245,14 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full min-h-[44px] py-3 text-sm mt-4 bg-gradient-to-b from-primary to-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 focus:ring-4 focus:ring-primary/40 transition-all duration-300 ease-out disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 transform active:scale-[0.98] ring-2 ring-primary/20"
+                className="w-full h-[44px] flex items-center justify-center py-0 text-sm mt-4 bg-gradient-to-b from-primary to-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 focus:ring-4 focus:ring-primary/40 transition-all duration-300 ease-out disabled:opacity-100 disabled:cursor-wait disabled:hover:translate-y-0 transform active:scale-[0.98] ring-2 ring-primary/20"
               >
                 {loading ? (
-                  <span className="inline-flex items-center justify-center gap-2">
-                    <iconify-icon icon="mdi:loading" className="animate-spin" width="20" height="20"></iconify-icon>
-                    Please wait...
+                  <span className="login-loading-inner">
+                    <span className="inline-flex login-spinner shrink-0">
+                      <iconify-icon icon="mdi:loading" width="18" height="18"></iconify-icon>
+                    </span>
+                    <span className="login-loading-text">Please wait...</span>
                   </span>
                 ) : isRegister ? 'Register as Admin' : 'Login'}
               </button>

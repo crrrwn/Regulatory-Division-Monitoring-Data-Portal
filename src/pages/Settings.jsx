@@ -149,9 +149,10 @@ export default function Settings() {
         type: 'success',
         title: 'Units updated',
         message: currentlyDisabled ? 'Unit is now visible to staff.' : 'Unit is now hidden from staff.',
+        toast: true,
       })
     } catch (err) {
-      showNotification({ type: 'error', title: 'Update failed', message: err.message || 'Could not update units.' })
+      showNotification({ type: 'error', title: 'Update failed', message: err.message || 'Could not update units.', toast: true })
     }
     setUnitsSaving(null)
   }
@@ -370,7 +371,6 @@ export default function Settings() {
                         const c = COLLECTIONS.find((col) => col.id === id)
                         if (!c) return null
                         const isDisabled = disabledUnitIds.includes(c.id)
-                        const saving = unitsSaving === c.id
                         return (
                           <div
                             key={c.id}
@@ -385,15 +385,15 @@ export default function Settings() {
                                 type="button"
                                 onClick={() => handleUnitToggle(c.id, isDisabled)}
                                 disabled={!!unitsSaving}
-                                className={`relative w-11 h-6 rounded-full transition-colors duration-200 ${isDisabled ? 'bg-red-500' : 'bg-[#1e4d2b]'} disabled:opacity-60`}
+                                className={`relative w-11 h-6 rounded-full transition-colors duration-300 ease-out ${isDisabled ? 'bg-red-500' : 'bg-[#1e4d2b]'} disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#1e4d2b]/40 focus:ring-offset-2 rounded-full`}
                                 aria-label={isDisabled ? `Enable ${c.label}` : `Disable ${c.label}`}
                               >
-                                <span className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform duration-200 ${isDisabled ? 'left-1' : 'left-6'}`} />
+                                <span
+                                  className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ease-out ${isDisabled ? 'left-1 translate-x-0' : 'left-1 translate-x-5'}`}
+                                  style={{ willChange: 'transform' }}
+                                />
                               </button>
                             </div>
-                            {saving && (
-                              <iconify-icon icon="mdi:loading" width="18" className="animate-spin text-[#1e4d2b] shrink-0"></iconify-icon>
-                            )}
                           </div>
                         )
                       })}
