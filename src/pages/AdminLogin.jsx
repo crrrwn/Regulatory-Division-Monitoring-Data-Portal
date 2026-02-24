@@ -43,6 +43,15 @@ export default function AdminLogin() {
     setForgotLoading(false)
   }
 
+  const onFormSubmit = (e) => {
+    e.preventDefault()
+    if (showForgotPassword) {
+      handleForgotPassword(e)
+      return
+    }
+    handleSubmit(e)
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -110,7 +119,7 @@ export default function AdminLogin() {
               <p className="admin-login-stagger-3 text-sm text-black/80 mt-2 font-medium">Sign in or register as Administrator</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={onFormSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-bold text-black mb-1.5">Email</label>
               <input
@@ -154,7 +163,7 @@ export default function AdminLogin() {
                 style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
               >
                 <p className="text-sm font-bold text-black">Reset password</p>
-                <form onSubmit={handleForgotPassword} className="space-y-3">
+                <div className="space-y-3">
                   <input
                     type="email"
                     value={forgotEmail}
@@ -187,7 +196,7 @@ export default function AdminLogin() {
                       )}
                     </button>
                   </div>
-                </form>
+                </div>
                 {forgotSuccess && (
                   <p className="admin-login-success-in text-sm text-black font-semibold flex items-center gap-1.5">
                     <iconify-icon icon="mdi:check-circle-outline" width="18" height="18"></iconify-icon>
@@ -233,18 +242,20 @@ export default function AdminLogin() {
               </div>
             )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full min-h-[44px] py-3 text-sm mt-4 bg-gradient-to-b from-primary to-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 focus:ring-4 focus:ring-primary/40 transition-all duration-300 ease-out disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 transform active:scale-[0.98] ring-2 ring-primary/20"
-            >
-              {loading ? (
-                <span className="inline-flex items-center justify-center gap-2">
-                  <iconify-icon icon="mdi:loading" className="animate-spin" width="20" height="20"></iconify-icon>
-                  Please wait...
-                </span>
-              ) : isRegister ? 'Register as Admin' : 'Login'}
-            </button>
+            {!showForgotPassword && (
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full min-h-[44px] py-3 text-sm mt-4 bg-gradient-to-b from-primary to-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 focus:ring-4 focus:ring-primary/40 transition-all duration-300 ease-out disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 transform active:scale-[0.98] ring-2 ring-primary/20"
+              >
+                {loading ? (
+                  <span className="inline-flex items-center justify-center gap-2">
+                    <iconify-icon icon="mdi:loading" className="animate-spin" width="20" height="20"></iconify-icon>
+                    Please wait...
+                  </span>
+                ) : isRegister ? 'Register as Admin' : 'Login'}
+              </button>
+            )}
             </form>
 
             <div className="mt-5 pt-5 border-t border-slate-200 flex flex-col items-center">
