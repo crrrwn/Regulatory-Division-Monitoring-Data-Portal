@@ -99,6 +99,7 @@ export default function DataAnalytics() {
   const { stats, refresh } = useAnalytics()
   const [showRatingsModal, setShowRatingsModal] = useState(false)
   const [selectedRatingUnit, setSelectedRatingUnit] = useState(null)
+  const [geoViewMode, setGeoViewMode] = useState('card')
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [lastRefreshedAt, setLastRefreshedAt] = useState(() => new Date())
   const [showReloadedSign, setShowReloadedSign] = useState(false)
@@ -270,7 +271,7 @@ export default function DataAnalytics() {
                              <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white/25 to-transparent rounded-t-lg" />
                            </div>
                          </div>
-                         <div className="mt-2 text-[9px] font-bold text-[#5c7355] truncate w-full text-center group-hover:text-[#1e4d2b] transition-colors duration-300">
+                         <div className="mt-2 text-[9px] font-bold text-[#5c574f] truncate w-full text-center group-hover:text-[#1e4d2b] transition-colors duration-300">
                            {formatMonthLabel(month)}
                          </div>
                        </div>
@@ -328,21 +329,32 @@ export default function DataAnalytics() {
         </div>
 
         {/* --- PROVINCE DISTRIBUTION (Geographic Data) — khaki/gold (Pest & Disease style) --- */}
-        <div className="analytics-section rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/12 overflow-hidden bg-white hover:shadow-xl hover:shadow-[#b8a066]/18 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]" style={{ animationDelay: '240ms' }}>
-           <div className="shrink-0 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] px-4 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#b8a066]/25">
+        <div className="analytics-section w-full min-w-0 max-w-full rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/12 overflow-hidden bg-white hover:shadow-xl hover:shadow-[#b8a066]/18 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]" style={{ animationDelay: '240ms' }}>
+           <div className="shrink-0 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] px-3 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#b8a066]/25">
              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
-             <div className="relative z-10 flex items-center justify-between">
-               <div>
-                 <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Geographic Data</h3>
-                 <p className="text-[10px] font-semibold text-white/85 tracking-wider mt-0.5">Records by Province</p>
+             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 min-w-0">
+               <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                 <div className="p-1.5 sm:p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-white shrink-0">
+                   <MapPin size={16} className="sm:w-[18px] sm:h-[18px]" />
+                 </div>
+                 <div className="min-w-0">
+                   <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-tight drop-shadow-sm truncate">Geographic Data</h3>
+                   <p className="text-[9px] sm:text-[10px] font-semibold text-white/85 tracking-wider mt-0.5 truncate">Records by Province</p>
+                 </div>
                </div>
-               <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-white">
-                 <MapPin size={18} />
+               <div className="flex rounded-lg overflow-hidden border border-white/25 bg-white/10 p-0.5 shrink-0 w-full sm:w-auto">
+                 <button type="button" onClick={() => setGeoViewMode('card')} className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 sm:py-1.5 text-[9px] sm:text-[10px] font-bold rounded-md transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] min-h-[44px] sm:min-h-0 touch-manipulation ${geoViewMode === 'card' ? 'bg-white text-[#153019] shadow-sm' : 'text-white/90 hover:text-white hover:bg-white/10'}`}>
+                   <span aria-hidden>📊</span> Card View
+                 </button>
+                 <button type="button" onClick={() => setGeoViewMode('analytics')} className={`flex-1 sm:flex-none inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-2 sm:py-1.5 text-[9px] sm:text-[10px] font-bold rounded-md transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] min-h-[44px] sm:min-h-0 touch-manipulation ${geoViewMode === 'analytics' ? 'bg-white text-[#153019] shadow-sm' : 'text-white/90 hover:text-white hover:bg-white/10'}`}>
+                   <span aria-hidden>📈</span> Analytics View
+                 </button>
                </div>
              </div>
            </div>
-           <div className="p-4 sm:p-5 bg-[linear-gradient(180deg,#faf8f5_0%,#f5f0e8_50%,#efe9e0_100%)] border-l-4 border-[#b8a066]/25">
-             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2.5 sm:gap-3">
+           <div className="p-3 sm:p-5 bg-[linear-gradient(180deg,#faf8f5_0%,#f5f0e8_50%,#efe9e0_100%)] border-l-4 border-[#b8a066]/25 min-w-0 overflow-x-hidden">
+             {geoViewMode === 'card' ? (
+             <div className="grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 min-w-0">
                {provinceEntries.map(([prov, count], index) => {
                  const maxProv = provinceEntries.length > 0 ? Math.max(...provinceEntries.map(([, c]) => c)) : 1
                  const barPct = maxProv > 0 ? (count / maxProv) * 100 : 0
@@ -350,23 +362,24 @@ export default function DataAnalytics() {
                  return (
                    <div
                      key={prov}
-                     className="group relative bg-white rounded-lg border-2 border-[#e8e0d4] p-3 shadow-md hover:shadow-xl hover:border-[#b8a066]/50 hover:-translate-y-0.5 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] overflow-hidden"
+                     className="group relative bg-white rounded-lg border-2 border-[#e8e0d4] p-2.5 sm:p-3 shadow-md hover:shadow-xl hover:shadow-[#b8a066]/15 hover:border-[#b8a066]/50 hover:-translate-y-1 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] overflow-hidden animate-in fade-in min-w-0"
+                     style={{ animationDelay: `${index * 40}ms`, animationDuration: '700ms', animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)', animationFillMode: 'both' }}
                    >
-                     <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#b8a066]/15 to-transparent rounded-bl-full pointer-events-none" />
+                     <div className="absolute top-1.5 left-1.5 p-1 sm:p-1.5 rounded-md sm:rounded-lg bg-[#faf8f5] border border-[#e8e0d4] text-[#9a7b4f] group-hover:bg-[#b8a066]/15 group-hover:border-[#b8a066]/30 group-hover:text-[#8f7a45] transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] z-10 shrink-0">
+                       <MapPin size={12} className="sm:w-[14px] sm:h-[14px]" />
+                     </div>
+                     <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#b8a066]/15 to-transparent rounded-bl-full pointer-events-none transition-opacity duration-500 group-hover:opacity-80" />
                      {isTop && (
-                       <div className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black shadow-md ring-1 ring-black/10 ${index === 0 ? 'bg-gradient-to-br from-[#b8a066] to-[#9a7b4f] text-[#153019]' : index === 1 ? 'bg-gradient-to-br from-[#5c7355] to-[#4a6b3c] text-white' : 'bg-gradient-to-br from-[#1e4d2b] to-[#153019] text-white'}`}>
+                       <div className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black shadow-md ring-1 ring-black/10 transition-transform duration-500 group-hover:scale-110 ${index === 0 ? 'bg-gradient-to-br from-[#b8a066] to-[#9a7b4f] text-[#153019]' : index === 1 ? 'bg-gradient-to-br from-[#5c7355] to-[#4a6b3c] text-white' : 'bg-gradient-to-br from-[#1e4d2b] to-[#153019] text-white'}`}>
                          {index + 1}
                        </div>
                      )}
-                     <div className="flex flex-col items-center text-center relative z-10">
-                       <div className="p-1.5 rounded-lg bg-[#faf8f5] border border-[#e8e0d4] text-[#9a7b4f] group-hover:bg-[#b8a066]/15 group-hover:border-[#b8a066]/30 group-hover:text-[#8f7a45] transition-colors duration-300 mb-1.5">
-                         <MapPin size={14} className="mx-auto" />
-                       </div>
-                       <span className="text-xl sm:text-2xl font-black text-[#1e4d2b] group-hover:scale-105 transition-transform duration-300">{count}</span>
-                       <span className="text-[9px] font-bold text-[#5c7355] uppercase tracking-wider mt-1 truncate w-full">{prov}</span>
+                     <div className="flex flex-col items-center text-center relative z-10 pt-5 sm:pt-6 min-w-0">
+                       <span className="text-lg sm:text-xl md:text-2xl font-black tabular-nums text-[#1e4d2b] group-hover:scale-110 transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">{count}</span>
+                       <span className="text-[8px] sm:text-[9px] font-bold text-[#5c7355] uppercase tracking-wider mt-0.5 sm:mt-1 truncate w-full max-w-full px-0.5">{prov}</span>
                        <div className="w-full h-1.5 mt-2 bg-[#e8e0d4]/80 rounded-full overflow-hidden shadow-inner">
                          <div
-                           className="h-full bg-gradient-to-r from-[#9a7b4f] to-[#b8a066] rounded-full transition-[width] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                           className="h-full bg-gradient-to-r from-[#9a7b4f] to-[#b8a066] rounded-full transition-[width] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
                            style={{ width: `${Math.max(barPct, 8)}%` }}
                          />
                        </div>
@@ -375,6 +388,43 @@ export default function DataAnalytics() {
                  )
                })}
              </div>
+             ) : (
+             <div className="space-y-2 sm:space-y-2.5 max-h-[360px] sm:max-h-[400px] overflow-y-auto overflow-x-hidden custom-scrollbar view-records-scroll pr-1 min-w-0">
+               {provinceEntries.length === 0 ? (
+                 <div className="flex items-center justify-center py-12 text-[#5c574f] rounded-xl border-2 border-dashed border-[#b8a066]/30 bg-white/60 animate-in fade-in duration-500">
+                   <span className="text-sm font-medium">No province data available</span>
+                 </div>
+               ) : (
+                 provinceEntries.map(([prov, count], index) => {
+                   const maxProv = provinceEntries.length > 0 ? Math.max(...provinceEntries.map(([, c]) => c)) : 1
+                   const barPct = maxProv > 0 ? (count / maxProv) * 100 : 0
+                   return (
+                     <div
+                       key={prov}
+                       className="group flex items-center gap-2 sm:gap-3 min-w-0 animate-in fade-in"
+                       style={{ animationDelay: `${index * 60}ms`, animationDuration: '700ms', animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)', animationFillMode: 'both' }}
+                     >
+                       <div className={`w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-[9px] sm:text-[10px] font-black shrink-0 shadow-sm transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-110 flex-shrink-0 ${index === 0 ? 'bg-gradient-to-br from-[#b8a066] to-[#9a7b4f] text-[#153019]' : index === 1 ? 'bg-gradient-to-br from-[#5c7355] to-[#4a6b3c] text-white' : index === 2 ? 'bg-gradient-to-br from-[#1e4d2b] to-[#153019] text-white' : 'bg-[#e8e0d4] text-[#5c574f]'}`}>
+                         {index + 1}
+                       </div>
+                       <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-3 overflow-hidden">
+                         <span className="text-[11px] sm:text-sm font-bold text-[#1e4d2b] truncate min-w-0 sm:min-w-[80px] md:min-w-[120px] transition-colors duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:text-[#153019]">{prov}</span>
+                         <div className="flex-1 min-w-0 h-6 sm:h-7 md:h-8 bg-[#e8e0d4]/80 rounded-lg overflow-hidden relative group/bar">
+                           <div
+                             className="h-full bg-gradient-to-r from-[#9a7b4f] to-[#b8a066] rounded-lg flex items-center justify-end pr-1.5 min-w-[2rem] transition-[width,filter] duration-[1200ms] ease-[cubic-bezier(0.16,1,0.3,1)] group-hover/bar:brightness-110"
+                             style={{ width: `${Math.max(barPct, 4)}%` }}
+                           >
+                             {barPct >= 25 && <span className="text-[8px] sm:text-[9px] font-black text-white drop-shadow-sm animate-in fade-in duration-500">{count}</span>}
+                           </div>
+                         </div>
+                         <span className="text-[11px] sm:text-xs font-black text-[#1e4d2b] w-7 sm:w-8 md:w-10 text-right shrink-0 flex-shrink-0 transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] group-hover:scale-110 tabular-nums">{count}</span>
+                       </div>
+                     </div>
+                   )
+                 })
+               )}
+             </div>
+             )}
            </div>
         </div>
       </div>
@@ -401,63 +451,66 @@ export default function DataAnalytics() {
             <div className="rounded-[1.75rem] overflow-hidden bg-[#faf8f5] flex flex-col h-full min-h-0">
             
             {/* Modal Header */}
-            <div className="px-6 sm:px-8 py-5 sm:py-6 flex justify-between items-center shrink-0 z-10 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] relative overflow-hidden">
+            <div className="px-6 sm:px-8 py-5 sm:py-6 flex justify-between items-start sm:items-center shrink-0 z-10 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] relative overflow-hidden">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(255,255,255,0.15),transparent)]" />
               <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <div className="flex items-center gap-4 relative z-10 flex-1 min-w-0">
-                <div className="p-3 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 shadow-lg">
-                  <Star size={26} className="text-[#d4c4a0] fill-[#d4c4a0]" />
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 relative z-10 flex-1 min-w-0 pr-14 sm:pr-12">
+                <div className="flex items-center gap-4 min-w-0 flex-shrink-0">
+                  <div className="p-3 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 shadow-lg shrink-0">
+                    <Star size={26} className="text-[#d4c4a0] fill-[#d4c4a0]" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight text-white drop-shadow-sm">
+                      {selectedRatingUnit ? 'Unit Performance' : 'Satisfaction Ratings'}
+                    </h3>
+                    {selectedRatingUnit && (
+                      <p className="text-[11px] font-semibold text-white/80 tracking-widest uppercase mt-1.5">
+                        Detailed feedback analysis
+                      </p>
+                    )}
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight text-white drop-shadow-sm">
-                    {selectedRatingUnit ? 'Unit Performance' : 'Satisfaction Ratings'}
-                  </h3>
-                  {selectedRatingUnit ? (
-                    <p className="text-[11px] font-semibold text-white/80 tracking-widest uppercase mt-1.5">
-                      Detailed feedback analysis
-                    </p>
-                  ) : (
-                    <div className="mt-3">
-                      {(() => {
-                        let totalSum = 0
-                        let totalCount = 0
-                        UNIT_GROUPS.forEach((group) => {
-                          group.units.forEach((unitId) => {
-                            const u = stats.unitRatings && stats.unitRatings[unitId]
-                            if (u && u.ratedCount > 0 && u.overallAvg != null) {
-                              totalSum += u.overallAvg * u.ratedCount
-                              totalCount += u.ratedCount
-                            }
-                          })
+                {!selectedRatingUnit && (
+                  <div className="flex-shrink-0">
+                    {(() => {
+                      let totalSum = 0
+                      let totalCount = 0
+                      UNIT_GROUPS.forEach((group) => {
+                        group.units.forEach((unitId) => {
+                          const u = stats.unitRatings && stats.unitRatings[unitId]
+                          if (u && u.ratedCount > 0 && u.overallAvg != null) {
+                            totalSum += u.overallAvg * u.ratedCount
+                            totalCount += u.ratedCount
+                          }
                         })
-                        const overallAvg = totalCount > 0 ? totalSum / totalCount : null
-                        const hasOverall = overallAvg != null && totalCount > 0
-                        return hasOverall ? (
-                          <div className="inline-flex items-center gap-2.5 px-3 py-2 rounded-xl bg-white/25 backdrop-blur-md border border-white/40 shadow-md ring-1 ring-white/20">
-                            <span className="text-[10px] font-black text-white/95 uppercase tracking-widest">Overall</span>
-                            <div className="flex gap-0.5">
-                              {[1, 2, 3, 4, 5].map((s) => (
-                                <Star key={s} size={14} className={`${s <= Math.round(overallAvg) ? 'text-amber-300 fill-amber-300' : 'text-white/35'}`} strokeWidth={1.5} />
-                              ))}
-                            </div>
-                            <span className="text-sm font-black text-white tabular-nums">{overallAvg.toFixed(1)}</span>
-                            <span className="text-[10px] font-bold text-white/80">/ 5</span>
-                            <span className="text-[9px] font-semibold text-white/75">{totalCount} rating{totalCount !== 1 ? 's' : ''}</span>
+                      })
+                      const overallAvg = totalCount > 0 ? totalSum / totalCount : null
+                      const hasOverall = overallAvg != null && totalCount > 0
+                      return hasOverall ? (
+                        <div className="inline-flex flex-wrap items-center gap-x-2.5 gap-y-1.5 px-3 py-2 rounded-xl bg-white/25 backdrop-blur-md border border-white/40 shadow-md ring-1 ring-white/20 max-w-full">
+                          <span className="text-[10px] font-black text-white/95 uppercase tracking-widest">Overall</span>
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <Star key={s} size={14} className={`shrink-0 ${s <= Math.round(overallAvg) ? 'text-amber-300 fill-amber-300' : 'text-white/35'}`} strokeWidth={1.5} />
+                            ))}
                           </div>
-                        ) : (
-                          <p className="text-[11px] font-semibold text-white/70 uppercase tracking-widest">No ratings yet</p>
-                        )
-                      })()}
-                    </div>
-                  )}
-                </div>
+                          <span className="text-sm font-black text-white tabular-nums">{overallAvg.toFixed(1)}</span>
+                          <span className="text-[10px] font-bold text-white/80">/ 5</span>
+                          <span className="text-[9px] font-semibold text-white/75">{totalCount} rating{totalCount !== 1 ? 's' : ''}</span>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] font-semibold text-white/70 uppercase tracking-widest">No ratings yet</p>
+                      )
+                    })()}
+                  </div>
+                )}
               </div>
               <button 
                 onClick={() => {
                   setShowRatingsModal(false)
                   setSelectedRatingUnit(null)
                 }}
-                className="relative z-10 p-2.5 rounded-xl bg-white/10 hover:bg-white/25 text-white/90 hover:text-white transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] border border-white/20 hover:border-white/40 hover:scale-105 active:scale-95"
+                className="absolute top-5 right-6 sm:top-6 sm:right-8 z-20 shrink-0 p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl bg-white/10 hover:bg-white/25 text-white/90 hover:text-white transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] border border-white/20 hover:border-white/40 hover:scale-105 active:scale-95 touch-manipulation"
               >
                 <X size={22} strokeWidth={2.5} />
               </button>

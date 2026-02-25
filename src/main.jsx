@@ -2,6 +2,7 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App'
+import ErrorBoundary from './components/ErrorBoundary'
 import { preloadPublicImages } from './utils/publicAssets'
 import './index.css'
 
@@ -9,6 +10,7 @@ preloadPublicImages()
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <ErrorBoundary>
     <BrowserRouter
       future={{
         v7_startTransition: true,
@@ -17,5 +19,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     >
       <App />
     </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>,
 )

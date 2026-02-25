@@ -13,7 +13,7 @@ export default function FormLayout({ title, children }) {
         </Link>
       </div>
       <h2 className="text-base sm:text-lg md:text-xl font-bold text-primary mb-3 sm:mb-6 break-words">{title}</h2>
-      <div className="bg-white rounded-lg sm:rounded-xl border border-border p-4 sm:p-6 lg:p-8 overflow-visible min-w-0">
+      <div className="form-layout-inner bg-white rounded-lg sm:rounded-xl border border-border p-4 sm:p-6 lg:p-8 overflow-x-hidden min-w-0 max-w-full">
         {children}
       </div>
     </div>

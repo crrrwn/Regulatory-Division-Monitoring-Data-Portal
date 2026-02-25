@@ -293,6 +293,34 @@
   background: rgba(30, 77, 43, 0.6);
 }
 
+/* ========== Unit forms (15 units) — prevent container overflow on mobile ========== */
+.form-layout-inner {
+  min-width: 0;
+}
+.form-layout-inner > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.form-layout-inner [class*="-section"],
+.form-layout-inner div[class*="rounded-2xl"][class*="border-2"] {
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.form-layout-inner .grid > *,
+.form-layout-inner form .grid > * {
+  min-width: 0;
+}
+.form-layout-inner input,
+.form-layout-inner select,
+.form-layout-inner textarea {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.form-layout-inner .overflow-x-auto {
+  -webkit-overflow-scrolling: touch;
+}
+
 /* View Records / Data Analytics / main content — smooth scroll, no blocking */
 .view-records-scroll {
   scroll-behavior: smooth;

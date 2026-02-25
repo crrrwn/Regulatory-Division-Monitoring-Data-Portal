@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
-import { collection, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, limit, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
@@ -91,6 +91,7 @@ export default function ViewRecords() {
   const [editForm, setEditForm] = useState({})
   const [exporting, setExporting] = useState(false)
   const [deleteConfirming, setDeleteConfirming] = useState(null) // { id, name } or null
+  const [loadError, setLoadError] = useState(null)
   const { user, role } = useAuth()
   const { showNotification } = useNotification()
 
@@ -104,11 +105,22 @@ export default function ViewRecords() {
     }
   }, [disabledUnitIds, selectedCollection])
 
+  const VIEW_RECORDS_LIMIT = 5000
+
   useEffect(() => {
+    setLoadError(null)
     const colRef = collection(db, selectedCollection)
-    const unsub = onSnapshot(colRef, (snap) => {
-      setDocs(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
-    })
+    const q = query(colRef, limit(VIEW_RECORDS_LIMIT))
+    const unsub = onSnapshot(
+      q,
+      (snap) => {
+        setDocs(snap.docs.map((d) => ({ id: d.id, ...d.data() })))
+      },
+      (err) => {
+        console.error('[ViewRecords] Firestore error:', err)
+        setLoadError(err?.message || 'Failed to load records')
+      }
+    )
     return () => unsub()
   }, [selectedCollection])
 
@@ -424,6 +436,10 @@ export default function ViewRecords() {
   }
 
   const handleExportExcel = async () => {
+    const EXPORT_WARN_THRESHOLD = 5000
+    if (filtered.length > EXPORT_WARN_THRESHOLD && !window.confirm(
+      `Exporting ${filtered.length} records may take a while and use more memory. Continue?`
+    )) return
     setExporting(true)
     try {
       await exportToExcel(filtered, selectedCollection, collectionLabel)
@@ -604,6 +620,15 @@ export default function ViewRecords() {
           </div>
         </div>
       </div>
+
+      {loadError && (
+        <div className="rounded-xl border-2 border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-800">
+          <span className="inline-flex items-center gap-2">
+            <iconify-icon icon="mdi:alert-circle" width="20"></iconify-icon>
+            {loadError}
+          </span>
+        </div>
+      )}
 
       {/* --- CONTROLS BAR (FILTERS & SEARCH) — khaki/gold accent (Quality Control style) --- */}
       <div className="view-records-anim-2 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#b8a066]/10 overflow-visible hover:shadow-xl hover:shadow-[#b8a066]/15 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
@@ -959,9 +984,14 @@ export default function ViewRecords() {
             </tbody>
           </table>
         </div>
-        <div className="shrink-0 bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] border-t-2 border-[#1e4d2b]/15 px-5 py-2.5 flex justify-between items-center text-[11px] font-bold text-[#5c7355] transition-colors duration-300">
+        <div className="shrink-0 bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] border-t-2 border-[#1e4d2b]/15 px-5 py-2.5 flex flex-wrap justify-between items-center gap-2 text-[11px] font-bold text-[#5c7355] transition-colors duration-300">
           <span>Showing {filtered.length} record(s)</span>
-          {filtered.length > 20 && <span className="italic">Scroll for more</span>}
+          <span className="flex items-center gap-2">
+            {docs.length >= VIEW_RECORDS_LIMIT && (
+              <span className="italic text-amber-700">First {VIEW_RECORDS_LIMIT} loaded — use filters to narrow</span>
+            )}
+            {filtered.length > 20 && <span className="italic">Scroll for more</span>}
+          </span>
         </div>
       </div>
 

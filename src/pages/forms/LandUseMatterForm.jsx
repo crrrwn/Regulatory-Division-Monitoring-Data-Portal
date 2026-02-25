@@ -203,7 +203,7 @@ export default function LandUseMatterForm() {
                 <label className={labelClass}>Field Investigation Details</label>
                 <input type="text" value={form.fieldInvestigation} onChange={updateUpper('fieldInvestigation')} className={inputClass} placeholder="Findings summary" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className={labelClass}>Date of Endorsement</label>
                   <input type="date" value={form.dateOfEndorsement} onChange={(e) => update('dateOfEndorsement', e.target.value)} className={inputClass} />

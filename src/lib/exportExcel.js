@@ -18,8 +18,16 @@ function safeSheetName(name) {
   return (sanitized || 'Sheet').slice(0, 31)
 }
 
+const EXPORT_MAX_RECORDS = 15000
+
 /** Export records to Excel with styled header and columns */
 export async function exportToExcel(records, collectionId, collectionLabel) {
+  if (!Array.isArray(records)) throw new Error('Invalid records')
+  const toExport = records.length > EXPORT_MAX_RECORDS ? records.slice(0, EXPORT_MAX_RECORDS) : records
+  if (records.length > EXPORT_MAX_RECORDS) {
+    console.warn(`[exportExcel] Capped at ${EXPORT_MAX_RECORDS} records (had ${records.length})`)
+  }
+
   const workbook = new ExcelJS.Workbook()
   workbook.creator = 'Regulatory Division Portal'
   const sheetName = safeSheetName(collectionLabel || collectionId)
@@ -27,7 +35,7 @@ export async function exportToExcel(records, collectionId, collectionLabel) {
     pageSetup: { paperSize: 9, orientation: 'landscape', fitToPage: true },
   })
 
-  if (records.length === 0) {
+  if (toExport.length === 0) {
     sheet.addRow(['No records to export.'])
     const buf = await workbook.xlsx.writeBuffer()
     downloadBlob(buf, `Records_${collectionId}_${dateFile()}.xlsx`)
@@ -37,7 +45,7 @@ export async function exportToExcel(records, collectionId, collectionLabel) {
   const excludeMeta = ['id', 'createdAt', 'createdBy', 'updatedAt']
   const excludeFromExport = [...RATING_FIELD_KEYS, 'recommendation']
   const allKeys = new Set()
-  records.forEach((doc) => {
+  toExport.forEach((doc) => {
     Object.keys(doc).filter((k) => !excludeMeta.includes(k)).forEach((k) => allKeys.add(k))
   })
   // Same column order as Edit modal; exclude ratings and recommendation
@@ -59,7 +67,7 @@ export async function exportToExcel(records, collectionId, collectionLabel) {
     c.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } }
   })
 
-  records.forEach((doc, idx) => {
+  toExport.forEach((doc, idx) => {
     const row = docToRow(doc)
     const name = getDisplayName(doc, collectionId)
     const cellValues = [idx + 1, name, ...headerKeys.slice(2).map((k) => row[k] ?? '')]
@@ -75,7 +83,7 @@ export async function exportToExcel(records, collectionId, collectionLabel) {
   const colWidths = []
   for (let c = 0; c < numCols; c++) {
     let maxLen = 12
-    records.forEach((doc, idx) => {
+    toExport.forEach((doc, idx) => {
       const row = docToRow(doc)
       const name = getDisplayName(doc, collectionId)
       const val = c === 0 ? String(idx + 1) : c === 1 ? name : (row[headerKeys[c]] ?? '')
