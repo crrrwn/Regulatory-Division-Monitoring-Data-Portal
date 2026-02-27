@@ -1,10 +1,13 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { useDisabledUnits } from '../context/DisabledUnitsContext';
 import { pathToCollectionId } from '../lib/collections';
+import { SECTION_IDS, getUnitIdsForSections } from '../lib/sections';
 
 const SECTIONS = [
   {
+    id: SECTION_IDS.REGISTRATION_LICENSING,
     title: 'Registration and Licensing',
     description: 'Manage accreditations and compliance for feeds and handlers.',
     theme: 'primary',
@@ -23,6 +26,7 @@ const SECTIONS = [
     ],
   },
   {
+    id: SECTION_IDS.QUALITY_CONTROL_INSPECTION,
     title: 'Quality Control and Inspection',
     description: 'Ensure standards for crops, animals, and food safety.',
     theme: 'primary-light',
@@ -41,6 +45,7 @@ const SECTIONS = [
     ],
   },
   {
+    id: SECTION_IDS.PEST_DISEASE_SURVEILLANCE,
     title: 'Pest & Disease Surveillance',
     description: 'Monitor and control spread of plant and animal diseases.',
     theme: 'accent',
@@ -58,7 +63,9 @@ const SECTIONS = [
 ];
 
 export default function Dashboard() {
-  const { disabledUnitIds } = useDisabledUnits();
+  const { role, userAllowedSections } = useAuth()
+  const { disabledUnitIds } = useDisabledUnits()
+  const allowedUnitIds = userAllowedSections && role === 'staff' ? getUnitIdsForSections(userAllowedSections) : null
 
   return (
     <div className="min-w-0 w-full max-w-full overflow-x-hidden px-3 sm:px-4 md:px-5 lg:px-6 pb-10 sm:pb-12">
@@ -127,7 +134,9 @@ export default function Dashboard() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 min-w-0">
                 {section.units.map((unit, unitIdx) => {
                   const unitId = pathToCollectionId(unit.path)
-                  const isUnitDisabled = disabledUnitIds.includes(unitId)
+                  const isAppDisabled = disabledUnitIds.includes(unitId)
+                  const isSectionRestricted = allowedUnitIds !== null && !allowedUnitIds.includes(unitId)
+                  const isUnitDisabled = isAppDisabled || isSectionRestricted
                   if (isUnitDisabled) {
                     return (
                       <div
@@ -143,7 +152,7 @@ export default function Dashboard() {
                             {unit.label}
                           </p>
                           <span className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold uppercase text-red-600 bg-red-50 px-2 py-0.5 rounded-md">
-                            Disabled
+                            {isSectionRestricted ? 'Not in your section' : 'Disabled'}
                           </span>
                         </div>
                       </div>

@@ -6,11 +6,14 @@ import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase'
 import { addSystemLog } from '../lib/systemLogs'
 import { getPublicImageUrl } from '../utils/publicAssets'
+import { SECTION_OPTIONS } from '../lib/sections'
 
 export default function StaffLogin() {
   const [isRegister, setIsRegister] = useState(false)
+  const [fullName, setFullName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [selectedSection, setSelectedSection] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -52,11 +55,19 @@ export default function StaffLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    if (isRegister && !fullName.trim()) {
+      setError('Please enter your full name.')
+      return
+    }
+    if (isRegister && !selectedSection) {
+      setError('Please select a section.')
+      return
+    }
     setLoading(true)
     try {
       if (isRegister) {
         const cred = await signUp(email, password)
-        await setDoc(doc(db, 'users', cred.user.uid), { email: cred.user.email, role: 'staff', createdAt: new Date().toISOString() })
+        await setDoc(doc(db, 'users', cred.user.uid), { fullName: fullName.trim(), email: cred.user.email, role: 'staff', section: selectedSection, allowedSections: [selectedSection], createdAt: new Date().toISOString() })
         await addSystemLog({ action: 'login', userId: cred.user.uid, userEmail: cred.user.email, role: 'staff', details: 'Staff registered and signed in.' })
         navigate('/dashboard')
       } else {
@@ -111,6 +122,21 @@ export default function StaffLogin() {
             </div>
 
             <form onSubmit={onFormSubmit} className="space-y-4">
+              {isRegister && (
+                <div>
+                  <label className="block text-sm font-bold text-black mb-1.5">Full Name</label>
+                  <input
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    required={isRegister}
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl text-black placeholder-slate-500 focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-300 ease-out outline-none"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.7)' }}
+                    placeholder="Juan dela Cruz"
+                  />
+                  <p className="text-xs text-black/70 mt-1 font-medium">This name will be visible to administrators in User Management.</p>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-bold text-black mb-1.5">Email</label>
                 <input
@@ -147,6 +173,25 @@ export default function StaffLogin() {
                   </button>
                 </div>
               </div>
+
+              {isRegister && (
+                <div>
+                  <label className="block text-sm font-bold text-black mb-1.5">Section (required)</label>
+                  <select
+                    value={selectedSection}
+                    onChange={(e) => setSelectedSection(e.target.value)}
+                    required={isRegister}
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl text-black focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-300 ease-out outline-none"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.7)' }}
+                  >
+                    <option value="">Select your section</option>
+                    {SECTION_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>{opt.label}</option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-black/70 mt-1 font-medium">You will only have access to this section after registration.</p>
+                </div>
+              )}
 
               {showForgotPassword && (
                 <div
@@ -229,7 +274,7 @@ export default function StaffLogin() {
               {isRegister ? (
                 <button
                   type="button"
-                  onClick={() => { setIsRegister(false); setError(''); }}
+                  onClick={() => { setIsRegister(false); setError(''); setFullName(''); setSelectedSection(''); }}
                   className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-bold text-black border border-slate-300 hover:border-slate-400 transition-all duration-300 ease-out active:scale-[0.98]"
                   style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
                 >
@@ -239,7 +284,7 @@ export default function StaffLogin() {
                 <div className="flex flex-wrap items-center justify-center gap-2">
                   <button
                     type="button"
-                    onClick={() => { setIsRegister(true); setError(''); }}
+                    onClick={() => { setIsRegister(true); setError(''); setFullName(''); setSelectedSection(''); }}
                     className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-bold text-black border border-slate-300 hover:border-slate-400 transition-all duration-300 ease-out active:scale-[0.98]"
                     style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
                   >

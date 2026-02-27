@@ -489,6 +489,34 @@
 .system-logs-anim-2 { animation: view-records-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
 .system-logs-anim-3 { animation: view-records-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both; }
 
+/* User Management — stagger section entrance */
+.user-mgmt-anim-1 { animation: view-records-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.user-mgmt-anim-2 { animation: view-records-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.user-mgmt-anim-3 { animation: view-records-fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both; }
+/* User Management — row/card staggered entrance */
+@keyframes user-mgmt-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.user-mgmt-row {
+  animation: user-mgmt-row-in 0.4s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+  opacity: 0;
+}
+/* User Management — modal overlay fade */
+@keyframes user-mgmt-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.user-mgmt-overlay-in {
+  animation: user-mgmt-overlay-in 0.25s ease-out forwards;
+}
+
 /* Modal enter (fallback if tailwindcss-animate not used) */
 @keyframes fade-in {
   from { opacity: 0; }

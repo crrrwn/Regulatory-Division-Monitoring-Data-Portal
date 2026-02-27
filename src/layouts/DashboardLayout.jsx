@@ -3,6 +3,7 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useDisabledUnits } from '../context/DisabledUnitsContext'
 import { pathToCollectionId } from '../lib/collections'
+import { getUnitIdsForSections, isPathAllowedForSections } from '../lib/sections'
 import { getPublicImageUrl } from '../utils/publicAssets'
 import { addSystemLog } from '../lib/systemLogs'
 
@@ -50,7 +51,7 @@ function DashboardLayout() {
   const [logoutSuccess, setLogoutSuccess] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
-  const { user, role, signOut } = useAuth()
+  const { user, role, userSection, userAllowedSections, signOut } = useAuth()
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -88,6 +89,19 @@ function DashboardLayout() {
   const isActive = (path) => location.pathname === path
 
   const { disabledUnitIds } = useDisabledUnits()
+  const allowedUnitIds = userAllowedSections && role === 'staff' ? getUnitIdsForSections(userAllowedSections) : null
+  const allSidebarUnitIds = SIDEBAR_SECTIONS.flatMap(s => s.items.map(i => pathToCollectionId(i.path)))
+  const sectionRestrictedIds = allowedUnitIds === null ? [] : allSidebarUnitIds.filter(id => !allowedUnitIds.includes(id))
+  const effectiveDisabledUnitIds = [...new Set([...disabledUnitIds, ...sectionRestrictedIds])]
+
+  // Redirect staff away from form paths outside their allowed sections
+  useEffect(() => {
+    if (role === 'staff' && userAllowedSections?.length && location.pathname.startsWith('/dashboard/forms/')) {
+      if (!isPathAllowedForSections(location.pathname, userAllowedSections)) {
+        navigate('/dashboard', { replace: true })
+      }
+    }
+  }, [role, userAllowedSections, location.pathname, navigate])
 
   // Auto-expand sidebar section if a child is active
   useEffect(() => {
@@ -229,7 +243,7 @@ function DashboardLayout() {
                   sidebarOpen={sidebarOpen}
                   mobileMenuOpen={mobileMenuOpen}
                   setSidebarOpen={setSidebarOpen}
-                  disabledUnitIds={disabledUnitIds}
+                  disabledUnitIds={effectiveDisabledUnitIds}
                   pathToCollectionId={pathToCollectionId}
                 />
               ))}
@@ -246,7 +260,10 @@ function DashboardLayout() {
             <div className="space-y-1">
               <NavItem to="/dashboard/settings" icon="mdi:cog-outline" label="Settings" active={isActive('/dashboard/settings')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
               {role === 'admin' && (
-                <NavItem to="/dashboard/system-logs" icon="mdi:clipboard-list-outline" label="System Logs" active={isActive('/dashboard/system-logs')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+                <>
+                  <NavItem to="/dashboard/user-management" icon="mdi:account-group-outline" label="User Management" active={isActive('/dashboard/user-management')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+                  <NavItem to="/dashboard/system-logs" icon="mdi:clipboard-list-outline" label="System Logs" active={isActive('/dashboard/system-logs')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+                </>
               )}
             </div>
           </div>
@@ -299,7 +316,7 @@ function DashboardLayout() {
               
               <div className="flex flex-col justify-center min-w-0">
                  <h2 className="text-base sm:text-lg font-bold text-primary tracking-tight leading-tight truncate">
-                    {({ '/dashboard': 'Dashboard', '/dashboard/analytics': 'Data Analytics', '/dashboard/records': 'Master Records', '/dashboard/settings': 'Settings', '/dashboard/system-logs': 'System Logs' }[location.pathname] || SIDEBAR_SECTIONS.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || 'Dashboard')}
+                    {({ '/dashboard': 'Dashboard', '/dashboard/analytics': 'Data Analytics', '/dashboard/records': 'Master Records', '/dashboard/settings': 'Settings', '/dashboard/user-management': 'User Management', '/dashboard/system-logs': 'System Logs' }[location.pathname] || SIDEBAR_SECTIONS.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || 'Dashboard')}
                  </h2>
                  <p className="text-xs text-text-muted mt-0.5 hidden sm:block truncate">Regulatory Division Portal</p>
               </div>

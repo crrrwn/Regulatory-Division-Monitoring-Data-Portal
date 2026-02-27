@@ -8,6 +8,7 @@ import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
 import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS } from '../lib/collections'
 import { useDisabledUnits } from '../context/DisabledUnitsContext'
+import { getUnitIdsForSections } from '../lib/sections'
 import {
   getMonthFromDoc,
   getProvinceFromDoc,
@@ -92,18 +93,25 @@ export default function ViewRecords() {
   const [exporting, setExporting] = useState(false)
   const [deleteConfirming, setDeleteConfirming] = useState(null) // { id, name } or null
   const [loadError, setLoadError] = useState(null)
-  const { user, role } = useAuth()
+  const { user, role, userAllowedSections } = useAuth()
   const { showNotification } = useNotification()
 
-  // Keep selected unit in sync with enabled list (e.g. admin disables current unit)
+  const allowedUnitIds = userAllowedSections && role === 'staff' ? getUnitIdsForSections(userAllowedSections) : null
+  const enabledCollectionIds = COLLECTIONS.filter((c) => {
+    if (disabledUnitIds.includes(c.id)) return false
+    if (allowedUnitIds !== null && !allowedUnitIds.includes(c.id)) return false
+    return true
+  }).map((c) => c.id)
+
+  // Keep selected unit in sync with enabled list (e.g. admin disables current unit, or section change)
   useEffect(() => {
-    const enabled = new Set(COLLECTIONS.filter((c) => !disabledUnitIds.includes(c.id)).map((c) => c.id))
+    const enabled = new Set(enabledCollectionIds)
     if (enabled.size === 0) return
     if (!enabled.has(selectedCollection)) {
       const first = COLLECTIONS.find((c) => enabled.has(c.id))
       if (first) setSelectedCollection(first.id)
     }
-  }, [disabledUnitIds, selectedCollection])
+  }, [enabledCollectionIds, selectedCollection])
 
   const VIEW_RECORDS_LIMIT = 5000
 
@@ -646,10 +654,13 @@ export default function ViewRecords() {
                 sectionLabel: g.sectionLabel,
                 options: g.unitIds.map((id) => {
                   const c = COLLECTIONS.find((col) => col.id === id)
-                  const disabled = disabledUnitIds.includes(id)
+                  const appDisabled = disabledUnitIds.includes(id)
+                  const sectionRestricted = allowedUnitIds !== null && !allowedUnitIds.includes(id)
+                  const disabled = appDisabled || sectionRestricted
+                  const suffix = sectionRestricted ? ' (Not in your section)' : appDisabled ? ' (Disabled)' : ''
                   return {
                     value: id,
-                    label: c ? (disabled ? `${c.label} (Disabled)` : c.label) : id,
+                    label: c ? `${c.label}${suffix}` : id,
                     disabled,
                   }
                 }),

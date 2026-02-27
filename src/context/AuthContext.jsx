@@ -21,17 +21,28 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(null)
   const [loading, setLoading] = useState(true)
 
+  const [userSection, setUserSection] = useState(null)
+  const [userAllowedSections, setUserAllowedSections] = useState(null)
+
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         setUser(null)
         setRole(null)
+        setUserSection(null)
+        setUserAllowedSections(null)
         setLoading(false)
         return
       }
       setUser(firebaseUser)
       const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid))
-      setRole(userDoc.exists() ? userDoc.data().role : 'staff')
+      const data = userDoc.exists() ? userDoc.data() : {}
+      setRole(data.role || 'staff')
+      setUserSection(data.section || null)
+      const allowed = Array.isArray(data.allowedSections) && data.allowedSections.length > 0
+        ? data.allowedSections
+        : data.section ? [data.section] : null
+      setUserAllowedSections(allowed)
       setLoading(false)
     })
     return () => unsub()
@@ -41,6 +52,6 @@ export function AuthProvider({ children }) {
   const signUp = (email, password) => createUserWithEmailAndPassword(auth, email, password)
   const signOut = () => firebaseSignOut(auth)
 
-  const value = { user, role, loading, signIn, signUp, signOut }
+  const value = { user, role, userSection, userAllowedSections, loading, signIn, signUp, signOut }
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

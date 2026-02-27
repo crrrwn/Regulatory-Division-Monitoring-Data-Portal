@@ -15,10 +15,13 @@ export default function AppSelect({
   className = '',
   disabled = false,
   leftIcon,
+  openUpward = false,
   'aria-label': ariaLabel,
 }) {
   const [isOpen, setIsOpen] = useState(false)
-  const [panelRect, setPanelRect] = useState({ top: 0, left: 0, width: 0 })
+  const PANEL_MAX_HEIGHT = 224
+  const GAP = 2
+  const [panelRect, setPanelRect] = useState({ top: 0, bottom: undefined, left: 0, width: 0, openUpward: false })
   const containerRef = useRef(null)
   const triggerRef = useRef(null)
 
@@ -31,10 +34,16 @@ export default function AppSelect({
   const updatePanelRect = () => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect()
+      const spaceBelow = window.innerHeight - rect.bottom - GAP
+      const shouldOpenUpward = openUpward || (spaceBelow < PANEL_MAX_HEIGHT && rect.top > spaceBelow)
+      const top = shouldOpenUpward ? undefined : rect.bottom + GAP
+      const bottom = shouldOpenUpward ? window.innerHeight - rect.top + GAP : undefined
       setPanelRect({
-        top: rect.bottom + 6,
+        top,
+        bottom,
         left: rect.left,
         width: rect.width,
+        openUpward: shouldOpenUpward,
       })
     }
   }
@@ -74,11 +83,11 @@ export default function AppSelect({
       {...(isOpen ? {} : { inert: '' })}
       className={isOpen ? 'app-select-panel-open' : 'app-select-panel-closed'}
       style={{
-        zIndex: 10001,
+        zIndex: 99999,
         position: 'fixed',
-        top: panelRect.top,
+        ...(panelRect.openUpward ? { bottom: panelRect.bottom } : { top: panelRect.top }),
         left: panelRect.left,
-        width: panelRect.width,
+        width: Math.max(panelRect.width, 140),
         minWidth: 140,
         background: 'white',
         border: '2px solid #e8e0d4',

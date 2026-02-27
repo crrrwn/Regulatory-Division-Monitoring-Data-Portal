@@ -8,10 +8,12 @@ import {
   reauthenticateWithCredential,
   EmailAuthProvider,
 } from 'firebase/auth'
-import { getAdminRegistrationCode, setAdminRegistrationCode, setDisabledUnits } from '../lib/settings'
+import { getAdminRegistrationCode, setAdminRegistrationCode } from '../lib/settings'
 import { addSystemLog } from '../lib/systemLogs'
-import { useDisabledUnits } from '../context/DisabledUnitsContext'
-import { COLLECTIONS } from '../lib/collections'
+import { collection, getDocs, doc, updateDoc } from 'firebase/firestore'
+import { db } from '../lib/firebase'
+import { SECTION_OPTIONS } from '../lib/sections'
+import AppSelect from '../components/AppSelect'
 
 const inputClass =
   'w-full px-4 py-2.5 border-2 border-[#e8e0d4] rounded-xl bg-white text-[#1e4d2b] text-sm font-medium focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] hover:border-[#1e4d2b]/50 transition-all duration-200 placeholder:text-[#8a857c]'
@@ -23,9 +25,11 @@ const btnGold =
 export default function Settings() {
   const { user, role } = useAuth()
   const { showNotification } = useNotification()
-  const { disabledUnitIds } = useDisabledUnits()
   const isAdmin = role === 'admin'
-  const [unitsSaving, setUnitsSaving] = useState(null)
+  const [staffUsers, setStaffUsers] = useState([])
+  const [selectedUserId, setSelectedUserId] = useState('')
+  const [selectedUserAllowedSections, setSelectedUserAllowedSections] = useState([])
+  const [sectionsSaving, setSectionsSaving] = useState(false)
 
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -50,6 +54,36 @@ export default function Settings() {
       getAdminRegistrationCode().then(setStoredCode)
     }
   }, [isAdmin])
+
+  useEffect(() => {
+    if (!isAdmin) return
+    let cancelled = false
+    getDocs(collection(db, 'users'))
+      .then((snap) => {
+        if (!cancelled) {
+          const list = snap.docs
+            .map((d) => ({ id: d.id, ...d.data() }))
+            .filter((u) => (u.role || 'staff') === 'staff')
+            .sort((a, b) => (a.fullName || a.email || '').localeCompare(b.fullName || b.email || ''))
+          setStaffUsers(list)
+        }
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [isAdmin])
+
+  const selectedUser = staffUsers.find((u) => u.id === selectedUserId)
+
+  useEffect(() => {
+    if (!selectedUser) {
+      setSelectedUserAllowedSections([])
+      return
+    }
+    const allowed = Array.isArray(selectedUser.allowedSections) && selectedUser.allowedSections.length > 0
+      ? selectedUser.allowedSections
+      : selectedUser.section ? [selectedUser.section] : []
+    setSelectedUserAllowedSections(allowed)
+  }, [selectedUser])
 
   const handleChangePassword = async (e) => {
     e.preventDefault()
@@ -132,29 +166,42 @@ export default function Settings() {
     setCodeLoading(false)
   }
 
-  const handleUnitToggle = async (unitId, currentlyDisabled) => {
-    if (!isAdmin) return
-    setUnitsSaving(unitId)
+  const handleSectionToggle = (sectionId) => {
+    setSelectedUserAllowedSections((prev) =>
+      prev.includes(sectionId) ? prev.filter((s) => s !== sectionId) : [...prev, sectionId]
+    )
+  }
+
+  const handleSaveSections = async () => {
+    if (!isAdmin || !selectedUserId) return
+    setSectionsSaving(true)
     try {
-      const next = currentlyDisabled ? disabledUnitIds.filter((id) => id !== unitId) : [...disabledUnitIds, unitId]
-      await setDisabledUnits(next)
+      await updateDoc(doc(db, 'users', selectedUserId), {
+        allowedSections: selectedUserAllowedSections,
+        updatedAt: new Date().toISOString(),
+      })
+      setStaffUsers((prev) =>
+        prev.map((u) =>
+          u.id === selectedUserId ? { ...u, allowedSections: selectedUserAllowedSections } : u
+        )
+      )
       await addSystemLog({
-        action: 'admin_code_change',
+        action: 'record_updated',
         userId: user.uid,
         userEmail: user.email,
         role: 'admin',
-        details: currentlyDisabled ? `Unit enabled: ${unitId}` : `Unit disabled: ${unitId}`,
+        details: `Section access updated for user ${selectedUser?.email}.`,
       })
       showNotification({
         type: 'success',
-        title: 'Units updated',
-        message: currentlyDisabled ? 'Unit is now visible to staff.' : 'Unit is now hidden from staff.',
+        title: 'Sections saved',
+        message: 'Section access has been updated for this staff.',
         toast: true,
       })
     } catch (err) {
-      showNotification({ type: 'error', title: 'Update failed', message: err.message || 'Could not update units.', toast: true })
+      showNotification({ type: 'error', title: 'Update failed', message: err.message || 'Could not save sections.', toast: true })
     }
-    setUnitsSaving(null)
+    setSectionsSaving(false)
   }
 
   return (
@@ -339,67 +386,102 @@ export default function Settings() {
           </div>
         )}
 
-        {/* Unit Disable / Enable — admin only */}
+        {/* User Section Access — admin only */}
         {isAdmin && (
-          <div className="settings-anim-3 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] flex flex-col">
+          <div className="settings-anim-3 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] flex flex-col lg:col-span-2">
             <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 py-3.5 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.08),transparent_50%)]" />
               <div className="relative z-10 flex items-center gap-3">
                 <div className="p-2 rounded-xl bg-white/15 border border-white/25">
-                  <iconify-icon icon="mdi:toggle-switch-outline" width="22" className="text-[#d4c4a0]"></iconify-icon>
+                  <iconify-icon icon="mdi:account-cog-outline" width="22" className="text-[#d4c4a0]"></iconify-icon>
                 </div>
                 <div>
-                  <h2 className="text-base font-black text-white uppercase tracking-tight">Disable / Enable units</h2>
-                  <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">Disabled units stay visible but cannot be opened (Dashboard, sidebar, View Records)</p>
+                  <h2 className="text-base font-black text-white uppercase tracking-tight">User Section Access</h2>
+                  <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">Select a staff user and choose which sections they can access</p>
                 </div>
               </div>
             </div>
             <div className="p-5 sm:p-6 flex-1 bg-gradient-to-b from-[#faf8f5] to-[#f2ede6] border-l-4 border-[#1e4d2b]/25">
-              <p className="text-[11px] text-[#5c574f] font-medium mb-4">Only admins can change this. Use <strong>Disable</strong> / <strong>Enable</strong> per unit below, grouped by section.</p>
-              <div className="space-y-5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
-                {[
-                  { sectionLabel: 'Registration & Licensing', unitIds: ['animalFeed', 'animalWelfare', 'livestockHandlers', 'transportCarrier', 'plantMaterial', 'organicAgri'] },
-                  { sectionLabel: 'Quality Control', unitIds: ['goodAgriPractices', 'goodAnimalHusbandry', 'organicPostMarket', 'landUseMatter', 'foodSafety', 'safdzValidation'] },
-                  { sectionLabel: 'Surveillance', unitIds: ['plantPestSurveillance', 'cfsAdmcc', 'animalDiseaseSurveillance'] },
-                ].map((group) => (
-                  <div key={group.sectionLabel} className="space-y-2">
-                    <h3 className="text-xs font-black text-[#1e4d2b] uppercase tracking-wider border-b-2 border-[#e8e0d4] pb-1.5 sticky top-0 bg-gradient-to-b from-[#faf8f5] to-[#f2ede6] z-10">
-                      {group.sectionLabel}
-                    </h3>
-                    <div className="space-y-2">
-                      {group.unitIds.map((id) => {
-                        const c = COLLECTIONS.find((col) => col.id === id)
-                        if (!c) return null
-                        const isDisabled = disabledUnitIds.includes(c.id)
-                        return (
-                          <div
-                            key={c.id}
-                            className={`flex items-center justify-between gap-3 p-3 rounded-xl border-2 transition-all duration-200 ${isDisabled ? 'bg-red-50/80 border-red-200' : 'bg-white border-[#e8e0d4]'}`}
-                          >
-                            <span className="text-sm font-bold text-[#1e4d2b] flex-1 min-w-0 truncate">{c.label}</span>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className={`text-[10px] font-bold uppercase ${isDisabled ? 'text-red-600' : 'text-[#5c7355]'}`}>
-                                {isDisabled ? 'Disabled' : 'Enabled'}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleUnitToggle(c.id, isDisabled)}
-                                disabled={!!unitsSaving}
-                                className={`relative w-11 h-6 rounded-full transition-colors duration-300 ease-out ${isDisabled ? 'bg-red-500' : 'bg-[#1e4d2b]'} disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#1e4d2b]/40 focus:ring-offset-2 rounded-full`}
-                                aria-label={isDisabled ? `Enable ${c.label}` : `Disable ${c.label}`}
-                              >
-                                <span
-                                  className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ease-out ${isDisabled ? 'left-1 translate-x-0' : 'left-1 translate-x-5'}`}
-                                  style={{ willChange: 'transform' }}
-                                />
-                              </button>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Select User (by section)</label>
+                  <AppSelect
+                    value={selectedUserId}
+                    onChange={(v) => setSelectedUserId(v || '')}
+                    groups={(() => {
+                      const placeholder = [{ sectionLabel: '—', options: [{ value: '', label: 'Select a staff user' }] }]
+                      const getPrimarySection = (u) => {
+                        const sections = Array.isArray(u.allowedSections) && u.allowedSections.length > 0 ? u.allowedSections : u.section ? [u.section] : []
+                        return sections[0] || null
+                      }
+                      const bySection = SECTION_OPTIONS.map((opt) => ({
+                        sectionLabel: opt.label,
+                        options: staffUsers
+                          .filter((u) => getPrimarySection(u) === opt.value)
+                          .map((u) => ({
+                            value: u.id,
+                            label: `${u.fullName || u.email?.split('@')[0] || 'Unknown'} (${u.email})`,
+                          })),
+                      })).filter((g) => g.options.length > 0)
+                      const noSection = staffUsers.filter((u) => !getPrimarySection(u))
+                      const other = noSection.length > 0 ? [{ sectionLabel: 'No section assigned', options: noSection.map((u) => ({ value: u.id, label: `${u.fullName || u.email?.split('@')[0] || 'Unknown'} (${u.email})` })) }] : []
+                      return [...placeholder, ...bySection, ...other]
+                    })()}
+                    placeholder="Select user"
+                    aria-label="Select staff user"
+                  />
+                </div>
+                {selectedUser && (
+                  <>
+                    <div>
+                      <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-2">Allowed Sections</label>
+                      <p className="text-[11px] text-[#5c574f] font-medium mb-3">Toggle which sections this staff can access. Staff can only use units within the selected sections.</p>
+                      <div className="space-y-2">
+                        {SECTION_OPTIONS.map((opt) => {
+                          const isChecked = selectedUserAllowedSections.includes(opt.value)
+                          return (
+                            <div
+                              key={opt.value}
+                              className={`flex items-center justify-between gap-3 p-3 rounded-xl border-2 transition-all duration-200 cursor-pointer ${isChecked ? 'bg-[#f0f5ee] border-[#1e4d2b]/40' : 'bg-white border-[#e8e0d4]'}`}
+                              onClick={() => handleSectionToggle(opt.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleSectionToggle(opt.value)}
+                              role="button"
+                              tabIndex={0}
+                              aria-pressed={isChecked}
+                            >
+                              <span className="text-sm font-bold text-[#1e4d2b] flex-1">{opt.label}</span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`text-[10px] font-bold uppercase ${isChecked ? 'text-[#1e4d2b]' : 'text-[#8a857c]'}`}>
+                                  {isChecked ? 'Allowed' : 'Blocked'}
+                                </span>
+                                <div
+                                  className={`relative w-11 h-6 rounded-full transition-colors duration-300 ease-out ${isChecked ? 'bg-[#1e4d2b]' : 'bg-[#e8e0d4]'}`}
+                                  aria-hidden
+                                >
+                                  <span
+                                    className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-all duration-300 ease-out ${isChecked ? 'left-1 translate-x-5' : 'left-1 translate-x-0'}`}
+                                    style={{ willChange: 'transform' }}
+                                  />
+                                </div>
+                              </div>
                             </div>
-                          </div>
-                        )
-                      })}
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                    <button
+                      type="button"
+                      onClick={handleSaveSections}
+                      disabled={sectionsSaving}
+                      className={`${btnPrimary} min-h-[44px] touch-manipulation`}
+                    >
+                      {sectionsSaving ? 'Saving...' : 'Save Section Access'}
+                    </button>
+                  </>
+                )}
+                {staffUsers.length === 0 && !selectedUserId && (
+                  <p className="text-sm text-[#5c574f] font-medium">No staff users found. Staff must register first.</p>
+                )}
               </div>
             </div>
           </div>

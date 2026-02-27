@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import { COLLECTIONS } from '../lib/collections'
+import { getUnitIdsForSections } from '../lib/sections'
 import { formatMonthLabel } from '../lib/recordFilters'
 import { useAnalytics } from '../context/AnalyticsContext'
 import { 
@@ -96,7 +98,12 @@ const UNIT_GROUPS = [
 ]
 
 export default function DataAnalytics() {
+  const { role, userAllowedSections } = useAuth()
   const { stats, refresh } = useAnalytics()
+  const allowedUnitIds = userAllowedSections && role === 'staff' ? getUnitIdsForSections(userAllowedSections) : null
+  const visibleGroups = allowedUnitIds === null
+    ? UNIT_GROUPS
+    : UNIT_GROUPS.map((g) => ({ ...g, units: g.units.filter((u) => allowedUnitIds.includes(u)) })).filter((g) => g.units.length > 0)
   const [showRatingsModal, setShowRatingsModal] = useState(false)
   const [selectedRatingUnit, setSelectedRatingUnit] = useState(null)
   const [geoViewMode, setGeoViewMode] = useState('card')
@@ -475,7 +482,7 @@ export default function DataAnalytics() {
                     {(() => {
                       let totalSum = 0
                       let totalCount = 0
-                      UNIT_GROUPS.forEach((group) => {
+                      visibleGroups.forEach((group) => {
                         group.units.forEach((unitId) => {
                           const u = stats.unitRatings && stats.unitRatings[unitId]
                           if (u && u.ratedCount > 0 && u.overallAvg != null) {
@@ -522,7 +529,7 @@ export default function DataAnalytics() {
               {/* === VIEW 1: MENU (UNIT SELECTION) === */}
               {!selectedRatingUnit && (
                 <div className="grid md:grid-cols-3 gap-6 h-full items-stretch">
-                  {UNIT_GROUPS.map((group, idx) => {
+                  {visibleGroups.map((group, idx) => {
                     const sectionRatingData = (() => {
                       let totalSum = 0
                       let totalCount = 0
