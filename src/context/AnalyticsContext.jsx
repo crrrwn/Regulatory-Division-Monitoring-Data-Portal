@@ -64,7 +64,8 @@ export function AnalyticsProvider({ children }) {
             const month = getMonthFromDoc(doc)
             if (month) byMonth[month] = (byMonth[month] || 0) + 1
             const prov = getProvinceFromDoc(doc)
-            if (prov) byProvince[prov] = (byProvince[prov] || 0) + 1
+            const provKey = prov || 'Unspecified'
+            byProvince[provKey] = (byProvince[provKey] || 0) + 1
           })
 
           if (RATING_COLLECTION_IDS.includes(c.id) && list.length > 0) {

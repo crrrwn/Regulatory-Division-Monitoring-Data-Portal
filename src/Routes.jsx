@@ -17,6 +17,7 @@ import DataAnalytics from './pages/DataAnalytics'
 import Settings from './pages/Settings'
 import SystemLogs from './pages/SystemLogs'
 import UserManagement from './pages/UserManagement'
+import BulkImport from './pages/BulkImport'
 
 import AnimalFeedForm from './pages/forms/AnimalFeedForm'
 import LivestockHandlersForm from './pages/forms/LivestockHandlersForm'
@@ -61,6 +62,7 @@ export default function Routes() {
         <Route path="settings" element={<Settings />} />
         <Route path="system-logs" element={<ProtectedRoute requireAdmin><SystemLogs /></ProtectedRoute>} />
         <Route path="user-management" element={<ProtectedRoute requireAdmin><UserManagement /></ProtectedRoute>} />
+        <Route path="bulk-import" element={<ProtectedRoute requireAdmin><BulkImport /></ProtectedRoute>} />
         <Route path="forms/animal-feed" element={<AnimalFeedForm />} />
         <Route path="forms/livestock-handlers" element={<LivestockHandlersForm />} />
         <Route path="forms/transport-carrier" element={<TransportCarrierForm />} />

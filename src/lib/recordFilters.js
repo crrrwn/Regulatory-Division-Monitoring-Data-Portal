@@ -1,5 +1,32 @@
 import { PROVINCES } from './regions'
 
+/** Municipality → Province mapping (when province field contains municipality instead of province) */
+const MUNICIPALITY_TO_PROVINCE = {
+  // Occidental Mindoro
+  'abra de ilog': 'Occidental Mindoro',
+  'calintaan': 'Occidental Mindoro',
+  'looc': 'Occidental Mindoro',
+  'lubang': 'Occidental Mindoro',
+  'magsaysay': 'Occidental Mindoro',
+  'mamburao': 'Occidental Mindoro',
+  'paluan': 'Occidental Mindoro',
+  'rizal': 'Occidental Mindoro', // Rizal, Occ. Mindoro (Palawan has Rizal too - defaulting here for empty-province records)
+  'sablayan': 'Occidental Mindoro',
+  'san jose': 'Occidental Mindoro',
+  'santa cruz': 'Occidental Mindoro',
+  // Palawan
+  'aborlan': 'Palawan',
+  'puerto princesa city': 'Palawan',
+  'puerto princesa': 'Palawan',
+  'narra': 'Palawan',
+  'quezon': 'Palawan',
+  'sofronio española': 'Palawan',
+  'española': 'Palawan',
+  'roxas': 'Palawan',
+  'san miguel': 'Palawan',
+  'mandaragat': 'Palawan',
+}
+
 /** Get YYYY-MM from doc for month filter (uses createdAt or first date field found) */
 export function getMonthFromDoc(doc) {
   const d = doc.createdAt || doc.date || doc.dateApplied || doc.applicationDate || doc.dateOfMonitoring || doc.inspectionDate || doc.dateReceived || doc.dateReported || doc.requestLetterDate || doc.dateOfCommunicationLetter || doc.dateOfSurveillance || doc.dateOfRequest || doc.dateReceivedAndEvaluated || doc.dateOfPreAssessment || doc.dateOfMonitoring
@@ -9,11 +36,14 @@ export function getMonthFromDoc(doc) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
-/** Get province from doc (checks address.province, businessAddress.province, province, municipality for some) */
+/** Get province from doc (checks province, address, businessAddress, municipality). Maps known municipalities to province. */
 export function getProvinceFromDoc(doc) {
   const p = doc.address?.province ?? doc.businessAddress?.province ?? doc.province ?? doc.municipality
   if (!p || typeof p !== 'string') return null
-  return PROVINCES.includes(p) ? p : p
+  const key = p.trim().toLowerCase()
+  const foundProvince = PROVINCES.find((prov) => prov.toLowerCase() === key)
+  if (foundProvince) return foundProvince
+  return MUNICIPALITY_TO_PROVINCE[key] ?? null
 }
 
 /** Get list of unique months from docs for dropdown (newest first) */

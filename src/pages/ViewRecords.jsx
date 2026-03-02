@@ -91,7 +91,8 @@ export default function ViewRecords() {
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [exporting, setExporting] = useState(false)
-  const [deleteConfirming, setDeleteConfirming] = useState(null) // { id, name } or null
+  const [deleteConfirming, setDeleteConfirming] = useState(null) // { id, name } or { ids: string[], count } or null
+  const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [loadError, setLoadError] = useState(null)
   const { user, role, userAllowedSections } = useAuth()
   const { showNotification } = useNotification()
@@ -114,6 +115,8 @@ export default function ViewRecords() {
   }, [enabledCollectionIds, selectedCollection])
 
   const VIEW_RECORDS_LIMIT = 5000
+
+  useEffect(() => setSelectedIds(new Set()), [selectedCollection])
 
   useEffect(() => {
     setLoadError(null)
@@ -156,12 +159,45 @@ export default function ViewRecords() {
   const canEdit = (docItem) => role === 'admin' || docItem.createdBy === user?.uid
   const canDelete = () => role === 'admin'
 
-  const handleDelete = async (id) => {
+  const allDisplayedIds = isGAP
+    ? [...filteredGapCert, ...filteredGapMonitoring, ...filteredGapOther].map((d) => d.id)
+    : filtered.map((d) => d.id)
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size >= allDisplayedIds.length) setSelectedIds(new Set())
+    else setSelectedIds(new Set(allDisplayedIds))
+  }
+
+  const clearSelection = () => setSelectedIds(new Set())
+
+  const handleDelete = async (idOrIds) => {
+    const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds]
     try {
-      await deleteDoc(doc(db, selectedCollection, id))
+      for (const id of ids) await deleteDoc(doc(db, selectedCollection, id))
       setDeleteConfirming(null)
-      showNotification({ type: 'success', title: 'Record deleted', message: 'The record has been permanently deleted.' })
-      addSystemLog({ action: 'record_deleted', userId: user?.uid, userEmail: user?.email, role: role || 'staff', details: `${selectedCollection} record deleted.` }).catch(() => {})
+      setSelectedIds(new Set())
+      const n = ids.length
+      showNotification({
+        type: 'success',
+        title: n === 1 ? 'Record deleted' : `${n} records deleted`,
+        message: n === 1 ? 'The record has been permanently deleted.' : `${n} records have been permanently deleted.`,
+      })
+      addSystemLog({
+        action: 'record_deleted',
+        userId: user?.uid,
+        userEmail: user?.email,
+        role: role || 'staff',
+        details: `${selectedCollection} ${n} record(s) deleted.`,
+      }).catch(() => {})
     } catch (err) {
       showNotification({ type: 'error', title: 'Delete failed', message: err.message || 'Failed to delete.' })
     }
@@ -731,10 +767,47 @@ export default function ViewRecords() {
             <span className="text-[11px] font-semibold text-white/85">{collectionLabel}</span>
           </div>
         </div>
+        {canDelete() && selectedIds.size > 0 && (
+          <div className="shrink-0 px-4 sm:px-6 py-2.5 bg-amber-50 border-b-2 border-amber-200/60 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm font-bold text-amber-900">
+              {selectedIds.size} record{selectedIds.size !== 1 ? 's' : ''} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={clearSelection}
+                className="px-3 py-1.5 rounded-lg text-sm font-semibold border-2 border-amber-300 text-amber-800 hover:bg-amber-100 transition-all"
+              >
+                Clear
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteConfirming({ ids: Array.from(selectedIds), count: selectedIds.size })}
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold bg-red-600 text-white hover:bg-red-700 transition-all"
+              >
+                <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
+                Delete selected
+              </button>
+            </div>
+          </div>
+        )}
         <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-260px)] sm:max-h-[calc(100vh-280px)] min-h-0 custom-scrollbar view-records-scroll flex-1 border-l-4 border-[#1e4d2b]/25 -mx-1 px-1 sm:mx-0 sm:px-0">
           <table className="w-full text-sm text-left border-collapse">
             <thead className="sticky top-0 z-10 bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] border-b-2 border-[#e8e0d4]">
               <tr>
+                {canDelete() && (
+                  <th className="px-2 sm:px-3 py-3 sm:py-3.5 w-10 sm:w-12 text-center">
+                    <label className="flex items-center justify-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={allDisplayedIds.length > 0 && selectedIds.size === allDisplayedIds.length}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4 rounded border-2 border-[#1e4d2b]/40 text-[#1e4d2b] focus:ring-[#1e4d2b]/50"
+                        aria-label="Select all"
+                      />
+                    </label>
+                  </th>
+                )}
                 <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Name / Identifier</th>
                 {RATING_COLLECTIONS[selectedCollection] && (
                   <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Avg. Rating</th>
@@ -746,7 +819,7 @@ export default function ViewRecords() {
             <tbody className="divide-y divide-[#e8e0d4]">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-6 py-16 text-center">
+                  <td colSpan={(RATING_COLLECTIONS[selectedCollection] ? 4 : 3) + (canDelete() ? 1 : 0)} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-[#5c7355] rounded-xl border-2 border-dashed border-[#1e4d2b]/25 bg-[#f0f5ee]/80 py-12 mx-4">
                       <iconify-icon icon="mdi:database-off-outline" width="56" class="opacity-60 animate-pulse"></iconify-icon>
                       <p className="mt-3 font-semibold text-[#1e4d2b]">No records found</p>
@@ -758,13 +831,24 @@ export default function ViewRecords() {
                 <>
                   {/* GAP Certification section */}
                   <tr className="bg-[#1e4d2b]/10 border-y-2 border-[#1e4d2b]/20">
-                    <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-5 py-2.5">
+                    <td colSpan={(RATING_COLLECTIONS[selectedCollection] ? 4 : 3) + (canDelete() ? 1 : 0)} className="px-5 py-2.5">
                       <span className="text-xs font-black text-[#1e4d2b] uppercase tracking-wider">GAP Certification</span>
                       {filteredGapCert.length > 0 && <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapCert.length} record(s))</span>}
                     </td>
                   </tr>
                   {filteredGapCert.map((docItem) => (
                     <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
+                      {canDelete() && (
+                        <td className="px-2 sm:px-3 py-3.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(docItem.id)}
+                            onChange={() => toggleSelect(docItem.id)}
+                            className="w-4 h-4 rounded border-2 border-[#1e4d2b]/40 text-[#1e4d2b] focus:ring-[#1e4d2b]/50"
+                            aria-label={`Select ${getDisplayName(docItem, selectedCollection)}`}
+                          />
+                        </td>
+                      )}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50 group-hover:scale-105 group-hover:from-[#1e4d2b]/20 group-hover:to-[#5c7355]/15 transition-all duration-300">
@@ -816,13 +900,24 @@ export default function ViewRecords() {
                   ))}
                   {/* GAP Monitoring section */}
                   <tr className="bg-[#1e4d2b]/10 border-y-2 border-[#1e4d2b]/20">
-                    <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-5 py-2.5">
+                    <td colSpan={(RATING_COLLECTIONS[selectedCollection] ? 4 : 3) + (canDelete() ? 1 : 0)} className="px-5 py-2.5">
                       <span className="text-xs font-black text-[#1e4d2b] uppercase tracking-wider">Monitoring of GAP Certified Farmer</span>
                       {filteredGapMonitoring.length > 0 && <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapMonitoring.length} record(s))</span>}
                     </td>
                   </tr>
                   {filteredGapMonitoring.map((docItem) => (
                     <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
+                      {canDelete() && (
+                        <td className="px-2 sm:px-3 py-3.5 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(docItem.id)}
+                            onChange={() => toggleSelect(docItem.id)}
+                            className="w-4 h-4 rounded border-2 border-[#1e4d2b]/40 text-[#1e4d2b] focus:ring-[#1e4d2b]/50"
+                            aria-label={`Select ${getDisplayName(docItem, selectedCollection)}`}
+                          />
+                        </td>
+                      )}
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50 group-hover:scale-105 group-hover:from-[#1e4d2b]/20 group-hover:to-[#5c7355]/15 transition-all duration-300">
@@ -875,13 +970,24 @@ export default function ViewRecords() {
                   {filteredGapOther.length > 0 && (
                     <>
                       <tr className="bg-[#b8a066]/10 border-y-2 border-[#b8a066]/20">
-                        <td colSpan={RATING_COLLECTIONS[selectedCollection] ? 4 : 3} className="px-5 py-2.5">
+                        <td colSpan={(RATING_COLLECTIONS[selectedCollection] ? 4 : 3) + (canDelete() ? 1 : 0)} className="px-5 py-2.5">
                           <span className="text-xs font-black text-[#5c574f] uppercase tracking-wider">Other</span>
                           <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapOther.length} record(s))</span>
                         </td>
                       </tr>
                       {filteredGapOther.map((docItem) => (
                         <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
+                          {canDelete() && (
+                            <td className="px-2 sm:px-3 py-3.5 text-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedIds.has(docItem.id)}
+                                onChange={() => toggleSelect(docItem.id)}
+                                className="w-4 h-4 rounded border-2 border-[#1e4d2b]/40 text-[#1e4d2b] focus:ring-[#1e4d2b]/50"
+                                aria-label={`Select ${getDisplayName(docItem, selectedCollection)}`}
+                              />
+                            </td>
+                          )}
                           <td className="px-5 py-3.5">
                             <div className="flex items-center gap-3">
                               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50">
@@ -934,6 +1040,17 @@ export default function ViewRecords() {
               ) : (
                 filtered.map((docItem) => (
                   <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
+                    {canDelete() && (
+                      <td className="px-2 sm:px-3 py-3.5 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(docItem.id)}
+                          onChange={() => toggleSelect(docItem.id)}
+                          className="w-4 h-4 rounded border-2 border-[#1e4d2b]/40 text-[#1e4d2b] focus:ring-[#1e4d2b]/50"
+                          aria-label={`Select ${getDisplayName(docItem, selectedCollection)}`}
+                        />
+                      </td>
+                    )}
                     <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50 group-hover:scale-105 group-hover:from-[#1e4d2b]/20 group-hover:to-[#5c7355]/15 transition-all duration-300">
@@ -1021,13 +1138,17 @@ export default function ViewRecords() {
                 <iconify-icon icon="mdi:alert-circle-outline" width="24" class="text-white"></iconify-icon>
               </span>
               <div className="relative z-10">
-                <h3 className="text-lg font-black text-white uppercase tracking-tight">Delete Record</h3>
+                <h3 className="text-lg font-black text-white uppercase tracking-tight">
+                  {deleteConfirming.ids ? `Delete ${deleteConfirming.count} Record${deleteConfirming.count !== 1 ? 's' : ''}` : 'Delete Record'}
+                </h3>
                 <p className="text-[11px] font-semibold text-white/90 mt-0.5">This action cannot be undone.</p>
               </div>
             </div>
             <div className="p-6 border-l-4 border-red-500/30 bg-gradient-to-b from-[#fef2f2] to-[#faf8f5]">
               <p className="text-sm font-medium text-[#1e293b] mb-1">
-                Are you sure you want to permanently delete this record?
+                {deleteConfirming.ids
+                  ? `Are you sure you want to permanently delete ${deleteConfirming.count} record${deleteConfirming.count !== 1 ? 's' : ''}?`
+                  : 'Are you sure you want to permanently delete this record?'}
               </p>
               {deleteConfirming.name && deleteConfirming.name !== '—' && (
                 <p className="text-xs text-[#64748b] mt-2 px-3 py-2 rounded-lg bg-white/80 border border-[#e8e0d4]">
@@ -1045,7 +1166,7 @@ export default function ViewRecords() {
               </button>
               <button
                 type="button"
-                onClick={() => handleDelete(deleteConfirming.id)}
+                onClick={() => handleDelete(deleteConfirming.ids || deleteConfirming.id)}
                 className="min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 hover:scale-105 active:scale-[0.98] shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-sm flex items-center gap-2 touch-manipulation"
               >
                 <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>

@@ -262,6 +262,7 @@ function DashboardLayout() {
               {role === 'admin' && (
                 <>
                   <NavItem to="/dashboard/user-management" icon="mdi:account-group-outline" label="User Management" active={isActive('/dashboard/user-management')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
+                  <NavItem to="/dashboard/bulk-import" icon="mdi:database-import-outline" label="Bulk Import" active={isActive('/dashboard/bulk-import')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
                   <NavItem to="/dashboard/system-logs" icon="mdi:clipboard-list-outline" label="System Logs" active={isActive('/dashboard/system-logs')} sidebarOpen={sidebarOpen || mobileMenuOpen} />
                 </>
               )}
@@ -316,7 +317,7 @@ function DashboardLayout() {
               
               <div className="flex flex-col justify-center min-w-0">
                  <h2 className="text-base sm:text-lg font-bold text-primary tracking-tight leading-tight truncate">
-                    {({ '/dashboard': 'Dashboard', '/dashboard/analytics': 'Data Analytics', '/dashboard/records': 'Master Records', '/dashboard/settings': 'Settings', '/dashboard/user-management': 'User Management', '/dashboard/system-logs': 'System Logs' }[location.pathname] || SIDEBAR_SECTIONS.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || 'Dashboard')}
+                    {({ '/dashboard': 'Dashboard', '/dashboard/analytics': 'Data Analytics', '/dashboard/records': 'Master Records', '/dashboard/settings': 'Settings', '/dashboard/user-management': 'User Management', '/dashboard/bulk-import': 'Bulk Import', '/dashboard/system-logs': 'System Logs' }[location.pathname] || SIDEBAR_SECTIONS.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || 'Dashboard')}
                  </h2>
                  <p className="text-xs text-text-muted mt-0.5 hidden sm:block truncate">Regulatory Division Portal</p>
               </div>
