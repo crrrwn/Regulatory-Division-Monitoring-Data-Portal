@@ -423,6 +423,662 @@ function parsePlantMaterialPaste(text, defaultProvince = '') {
 }
 
 /**
+ * Parse Organic Agri paste - 14 columns (from ORGANIC_AGRI_BY_PROVINCE.md).
+ * Columns: No., Application, Name of Group, Name of Applicant, Location, Area, Date of Evaluation, Remarks,
+ * Date of Endorsement, Final Inspection/Accreditation, Status, Issuance of Certificate, Remarks, Link File.
+ * Skips ## headings, ```, and header row. Carries over Application/Name of Group on sub-rows.
+ */
+function parseOrganicAgriPaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  function extractProvinceFromLocation(loc) {
+    if (!loc || typeof loc !== 'string') return ''
+    const parts = loc.split(',').map((p) => p.trim()).filter(Boolean)
+    for (let i = parts.length - 1; i >= 0; i--) {
+      const p = parts[i].toLowerCase()
+      if (p.includes('oriental mindoro')) return 'Oriental Mindoro'
+      if (p.includes('occidental mindoro')) return 'Occidental Mindoro'
+      if (p.includes('palawan') || p.includes('puerto princesa')) return 'Palawan'
+      if (p.includes('marinduque')) return 'Marinduque'
+      if (p.includes('romblon')) return 'Romblon'
+    }
+    return ''
+  }
+
+  const rows = []
+  let lastApplication = ''
+  let lastNameOfGroup = ''
+  let headerFound = false
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+    if (line.startsWith('##') || line.startsWith('```')) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col0 = get(0)
+    const col1 = get(1)
+    const col2 = get(2)
+    const col3 = get(3)
+
+    if (col0.toLowerCase() === 'no.' && (col1.toLowerCase().includes('application') || col2.toLowerCase().includes('group'))) {
+      headerFound = true
+      continue
+    }
+    if (!headerFound && row.length < 5) continue
+    if (row.length < 5) continue
+    if (!col3 && !col2 && !col1) continue
+    if (col3.toLowerCase() === 'name of applicant' || col2.toLowerCase() === 'name of group') continue
+
+    const application = col1 || lastApplication
+    const nameOfGroup = col2 || lastNameOfGroup
+    const nameOfApplicant = col3
+    if (!nameOfApplicant) continue
+
+    if (application) lastApplication = application
+    if (nameOfGroup) lastNameOfGroup = nameOfGroup
+
+    const location = get(4)
+    const province = extractProvinceFromLocation(location) || defaultProvince
+
+    rows.push({
+      application: application || '',
+      nameOfGroup: nameOfGroup || '',
+      nameOfApplicant,
+      province,
+      location,
+      area: get(5) || '',
+      dateOfEvaluation: parseDate(get(6)) || get(6),
+      remarks: get(7) || '',
+      dateOfEndorsement: parseDate(get(8)) || get(8),
+      finalInspection: get(9) || '',
+      status: get(10) || '',
+      issuanceOfCertificate: get(11) || '',
+      finalRemarks: get(12) || '',
+      linkFile: get(13) || '',
+    })
+  }
+  return rows
+}
+
+/**
+ * Parse GAP Certification Form paste (Good Agri Practices - first form). 11 columns from GAP_CERTIFICATION_BY_PROVINCE.md.
+ * Columns: No., Date of Request, Name of Applicant, Location, Area (ha), Crop, Date of Pre-assessment, Remarks,
+ * Date of Endorsement to BPI, Date of Final Inspection, Status.
+ * Skips ##, ```, blank lines, and "CY 20XX - FIRST/SECOND SEMESTER" lines. Sets formType: 'gapCertification'.
+ */
+function parseGoodAgriPracticesGapPaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  function extractProvinceFromLocation(loc) {
+    if (!loc || typeof loc !== 'string') return ''
+    const lower = loc.toLowerCase()
+    if (lower.includes('oriental mindoro')) return 'Oriental Mindoro'
+    if (lower.includes('occidental mindoro') || lower.includes('occ. mindoro')) return 'Occidental Mindoro'
+    if (lower.includes('palawan') || lower.includes('puerto princesa') || lower.includes('narra')) return 'Palawan'
+    if (lower.includes('marinduque')) return 'Marinduque'
+    if (lower.includes('romblon')) return 'Romblon'
+    return ''
+  }
+
+  const rows = []
+  let headerFound = false
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+    if (line.startsWith('##') || line.startsWith('```')) continue
+    if (/^CY\s+\d{4}\s*-/i.test(line) || /SEMESTER\s*$/i.test(line)) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col0 = get(0)
+    const col1 = get(1)
+    const col2 = get(2)
+
+    if (col0.toLowerCase() === 'no.' && (col1.toLowerCase().includes('date') || col2.toLowerCase().includes('applicant'))) {
+      headerFound = true
+      continue
+    }
+    if (row.length < 5) continue
+    if (!col2) continue
+    if (col2.toLowerCase() === 'name of applicant') continue
+
+    const province = extractProvinceFromLocation(get(3)) || defaultProvince
+
+    rows.push({
+      formType: 'gapCertification',
+      controlNo: col0 || '',
+      dateOfRequest: parseDate(col1) || col1,
+      nameOfApplicant: col2,
+      location: get(3),
+      province,
+      area: get(4) || '',
+      crop: get(5) || '',
+      dateOfPreAssessment: parseDate(get(6)) || get(6),
+      remarks: get(7) || '',
+      dateOfEndorsementToBPI: parseDate(get(8)) || get(8),
+      dateOfFinalInspection: get(9) || '',
+      status: get(10) || '',
+    })
+  }
+  return rows
+}
+
+/**
+ * Parse Monitoring of GAP Certified Farmer paste (Good Agri Practices - second form). 8 columns from GAP_MONITORING_BY_PROVINCE.md.
+ * Columns: No., Date of Monitoring, Name of Farmer, Location, Area (ha), Certificate Number, Certificate Validity, Remarks.
+ * Skips ##, ```, blank lines, and "CY 20XX - FIRST/SECOND SEMESTER" lines. Sets formType: 'monitoring'.
+ */
+function parseGoodAgriPracticesMonitoringPaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  function extractProvinceFromLocation(loc) {
+    if (!loc || typeof loc !== 'string') return ''
+    const lower = loc.toLowerCase()
+    if (lower.includes('oriental mindoro') || lower.includes('or. mindoro')) return 'Oriental Mindoro'
+    if (lower.includes('occidental mindoro') || lower.includes('occ. mdo') || lower.includes('occ.mdo')) return 'Occidental Mindoro'
+    if (lower.includes('palawan') || lower.includes('puerto princesa') || lower.includes('narra')) return 'Palawan'
+    if (lower.includes('marinduque')) return 'Marinduque'
+    if (lower.includes('romblon')) return 'Romblon'
+    return ''
+  }
+
+  const rows = []
+  let headerFound = false
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+    if (line.startsWith('##') || line.startsWith('```')) continue
+    if (/^CY\s+\d{4}\s*-/i.test(line) || /SEMESTER\s*$/i.test(line)) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col0 = get(0)
+    const col1 = get(1)
+    const col2 = get(2)
+
+    if (col0.toLowerCase() === 'no.' && (col1.toLowerCase().includes('date of monitoring') || col2.toLowerCase().includes('farmer'))) {
+      headerFound = true
+      continue
+    }
+    if (row.length < 5) continue
+    if (!col2) continue
+    if (col2.toLowerCase() === 'name of farmer') continue
+
+    const province = extractProvinceFromLocation(get(3)) || defaultProvince
+
+    rows.push({
+      formType: 'monitoring',
+      controlNo: col0 || '',
+      dateOfMonitoring: parseDate(col1) || col1,
+      nameOfFarmer: col2,
+      location: get(3),
+      province,
+      area: get(4) || '',
+      certificateNumber: get(5) || '',
+      certificateValidity: parseDate(get(6)) || get(6),
+      remarks: get(7) || '',
+    })
+  }
+  return rows
+}
+
+/**
+ * Parse Organic Post-Market Surveillance paste. Columns: No., Request Letter (Date), Identified Market Outlet,
+ * Date of Communication Letter, Date of Surveillance, Product Brand, Commodity, Certification, Name of Owner/Manager,
+ * Location, Area, Date of Evaluation, Remarks, Final Inspection, Status, Issuance of Certificate.
+ * Skips ##, ```, blank, "FY 2024", "FY 2025 FIRST/SECOND SEMESTER". Carries over establishment fields on product sub-rows.
+ */
+function parseOrganicPostMarketPaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  function extractProvinceFromLocation(loc) {
+    if (!loc || typeof loc !== 'string') return ''
+    const lower = loc.toLowerCase()
+    if (lower.includes('oriental mindoro') || lower.includes('or. mindoro') || lower.includes('calapan') || lower.includes('bongabong') || lower.includes('naujan') || lower.includes('puerto galera')) return 'Oriental Mindoro'
+    if (lower.includes('occidental mindoro') || lower.includes('occ. mindoro') || lower.includes('occidnetal') || lower.includes('magsaysay') || (lower.includes('san jose') && !lower.includes('oriental'))) return 'Occidental Mindoro'
+    if (lower.includes('palawan') || lower.includes('ppc')) return 'Palawan'
+    return ''
+  }
+
+  const rows = []
+  let last = {
+    requestLetterDate: '',
+    identifiedMarketOutlet: '',
+    dateOfCommunicationLetter: '',
+    dateOfSurveillance: '',
+    nameOfOwnerManager: '',
+    location: '',
+  }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+    if (line.startsWith('##') || line.startsWith('```')) continue
+    if (/^FY\s+\d{4}/i.test(line) || /FIRST SEMESTER/i.test(line) || /SECOND SEMESTER/i.test(line)) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col1 = get(1)
+    const col2 = get(2)
+    const col3 = get(3)
+    const col4 = get(4)
+    const col5 = get(5)
+    const col6 = get(6)
+    const col7 = get(7)
+    const col8 = get(8)
+    const col9 = get(9)
+    const col12 = get(12)
+
+    if (get(0).toLowerCase() === 'no.' && (col1.toLowerCase().includes('request') || col2.toLowerCase().includes('market') || col2.toLowerCase().includes('establishment'))) continue
+    if (row.length < 3) continue
+
+    const requestLetterDate = col1 || last.requestLetterDate
+    const identifiedMarketOutlet = col2 || last.identifiedMarketOutlet
+    const dateOfCommunicationLetter = col3 || last.dateOfCommunicationLetter
+    const dateOfSurveillance = col4 || last.dateOfSurveillance
+    const nameOfOwnerManager = col8 || last.nameOfOwnerManager
+    const location = col9 || last.location
+
+    if (!identifiedMarketOutlet && !nameOfOwnerManager && !location && !col5 && !col6 && !col7) continue
+
+    if (requestLetterDate) last.requestLetterDate = requestLetterDate
+    if (identifiedMarketOutlet) last.identifiedMarketOutlet = identifiedMarketOutlet
+    if (dateOfCommunicationLetter) last.dateOfCommunicationLetter = dateOfCommunicationLetter
+    if (dateOfSurveillance) last.dateOfSurveillance = dateOfSurveillance
+    if (nameOfOwnerManager) last.nameOfOwnerManager = nameOfOwnerManager
+    if (location) last.location = location
+
+    const province = extractProvinceFromLocation(location) || defaultProvince
+
+    rows.push({
+      requestLetterDate: parseDate(requestLetterDate) || requestLetterDate,
+      identifiedMarketOutlet: identifiedMarketOutlet || '',
+      dateOfCommunicationLetter: parseDate(dateOfCommunicationLetter) || dateOfCommunicationLetter,
+      nameOfProduct: col5 || '',
+      commodity: col6 || '',
+      certification: col7 || '',
+      nameOfOwnerManager: nameOfOwnerManager || '',
+      province,
+      location: location || '',
+      dateOfSurveillance: parseDate(dateOfSurveillance) || dateOfSurveillance,
+      remarks: col12 || '',
+      linkFile: '',
+    })
+  }
+  return rows
+}
+
+/**
+ * Parse Land Use Matter (Land Use Concern) paste. 14 columns from LAND_USE_BY_PROVINCE.md.
+ * Columns: No., Control No., Name of Applicant, Purpose of Application, Size of Area (ha), Location,
+ * Date of Request, Date Received and Evaluated, Date of Reply to the Request, Date Received by the Applicant,
+ * Field Investigation, Date of Endorsement, Issuance of Certificate, Remarks.
+ * Skips ##, ```, blank, "CY 2024", "CY 2025". Date cells may contain "(through messenger)" etc. — first line used for parseDate.
+ */
+function parseLandUseMatterPaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  function firstLineDate(val) {
+    const s = String(val || '').split(/\r?\n/)[0].trim()
+    return parseDate(s) || s
+  }
+
+  function extractProvinceFromLocation(loc) {
+    if (!loc || typeof loc !== 'string') return ''
+    const lower = loc.toLowerCase()
+    if (lower.includes('marinduque')) return 'Marinduque'
+    if (lower.includes('oriental mindoro') || lower.includes('victoria')) return 'Oriental Mindoro'
+    if (lower.includes('occidental mindoro')) return 'Occidental Mindoro'
+    if (lower.includes('palawan')) return 'Palawan'
+    if (lower.includes('romblon')) return 'Romblon'
+    return ''
+  }
+
+  const rows = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+    if (line.startsWith('##') || line.startsWith('```')) continue
+    if (/^CY\s+\d{4}/i.test(line)) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col0 = get(0)
+    const col1 = get(1)
+    const col2 = get(2)
+
+    if (col0.toLowerCase() === 'no.' && (col1.toLowerCase().includes('control') || col2.toLowerCase().includes('applicant'))) continue
+    if (row.length < 6) continue
+    if (!col2) continue
+    if (col2.toLowerCase() === 'name of applicant') continue
+
+    const location = get(5)
+    const province = extractProvinceFromLocation(location) || defaultProvince
+
+    rows.push({
+      controlNo: col1 || '',
+      nameOfApplicant: col2 || '',
+      purposeOfApplication: get(3) || '',
+      sizeOfArea: get(4) || '',
+      province,
+      location,
+      dateOfRequest: firstLineDate(get(6)),
+      dateReceivedAndEvaluated: firstLineDate(get(7)),
+      dateOfReplyToRequest: firstLineDate(get(8)),
+      dateReceivedByApplicant: firstLineDate(get(9)),
+      fieldInvestigation: get(10) || '',
+      dateOfEndorsement: firstLineDate(get(11)),
+      issuanceOfCertificate: get(12) || '',
+      remarks: get(13) || '',
+    })
+  }
+  return rows
+}
+
+/**
+ * Parse SAFDZ Validation paste. 16 columns from SAFDZ_VALIDATION_BY_PROVINCE.md.
+ * Columns: No., Exploration Permit Application No., Name of Applicant, Date Received, Location, Area (ha),
+ * Date of Reply to the Request, Endorsement to BSWM, Endorsement to MGB, Field Validation, Remarks,
+ * Rescheduled date, Field Validation Report, Issuance of Certificate and Endorsement to MGB, Status, Findings.
+ * Skips ##, ```, blank, "CY 2024", "CY 2025". Carries over application no., name, location, area on sub-rows.
+ */
+function parseSafdzValidationPaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  function firstLineDate(val) {
+    const s = String(val || '').split(/\r?\n/)[0].trim()
+    return parseDate(s) || s
+  }
+
+  function extractProvinceFromLocation(loc) {
+    if (!loc || typeof loc !== 'string') return ''
+    const lower = loc.toLowerCase()
+    if (lower.includes('palawan')) return 'Palawan'
+    if (lower.includes('marinduque')) return 'Marinduque'
+    if (lower.includes('oriental mindoro')) return 'Oriental Mindoro'
+    if (lower.includes('occidental mindoro')) return 'Occidental Mindoro'
+    if (lower.includes('romblon')) return 'Romblon'
+    return ''
+  }
+
+  const rows = []
+  let last = { explorationPermitApplicationNo: '', nameOfApplicant: '', location: '', area: '' }
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+    if (line.startsWith('##') || line.startsWith('```')) continue
+    if (/^CY\s+\d{4}/i.test(line)) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col0 = get(0)
+    const col1 = get(1)
+    const col2 = get(2)
+    const col4 = get(4)
+    const col5 = get(5)
+
+    if (col0.toLowerCase() === 'no.' && (col1.toLowerCase().includes('exploration') || col2.toLowerCase().includes('applicant'))) continue
+    if (row.length < 6) continue
+    if (col2.toLowerCase() === 'name of applicant') continue
+
+    const explorationPermitApplicationNo = col1 || last.explorationPermitApplicationNo
+    const nameOfApplicant = col2 || last.nameOfApplicant
+    const location = col4 || last.location
+    const area = col5 || last.area
+
+    if (!explorationPermitApplicationNo && !nameOfApplicant && !location && !get(3)) continue
+
+    if (col1) last.explorationPermitApplicationNo = col1
+    if (col2) last.nameOfApplicant = col2
+    if (col4) last.location = col4
+    if (col5) last.area = col5
+
+    const province = extractProvinceFromLocation(location) || defaultProvince
+    const areaStr = area ? String(area).replace(/,/g, '').trim() : ''
+
+    rows.push({
+      explorationPermitApplicationNo: explorationPermitApplicationNo || '',
+      nameOfApplicant: nameOfApplicant || '',
+      dateReceived: firstLineDate(get(3)),
+      province,
+      location: location || '',
+      area: areaStr,
+      dateOfReplyToRequest: firstLineDate(get(6)),
+      endorsementToBSWM: get(7) || '',
+      endorsementToMGB: get(8) || '',
+      fieldValidation: get(9) || '',
+      remarks: get(10) || '',
+      rescheduledDate: firstLineDate(get(11)),
+      fieldValidationReport: get(12) || '',
+      issuanceOfCertificateAndEndorsementToMGB: get(13) || '',
+      status: get(14) || '',
+      findings: get(15) || '',
+    })
+  }
+  return rows
+}
+
+/**
+ * Parse Plant Pest Surveillance paste. 13 columns. Header may be "Date of Request and Collection" or "Date of Collection".
+ * Province from section header. Carries over farmerName, date, and address on sub-rows so walang kulang.
+ */
+function parsePlantPestSurveillancePaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  const PROVINCE_NAMES = ['ORIENTAL MINDORO', 'OCCIDENTAL MINDORO', 'ROMBLON', 'PALAWAN', 'MARINDUQUE']
+  const PROVINCE_DISPLAY = { 'ORIENTAL MINDORO': 'Oriental Mindoro', 'OCCIDENTAL MINDORO': 'Occidental Mindoro', ROMBLON: 'Romblon', PALAWAN: 'Palawan', MARINDUQUE: 'Marinduque' }
+  function getProvinceFromLine(line) {
+    const upper = line.toUpperCase().trim().replace(/\s+/g, ' ')
+    for (const p of PROVINCE_NAMES) {
+      if (upper === p || upper.startsWith(p + ' ') || upper === p.replace(/\s+/g, '')) return PROVINCE_DISPLAY[p] || p
+    }
+    return ''
+  }
+
+  function firstLine(val) {
+    return String(val || '').split(/\r?\n/)[0].trim()
+  }
+
+  const rows = []
+  let currentProvince = defaultProvince
+  let lastFarmerName = ''
+  let lastDate = ''
+  let lastAddress = ''
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+
+    const provFromLine = getProvinceFromLine(line)
+    if (provFromLine) {
+      currentProvince = provFromLine
+      continue
+    }
+    if (/^CY\s+\d{4}/i.test(line) || /FIRST SEMESTER/i.test(line) || /SECOND SEMESTER/i.test(line)) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col0 = get(0)
+    const col1 = get(1)
+    const col2 = get(2)
+
+    if (col0.toLowerCase().includes('date of') && (col1.toLowerCase().includes('farmer') || col1.toLowerCase().includes('name of'))) continue
+    if (col2.toLowerCase() === 'address' || col1.toLowerCase() === 'name of farmer') continue
+
+    const farmerName = col1 || lastFarmerName
+    const address = col2 || lastAddress
+    const dateVal = firstLine(col0) || lastDate
+    if (col1) lastFarmerName = col1
+    if (col2) lastAddress = col2
+    if (firstLine(col0)) lastDate = firstLine(col0)
+
+    if (!farmerName && !address && !get(5)) continue
+
+    const province = currentProvince || defaultProvince
+
+    rows.push({
+      dateOfRequestAndCollection: dateVal ? (parseDate(dateVal) || dateVal) : '',
+      farmerName: farmerName || '',
+      province,
+      address: address || '',
+      contactNumber: get(3) || '',
+      gpsLocation: get(4) || '',
+      crop: get(5) || '',
+      variety: get(6) || '',
+      datePlanted: firstLine(get(7)) ? (parseDate(firstLine(get(7))) || firstLine(get(7))) : get(7),
+      areaPlanted: get(8) ? String(get(8)).replace(/,/g, '').trim() : '',
+      areaAffected: get(9) || '',
+      percentInfestation: get(10) || '',
+      pestsDiseases: get(11) || '',
+      remarks: get(12) || '',
+    })
+  }
+  return rows
+}
+
+/**
+ * Parse CFS/ADMCC paste. 11 data columns (No. + 10). Columns: Name of LGU/Client/Farm, Type of Disease Surveillance,
+ * Purpose, Address, Date of Request, Date of Surveillance (Blood Collection), Number of Samples, Date Submitted to Lab,
+ * Date of Endorsement to DA-BAI, Remarks. Province extracted from Address. Skips section headers (2024 ANIMAL DISEASE, FIRST SEM, etc.).
+ */
+function parseCfsAdmccPaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  function firstLine(val) {
+    return String(val || '').split(/\r?\n/)[0].trim()
+  }
+
+  function extractProvinceFromAddress(addr) {
+    if (!addr || typeof addr !== 'string') return ''
+    const lower = addr.toLowerCase()
+    if (lower.includes('oriental mindoro')) return 'Oriental Mindoro'
+    if (lower.includes('occidental mindoro')) return 'Occidental Mindoro'
+    if (lower.includes('romblon')) return 'Romblon'
+    if (lower.includes('palawan')) return 'Palawan'
+    if (lower.includes('marinduque')) return 'Marinduque'
+    return ''
+  }
+
+  const rows = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+    if (/2024\s+ANIMAL\s+DISEASE/i.test(line) || /^FIRST\s+SEM/i.test(line) || /^SECOND\s+SEM/i.test(line) || /AVIAN\s+INFLUENZA\s+SURVEILLANCE/i.test(line) || /FIRST\s+SEMESTER/i.test(line) || /SECOND\s+SEMESTER/i.test(line)) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col0 = get(0)
+    const col1 = get(1)
+    const col4 = get(4)
+
+    if (col0.toLowerCase() === 'no.' && (col1.toLowerCase().includes('name of') || col1.toLowerCase().includes('local government'))) continue
+    if (col0.toLowerCase().includes('blood collection') || col1.toLowerCase().includes('number of samples collected')) continue
+    if (row.length < 6) continue
+    if (!col1 && !col4) continue
+
+    const address = get(4)
+    const province = extractProvinceFromAddress(address) || defaultProvince
+
+    rows.push({
+      clientName: col1 || '',
+      typeOfDiseaseSurveillance: get(2) || '',
+      purpose: get(3) || '',
+      province,
+      address: address || '',
+      dateOfRequest: firstLine(get(5)) ? (parseDate(firstLine(get(5))) || firstLine(get(5))) : '',
+      dateOfSurveillance: firstLine(get(6)) ? (parseDate(firstLine(get(6))) || firstLine(get(6))) : get(6),
+      numberOfSamples: get(7) ? String(get(7)).replace(/,/g, '').trim() : '',
+      dateSubmittedToLab: firstLine(get(8)) ? (parseDate(firstLine(get(8))) || firstLine(get(8))) : get(8),
+      dateOfEndorsementToDA: firstLine(get(9)) ? (parseDate(firstLine(get(9))) || firstLine(get(9))) : get(9),
+      remarks: get(10) || '',
+    })
+  }
+  return rows
+}
+
+/**
+ * Parse Animal Disease Surveillance paste. Same 11 data columns as CFS/ADMCC. Skips "CY 2024", "FIRST SEMESTER", "SECOND SEMESTER", header row, and "(Blood Collection)" continuation. Province from Address; normalizes "Occidenatal" to Occidental Mindoro.
+ */
+function parseAnimalDiseaseSurveillancePaste(text, defaultProvince = '') {
+  const lines = text.split(/\r?\n/).map((l) => l.trim())
+  if (lines.length < 2) return []
+
+  function firstLine(val) {
+    return String(val || '').split(/\r?\n/)[0].trim()
+  }
+
+  function extractProvinceFromAddress(addr) {
+    if (!addr || typeof addr !== 'string') return ''
+    const lower = addr.toLowerCase()
+    if (lower.includes('oriental mindoro')) return 'Oriental Mindoro'
+    if (lower.includes('occidental mindoro') || lower.includes('occidenatal mindoro')) return 'Occidental Mindoro'
+    if (lower.includes('romblon')) return 'Romblon'
+    if (lower.includes('palawan')) return 'Palawan'
+    if (lower.includes('marinduque')) return 'Marinduque'
+    return ''
+  }
+
+  const rows = []
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]
+    if (!line) continue
+    if (/CY\s+\d{4}/i.test(line) || /^FIRST\s+SEMESTER/i.test(line) || /^SECOND\s+SEMESTER/i.test(line)) continue
+
+    const row = line.split(/\t/)
+    const get = (idx) => (row[idx] !== undefined && row[idx] !== null ? String(row[idx]).trim() : '')
+
+    const col0 = get(0)
+    const col1 = get(1)
+    const col2 = get(2)
+    const col4 = get(4)
+
+    if (col0.toLowerCase() === 'no.' && (col1.toLowerCase().includes('name of') || col1.toLowerCase().includes('local government') || (col2 && col2.toLowerCase().includes('african swine')))) continue
+    if (col0.toLowerCase().includes('blood collection') || col1.toLowerCase().includes('number of samples collected')) continue
+    if (row.length < 6) continue
+    if (!col1 && !col4) continue
+
+    const address = get(4)
+    const province = extractProvinceFromAddress(address) || defaultProvince
+
+    rows.push({
+      clientName: col1 || '',
+      typeOfDiseaseSurveillance: get(2) || '',
+      purpose: get(3) || '',
+      province,
+      address: address || '',
+      dateOfRequest: firstLine(get(5)) ? (parseDate(firstLine(get(5))) || firstLine(get(5))) : '',
+      dateOfSurveillance: firstLine(get(6)) ? (parseDate(firstLine(get(6))) || firstLine(get(6))) : get(6),
+      numberOfSamples: get(7) ? String(get(7)).replace(/,/g, '').trim() : '',
+      dateSubmittedToLab: firstLine(get(8)) ? (parseDate(firstLine(get(8))) || firstLine(get(8))) : get(8),
+      dateOfEndorsementToDA: firstLine(get(9)) ? (parseDate(firstLine(get(9))) || firstLine(get(9))) : get(9),
+      remarks: get(10) || '',
+    })
+  }
+  return rows
+}
+
+/**
  * Generic TSV parser for units without custom parser. Maps columns by position to collection fields.
  * First row = header (skipped). Data columns map to COLLECTION_FIELD_ORDER[unit] (excluding rating, attachmentData).
  */
@@ -464,7 +1120,7 @@ function parseGenericTsvPaste(unitId, text, defaultProvince = '') {
   return rows
 }
 
-const UNITS_WITH_CUSTOM_PARSER = ['animalFeed', 'animalWelfare', 'livestockHandlers', 'transportCarrier', 'plantMaterial']
+const UNITS_WITH_CUSTOM_PARSER = ['animalFeed', 'animalWelfare', 'livestockHandlers', 'transportCarrier', 'plantMaterial', 'organicAgri', 'goodAgriPractices', 'organicPostMarket', 'landUseMatter', 'safdzValidation', 'plantPestSurveillance', 'cfsAdmcc', 'animalDiseaseSurveillance']
 
 export default function BulkImport() {
   const { user } = useAuth()
@@ -493,6 +1149,31 @@ export default function BulkImport() {
     } else if (unit === 'plantMaterial') {
       rows = parsePlantMaterialPaste(pasted, province)
       if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'Check your paste format. Use tab-separated data (16 cols). See PLANT_MATERIAL_FORM_BY_PROVINCE.md.' })
+    } else if (unit === 'organicAgri') {
+      rows = parseOrganicAgriPaste(pasted, province)
+      if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'Check your paste format. Use tab-separated data (14 cols). Pwede i-paste buong block mula sa ORGANIC_AGRI_BY_PROVINCE.md (kasama ## at header).' })
+    } else if (unit === 'goodAgriPractices') {
+      const isMonitoring = /Date of Monitoring/i.test(pasted) && /Name of Farmer/i.test(pasted)
+      rows = isMonitoring ? parseGoodAgriPracticesMonitoringPaste(pasted, province) : parseGoodAgriPracticesGapPaste(pasted, province)
+      if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: isMonitoring ? 'Monitoring form: 8 cols. Pwede i-paste buong block mula sa GAP_MONITORING_BY_PROVINCE.md.' : 'GAP Certification form: 11 cols. Pwede i-paste buong block mula sa GAP_CERTIFICATION_BY_PROVINCE.md (kasama ## at header).' })
+    } else if (unit === 'organicPostMarket') {
+      rows = parseOrganicPostMarketPaste(pasted, province)
+      if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'Organic Post-Market: 16 cols. Pwede i-paste buong block mula sa ORGANIC_POST_MARKET_BY_PROVINCE.md (kasama ## at header). Sub-rows carry over establishment.' })
+    } else if (unit === 'landUseMatter') {
+      rows = parseLandUseMatterPaste(pasted, province)
+      if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'Land Use Matter: 14 cols. Pwede i-paste buong block mula sa LAND_USE_BY_PROVINCE.md (kasama ## at header).' })
+    } else if (unit === 'safdzValidation') {
+      rows = parseSafdzValidationPaste(pasted, province)
+      if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'SAFDZ Validation: 16 cols. Pwede i-paste buong block mula sa SAFDZ_VALIDATION_BY_PROVINCE.md (kasama ## at header). Sub-rows carry over application.' })
+    } else if (unit === 'plantPestSurveillance') {
+      rows = parsePlantPestSurveillancePaste(pasted, province)
+      if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'Plant Pest Surveillance: 13 cols. Pwede i-paste buong block mula sa PLANT_PEST_SURVEILLANCE_BY_PROVINCE.md. Lagay province name (ORIENTAL MINDORO, etc.) bago ang table para ma-detect ang province.' })
+    } else if (unit === 'cfsAdmcc') {
+      rows = parseCfsAdmccPaste(pasted, province)
+      if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'CFS/ADMCC: 11 cols (No., Name of LGU/Client/Farm, Type of Disease Surveillance, Purpose, Address, Date of Request, Date of Surveillance, No. of Samples, Date Submitted to Lab, Date of Endorsement to DA-BAI, Remarks). Province from Address. Pwede i-paste mula sa CFSADMCC_BY_PROVINCE.md.' })
+    } else if (unit === 'animalDiseaseSurveillance') {
+      rows = parseAnimalDiseaseSurveillancePaste(pasted, province)
+      if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'Animal Disease Surveillance: 11 cols (No., Name of LGU/Client/Farm, Type of Disease Surveillance, Purpose, Address, Date of Request, Date of Surveillance, No. of Samples, Date Submitted to Lab, Date of Endorsement to DA-BAI, Remarks). Province from Address. Pwede i-paste buong block mula sa ANIMAL_DISEASE_SURVEILLANCE_BY_PROVINCE.md o ANIMAL_DISEASE_SURVEILLANCE_FULL_DATA.txt.' })
     } else {
       rows = parseGenericTsvPaste(unit, pasted, province)
       if (rows.length === 0) showNotification({ type: 'warning', title: 'No data parsed', message: 'Paste tab-separated data. First row = header. Column order must match the unit\'s field order.' })
@@ -618,6 +1299,14 @@ export default function BulkImport() {
           {unit === 'livestockHandlers' && 'Copy from Excel or Google Sheet (with headers). Tab-separated. Livestock Handlers: No., Registration No., Name of Establishment, Name of Applicant, Address, Type of Application, Date of Application, OR Number, OR Date, Amount of Fee Collected, Date of Inspection, Validity. (2nd Sem adds: Date of Certification, Transmittal Date to BAI.) Paste BY PROVINCE.'}
           {unit === 'transportCarrier' && 'Copy from Excel or Google Sheet (with headers). Tab-separated. Transport Carrier (14 cols): No., Registration No., Name of Establishment, Name of Applicant, Address, Type of Application, Date of Application, OR Number, OR Date, Amount of Fee Collected, Date of Inspection and Monitoring, Date of Certification, Transmittal Date to BAI, Validity. Paste BY PROVINCE.'}
           {unit === 'plantMaterial' && 'Copy from Excel or Google Sheet (with headers). Tab-separated. Plant Material (16 cols): No., Applicant, Operator, Location, Crops/Variety, Submission of Application Form, Evaluation of Documentary, Payment of Application Fee, Amount of Fee, Date of inspection and evaluation of nursery, Approved validated result, Endorsement to BPI, Date of inspection (1st Sem), Date of inspection (2nd Sem), Status, Validity. See PLANT_MATERIAL_FORM_BY_PROVINCE.md.'}
+          {unit === 'organicAgri' && 'Pwede i-paste ang buong block mula sa ORGANIC_AGRI_BY_PROVINCE.md (kasama ang ## 1. PALAWAN at header row). Tab-separated, 14 cols: No., Application, Name of Group, Name of Applicant, Location, Area, Date of Evaluation, Remarks, Date of Endorsement, Final Inspection/Accreditation, Status, Issuance of Certificate, Remarks, Link File.'}
+          {unit === 'goodAgriPractices' && 'Dalawang form: (1) GAP Certification — GAP_CERTIFICATION_BY_PROVINCE.md, 11 cols: No., Date of Request, Name of Applicant, Location, Area, Crop, Date of Pre-assessment, Remarks, Date of Endorsement to BPI, Date of Final Inspection, Status. (2) Monitoring of GAP Certified Farmer — GAP_MONITORING_BY_PROVINCE.md, 8 cols: No., Date of Monitoring, Name of Farmer, Location, Area, Certificate Number, Certificate Validity, Remarks. Auto-detect mula sa header.'}
+          {unit === 'organicPostMarket' && 'Organic Post-Market Surveillance. Pwede i-paste buong block mula sa ORGANIC_POST_MARKET_BY_PROVINCE.md (kasama ## at header). 16 cols: No., Request Letter (Date), Identified Market Outlet, Date of Communication Letter, Date of Surveillance, Product Brand, Commodity, Certification, Name of Owner/Manager, Location, Area, Date of Evaluation, Remarks, Final Inspection, Status, Issuance of Certificate. Sub-rows carry over establishment.'}
+          {unit === 'landUseMatter' && 'Land Use Concern. Pwede i-paste buong block mula sa LAND_USE_BY_PROVINCE.md (kasama ## at header). 14 cols: No., Control No., Name of Applicant, Purpose of Application, Size of Area (ha), Location, Date of Request, Date Received and Evaluated, Date of Reply to the Request, Date Received by the Applicant, Field Investigation, Date of Endorsement, Issuance of Certificate, Remarks.'}
+          {unit === 'safdzValidation' && 'SAFDZ Validation. Pwede i-paste buong block mula sa SAFDZ_VALIDATION_BY_PROVINCE.md (kasama ## at header). 16 cols: No., Exploration Permit Application No., Name of Applicant, Date Received, Location, Area (ha), Date of Reply to the Request, Endorsement to BSWM, Endorsement to MGB, Field Validation, Remarks, Rescheduled date, Field Validation Report, Issuance of Certificate and Endorsement to MGB, Status, Findings. Sub-rows carry over application.'}
+          {unit === 'plantPestSurveillance' && 'Plant Pest Surveillance. 13 cols: Date of Request/Collection, Name of Farmer, Address, Contact Number, GPS Location, Crop, Variety, Date Planted, Area Planted, Area Affected, Percent Infestation, Pests/Diseases, Remarks. Lagay province name (ORIENTAL MINDORO, OCCIDENTAL MINDORO, ROMBLON, PALAWAN, MARINDUQUE) sa sariling line bago ang table. Pwede i-paste mula sa PLANT_PEST_SURVEILLANCE_BY_PROVINCE.md.'}
+          {unit === 'cfsAdmcc' && 'CFS/ADMCC. 11 cols: No., Name of LGU/Client/Farm, Type of Disease Surveillance, Purpose, Address, Date of Request, Date of Surveillance (Blood Collection), No. of Samples, Date Submitted to Lab, Date of Endorsement to DA-BAI, Remarks. Province auto from Address. Pwede i-paste buong block (ASF/AI, First Sem/Second Sem) mula sa CFSADMCC_BY_PROVINCE.md.'}
+          {unit === 'animalDiseaseSurveillance' && 'Animal Disease Surveillance. 11 cols: No., Name of LGU/Client/Farm, Type of Disease Surveillance, Purpose, Address, Date of Request, Date of Surveillance (Blood Collection), No. of Samples, Date Submitted to Lab, Date of Endorsement to DA-BAI, Remarks. Province auto from Address, by province. Pwede i-paste buong block (CY 2024 First Sem/Second Sem) mula sa ANIMAL_DISEASE_SURVEILLANCE_FULL_DATA.txt — kumpleto lahat ng data.'}
           {!UNITS_WITH_CUSTOM_PARSER.includes(unit) && 'Copy from Excel or Google Sheet. Tab-separated. First row = header. Column order must match the unit\'s field order (see View Records for field names). Default Province applies if not in data.'}
         </p>
         <textarea
@@ -663,6 +1352,220 @@ export default function BulkImport() {
                       <td className="px-2 py-1.5">{r.province || '—'}</td>
                       <td className="px-2 py-1.5">{r.status || '—'}</td>
                       <td className="px-2 py-1.5">{r.validity || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : unit === 'organicAgri' ? (
+              <table className="w-full text-sm border-collapse" style={{ minWidth: '1000px' }}>
+                <thead>
+                  <tr className="border-b-2 border-[#e8e0d4] bg-[#faf8f5]">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Application</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Name of Group</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Name of Applicant</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Location</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Province</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map((r, i) => (
+                    <tr key={i} className="border-b border-[#e8e0d4] hover:bg-[#f0f5ee]/60">
+                      <td className="px-2 py-1.5 font-medium text-[#5c574f]">{startNo + i}</td>
+                      <td className="px-2 py-1.5">{r.application || '—'}</td>
+                      <td className="px-2 py-1.5">{r.nameOfGroup || '—'}</td>
+                      <td className="px-2 py-1.5">{r.nameOfApplicant || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[220px] truncate">{r.location || '—'}</td>
+                      <td className="px-2 py-1.5">{r.province || '—'}</td>
+                      <td className="px-2 py-1.5">{r.status || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : unit === 'goodAgriPractices' ? (parsed[0]?.formType === 'monitoring' ? (
+              <table className="w-full text-sm border-collapse" style={{ minWidth: '1000px' }}>
+                <thead>
+                  <tr className="border-b-2 border-[#e8e0d4] bg-[#faf8f5]">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Date of Monitoring</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Name of Farmer</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Location</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Province</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Certificate No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map((r, i) => (
+                    <tr key={i} className="border-b border-[#e8e0d4] hover:bg-[#f0f5ee]/60">
+                      <td className="px-2 py-1.5 font-medium text-[#5c574f]">{startNo + i}</td>
+                      <td className="px-2 py-1.5 text-[#5c574f]">{r.dateOfMonitoring ? (typeof r.dateOfMonitoring === 'string' ? r.dateOfMonitoring : new Date(r.dateOfMonitoring).toLocaleDateString('en-PH')) : '—'}</td>
+                      <td className="px-2 py-1.5">{r.nameOfFarmer || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[220px] truncate">{r.location || '—'}</td>
+                      <td className="px-2 py-1.5">{r.province || '—'}</td>
+                      <td className="px-2 py-1.5">{r.certificateNumber || '—'}</td>
+                      <td className="px-2 py-1.5">{r.remarks || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <table className="w-full text-sm border-collapse" style={{ minWidth: '1000px' }}>
+                <thead>
+                  <tr className="border-b-2 border-[#e8e0d4] bg-[#faf8f5]">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Date of Request</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Name of Applicant</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Location</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Province</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map((r, i) => (
+                    <tr key={i} className="border-b border-[#e8e0d4] hover:bg-[#f0f5ee]/60">
+                      <td className="px-2 py-1.5 font-medium text-[#5c574f]">{startNo + i}</td>
+                      <td className="px-2 py-1.5 text-[#5c574f]">{r.dateOfRequest ? (typeof r.dateOfRequest === 'string' ? r.dateOfRequest : new Date(r.dateOfRequest).toLocaleDateString('en-PH')) : '—'}</td>
+                      <td className="px-2 py-1.5">{r.nameOfApplicant || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[220px] truncate">{r.location || '—'}</td>
+                      <td className="px-2 py-1.5">{r.province || '—'}</td>
+                      <td className="px-2 py-1.5">{r.status || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )) : unit === 'organicPostMarket' ? (
+              <table className="w-full text-sm border-collapse" style={{ minWidth: '1100px' }}>
+                <thead>
+                  <tr className="border-b-2 border-[#e8e0d4] bg-[#faf8f5]">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Market Outlet</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Product</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Commodity</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Certification</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Location</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Province</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map((r, i) => (
+                    <tr key={i} className="border-b border-[#e8e0d4] hover:bg-[#f0f5ee]/60">
+                      <td className="px-2 py-1.5 font-medium text-[#5c574f]">{startNo + i}</td>
+                      <td className="px-2 py-1.5 max-w-[180px] truncate">{r.identifiedMarketOutlet || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[140px] truncate">{r.nameOfProduct || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[120px] truncate">{r.commodity || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[120px] truncate">{r.certification || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[200px] truncate">{r.location || '—'}</td>
+                      <td className="px-2 py-1.5">{r.province || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : unit === 'landUseMatter' ? (
+              <table className="w-full text-sm border-collapse" style={{ minWidth: '1000px' }}>
+                <thead>
+                  <tr className="border-b-2 border-[#e8e0d4] bg-[#faf8f5]">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Control No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Name of Applicant</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Purpose</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Location</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Province</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map((r, i) => (
+                    <tr key={i} className="border-b border-[#e8e0d4] hover:bg-[#f0f5ee]/60">
+                      <td className="px-2 py-1.5 font-medium text-[#5c574f]">{startNo + i}</td>
+                      <td className="px-2 py-1.5">{r.controlNo || '—'}</td>
+                      <td className="px-2 py-1.5">{r.nameOfApplicant || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[180px] truncate">{r.purposeOfApplication || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[200px] truncate">{r.location || '—'}</td>
+                      <td className="px-2 py-1.5">{r.province || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[180px] truncate">{r.remarks || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : unit === 'safdzValidation' ? (
+              <table className="w-full text-sm border-collapse" style={{ minWidth: '1100px' }}>
+                <thead>
+                  <tr className="border-b-2 border-[#e8e0d4] bg-[#faf8f5]">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">EPA No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Name of Applicant</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Location</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Province</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Field Validation</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map((r, i) => (
+                    <tr key={i} className="border-b border-[#e8e0d4] hover:bg-[#f0f5ee]/60">
+                      <td className="px-2 py-1.5 font-medium text-[#5c574f]">{startNo + i}</td>
+                      <td className="px-2 py-1.5 max-w-[160px] truncate">{r.explorationPermitApplicationNo || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[180px] truncate">{r.nameOfApplicant || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[180px] truncate">{r.location || '—'}</td>
+                      <td className="px-2 py-1.5">{r.province || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[140px] truncate">{r.fieldValidation || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[120px] truncate">{r.status || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : unit === 'plantPestSurveillance' ? (
+              <table className="w-full text-sm border-collapse" style={{ minWidth: '1100px' }}>
+                <thead>
+                  <tr className="border-b-2 border-[#e8e0d4] bg-[#faf8f5]">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Date</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Name of Farmer</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Address</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Province</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Crop</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Pests/Diseases</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map((r, i) => (
+                    <tr key={i} className="border-b border-[#e8e0d4] hover:bg-[#f0f5ee]/60">
+                      <td className="px-2 py-1.5 font-medium text-[#5c574f]">{startNo + i}</td>
+                      <td className="px-2 py-1.5 whitespace-nowrap">{r.dateOfRequestAndCollection ? (r.dateOfRequestAndCollection.match(/^\d{4}-\d{2}-\d{2}/) ? new Date(r.dateOfRequestAndCollection).toLocaleDateString('en-PH') : r.dateOfRequestAndCollection) : '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[160px] truncate">{r.farmerName || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[180px] truncate">{r.address || '—'}</td>
+                      <td className="px-2 py-1.5">{r.province || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[120px] truncate">{r.crop || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[180px] truncate">{r.pestsDiseases || '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (unit === 'cfsAdmcc' || unit === 'animalDiseaseSurveillance') ? (
+              <table className="w-full text-sm border-collapse" style={{ minWidth: '1100px' }}>
+                <thead>
+                  <tr className="border-b-2 border-[#e8e0d4] bg-[#faf8f5]">
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">No.</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Client/LGU/Farm</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Type of Surveillance</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Address</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Province</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Samples</th>
+                    <th className="px-2 py-1.5 text-left font-bold text-[#1e4d2b] whitespace-nowrap">Remarks</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {parsed.map((r, i) => (
+                    <tr key={i} className="border-b border-[#e8e0d4] hover:bg-[#f0f5ee]/60">
+                      <td className="px-2 py-1.5 font-medium text-[#5c574f]">{startNo + i}</td>
+                      <td className="px-2 py-1.5 max-w-[200px] truncate">{r.clientName || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[140px] truncate">{r.typeOfDiseaseSurveillance || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[180px] truncate">{r.address || '—'}</td>
+                      <td className="px-2 py-1.5">{r.province || '—'}</td>
+                      <td className="px-2 py-1.5">{r.numberOfSamples || '—'}</td>
+                      <td className="px-2 py-1.5 max-w-[160px] truncate">{r.remarks || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
