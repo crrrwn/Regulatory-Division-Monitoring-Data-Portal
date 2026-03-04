@@ -548,6 +548,53 @@
 /* Data Analytics — page entrance (same as Dashboard / View Records) */
 .analytics-section { animation: dashboard-section-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+/* Ratings page — entrance and transitions */
+@keyframes ratings-page-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ratings-header-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ratings-section-in {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ratings-detail-in {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes ratings-detail-card-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes ratings-bar-in {
+  from { width: 0; }
+}
+@keyframes ratings-histogram-in {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.ratings-page { animation: ratings-page-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.ratings-header { animation: ratings-header-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.05s both; }
+.ratings-content { animation: ratings-page-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both; }
+.ratings-section-1 { animation: ratings-section-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.12s both; }
+.ratings-section-2 { animation: ratings-section-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.22s both; }
+.ratings-section-3 { animation: ratings-section-in 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.32s both; }
+.ratings-detail-view { animation: ratings-detail-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.ratings-detail-back { animation: ratings-detail-card-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.ratings-detail-card-1 { animation: ratings-detail-card-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.08s both; }
+.ratings-detail-card-2 { animation: ratings-detail-card-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.16s both; }
+.ratings-detail-card-3 { animation: ratings-detail-card-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.24s both; }
+.ratings-criteria-bar { animation: ratings-bar-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both; }
+.ratings-histogram-bar { transform-origin: bottom; animation: ratings-histogram-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.ratings-histogram-bar-delay-0 { animation-delay: 0.35s; }
+.ratings-histogram-bar-delay-1 { animation-delay: 0.42s; }
+.ratings-histogram-bar-delay-2 { animation-delay: 0.49s; }
+.ratings-histogram-bar-delay-3 { animation-delay: 0.56s; }
+.ratings-histogram-bar-delay-4 { animation-delay: 0.63s; }
+
 /* Animal Feed Form — staggered section entrance */
 @keyframes animal-feed-section-in {
   from {

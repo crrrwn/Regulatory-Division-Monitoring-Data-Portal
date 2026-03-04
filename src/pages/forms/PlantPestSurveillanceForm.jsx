@@ -41,14 +41,36 @@ const initialState = {
   ratingAttitude: '',
   ratingPromptness: '',
   recommendation: '',
+  attachmentFileName: '',
+  attachmentData: '',
 }
+
+const MAX_ATTACHMENT_SIZE = 700 * 1024
 
 export default function PlantPestSurveillanceForm() {
   const [form, setForm] = useState(initialState)
-  const { submit, loading, message } = useFormSubmit('plantPestSurveillance')
-  
+  const { submit, loading, message, setMessage } = useFormSubmit('plantPestSurveillance')
+
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
+
+  const handleAttachmentChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) { update('attachmentFileName', ''); update('attachmentData', ''); return }
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      setMessage({ type: 'error', text: `File too large. Max ${Math.round(MAX_ATTACHMENT_SIZE / 1024)} KB.` })
+      e.target.value = ''
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const data = reader.result
+      const base64 = typeof data === 'string' ? data.split(',')[1] || data : ''
+      setForm((f) => ({ ...f, attachmentFileName: file.name, attachmentData: base64 }))
+      setMessage(null)
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -268,12 +290,29 @@ export default function PlantPestSurveillanceForm() {
 
           <div className="mt-6">
             <label className={labelClass}>Recommendation</label>
-            <textarea 
-              value={form.recommendation} 
-              onChange={updateUpper('recommendation')} 
-              className={textAreaClass} 
-              placeholder="Enter final recommendation here..." 
+            <textarea
+              value={form.recommendation}
+              onChange={updateUpper('recommendation')}
+              className={textAreaClass}
+              placeholder="Enter final recommendation here..."
             />
+          </div>
+          <div>
+            <label className={labelClass}>Attachments</label>
+            <div className="flex items-center gap-3">
+              <label className="flex-1 cursor-pointer group">
+                <span className="sr-only">Choose file</span>
+                <input type="file" onChange={handleAttachmentChange} className="block w-full text-sm text-[#5c574f] file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1e4d2b]/10 file:text-[#1e4d2b] hover:file:bg-[#1e4d2b]/20 transition-all duration-300 border-2 border-dashed border-[#e8e0d4] rounded-xl group-hover:border-[#1e4d2b]/50 py-3 px-4" />
+              </label>
+              {form.attachmentFileName && (
+                <button type="button" onClick={() => { update('attachmentFileName', ''); update('attachmentData', '') }} className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl hover:scale-110 active:scale-95 transition-all duration-300" title="Remove File">
+                  <iconify-icon icon="mdi:trash-can-outline" width="20"></iconify-icon>
+                </button>
+              )}
+            </div>
+            <p className="mt-2 text-[10px] text-[#5c574f]">
+              {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 700KB (Images/PDF)'}
+            </p>
           </div>
         </div>
 

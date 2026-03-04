@@ -12,12 +12,11 @@ import ContactUsPage from './pages/ContactUsPage'
 import AdminLogin from './pages/AdminLogin'
 import StaffLogin from './pages/StaffLogin'
 import Dashboard from './pages/Dashboard'
+import Ratings from './pages/Ratings'
 import ViewRecords from './pages/ViewRecords'
-import DataAnalytics from './pages/DataAnalytics'
 import Settings from './pages/Settings'
 import SystemLogs from './pages/SystemLogs'
 import UserManagement from './pages/UserManagement'
-import BulkImport from './pages/BulkImport'
 
 import AnimalFeedForm from './pages/forms/AnimalFeedForm'
 import LivestockHandlersForm from './pages/forms/LivestockHandlersForm'
@@ -57,12 +56,11 @@ export default function Routes() {
 
       <Route path="/dashboard" element={<ProtectedRoute><AnalyticsProvider><DashboardLayout /></AnalyticsProvider></ProtectedRoute>}>
         <Route index element={<Dashboard />} />
-        <Route path="analytics" element={<DataAnalytics />} />
+        <Route path="ratings" element={<Ratings />} />
         <Route path="records" element={<ViewRecords />} />
         <Route path="settings" element={<Settings />} />
         <Route path="system-logs" element={<ProtectedRoute requireAdmin><SystemLogs /></ProtectedRoute>} />
         <Route path="user-management" element={<ProtectedRoute requireAdmin><UserManagement /></ProtectedRoute>} />
-        <Route path="bulk-import" element={<ProtectedRoute requireAdmin><BulkImport /></ProtectedRoute>} />
         <Route path="forms/animal-feed" element={<AnimalFeedForm />} />
         <Route path="forms/livestock-handlers" element={<LivestockHandlersForm />} />
         <Route path="forms/transport-carrier" element={<TransportCarrierForm />} />

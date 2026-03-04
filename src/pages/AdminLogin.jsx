@@ -86,54 +86,56 @@ export default function AdminLogin() {
     setLoading(false)
   }
 
+  // Color theme: dark green, muted green, light khaki/beige, pale cream
+  const theme = {
+    darkGreen: '#1a3d24',
+    mutedGreen: '#5c7355',
+    lightKhaki: '#c4b896',
+    paleCream: '#f5f0e6',
+  }
+
   return (
-    <div className="min-h-screen w-full relative">
-      <div className="fixed inset-0 z-0" aria-hidden="true" style={{ transform: 'translateZ(0)' }}>
-        <img
-          src={getPublicImageUrl('ABOUTPAGE.png')}
-          alt=""
-          className="w-full h-full object-cover object-center"
-          role="presentation"
-        />
-      </div>
-      <div className="admin-login-page relative z-10 min-h-[80vh] pt-14 pb-10 px-4 sm:px-6 flex flex-col items-center justify-center">
-        <div className="admin-login-card relative w-full max-w-[420px] rounded-3xl overflow-hidden p-0 transition-all duration-500 ease-out">
+    <div
+      className="min-h-screen w-full relative flex flex-col items-center justify-center py-12 px-4 sm:px-6"
+      style={{
+        background: `linear-gradient(180deg, ${theme.darkGreen} 0%, ${theme.mutedGreen} 28%, ${theme.lightKhaki} 55%, ${theme.paleCream} 100%)`,
+      }}
+    >
+      <div className="admin-login-page w-full max-w-[420px]">
+        <div className="admin-login-card relative w-full rounded-3xl overflow-hidden transition-all duration-500 ease-out shadow-xl border-2 border-white/20" style={{ backgroundColor: theme.paleCream }}>
           <Link
             to="/"
             aria-label="Back to Home"
-            className="absolute left-3 top-3 z-10 inline-flex items-center justify-center w-10 h-10 rounded-xl text-black border border-white/60 hover:border-slate-300 transition-all duration-300 ease-out active:scale-95"
-            style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset' }}
+            className="absolute left-3 top-3 z-10 inline-flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-300 ease-out active:scale-95 text-[#1a3d24] hover:bg-white/60 border border-[#5c7355]/30"
+            style={{ backgroundColor: 'rgba(255,255,255,0.7)' }}
           >
             <iconify-icon icon="mdi:arrow-left" width="22" height="22"></iconify-icon>
           </Link>
-          <div className="p-5 sm:p-6">
-            <div className="text-center mb-6 pb-5 border-b border-slate-200">
-              <div
-                className="admin-login-stagger-1 inline-flex items-center justify-center p-2.5 rounded-2xl mb-3.5 transition-all duration-500 ease-out hover:scale-105"
-                style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.7)', boxShadow: '0 1px 0 rgba(255,255,255,0.5) inset' }}
-              >
-                <img src={getPublicImageUrl('DALOGO.png')} alt="DA Logo" className="h-11 w-11 sm:h-12 sm:w-12 rounded-lg object-contain" />
+          <div className="p-6 sm:p-8">
+            <div className="text-center mb-6 pb-5 border-b" style={{ borderColor: theme.lightKhaki }}>
+              <div className="admin-login-stagger-1 inline-flex items-center justify-center p-3 rounded-2xl mb-3.5 transition-all duration-500 ease-out hover:scale-105 bg-white/80 border border-[#5c7355]/20 shadow-sm">
+                <img src={getPublicImageUrl('DALOGO.png')} alt="DA Logo" className="h-12 w-12 sm:h-14 sm:w-14 rounded-lg object-contain" />
               </div>
-              <h1 className="admin-login-stagger-2 text-xl font-extrabold text-black tracking-tight">Admin Portal</h1>
-              <p className="admin-login-stagger-3 text-sm text-black/80 mt-2 font-medium">Sign in or register as Administrator</p>
+              <h1 className="admin-login-stagger-2 text-xl font-extrabold tracking-tight" style={{ color: theme.darkGreen }}>Admin Portal</h1>
+              <p className="admin-login-stagger-3 text-sm mt-2 font-medium" style={{ color: theme.mutedGreen }}>Sign in or register as Administrator</p>
             </div>
 
             <form onSubmit={onFormSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-bold text-black mb-1.5">Email</label>
+              <label className="block text-sm font-bold mb-1.5" style={{ color: theme.darkGreen }}>Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full px-3.5 py-2.5 text-sm rounded-xl text-black placeholder-slate-500 focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-300 ease-out outline-none"
-                style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.7)' }}
+                className="w-full px-3.5 py-2.5 text-sm rounded-xl placeholder-[#5c7355]/60 focus:ring-2 focus:ring-[#1a3d24]/30 transition-all duration-300 ease-out outline-none"
+                style={{ backgroundColor: 'white', border: '1px solid #c4b896' }}
                 placeholder="admin@agency.gov.ph"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-black mb-1.5">Password</label>
+              <label className="block text-sm font-bold mb-1.5" style={{ color: theme.darkGreen }}>Password</label>
               <div className="relative flex items-center">
                 <input
                   type={showPassword ? 'text' : 'password'}
@@ -141,14 +143,15 @@ export default function AdminLogin() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full px-3.5 py-2.5 pr-12 text-sm rounded-xl text-black placeholder-slate-500 focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-300 ease-out outline-none"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.7)' }}
+                  className="w-full px-3.5 py-2.5 pr-12 text-sm rounded-xl placeholder-[#5c7355]/60 focus:ring-2 focus:ring-[#1a3d24]/30 transition-all duration-300 ease-out outline-none"
+                  style={{ backgroundColor: 'white', border: '1px solid #c4b896' }}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((p) => !p)}
-                  className="absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center rounded-r-xl text-slate-600 hover:text-black hover:bg-white/50 transition-all duration-300 ease-out"
+                  className="absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center rounded-r-xl transition-all duration-300 ease-out"
+                  style={{ color: theme.mutedGreen }}
                   aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   <iconify-icon icon={showPassword ? 'mdi:eye-off-outline' : 'mdi:eye-outline'} width="20" height="20"></iconify-icon>
@@ -157,33 +160,30 @@ export default function AdminLogin() {
             </div>
 
             {showForgotPassword && (
-              <div
-                className="admin-login-forgot-in p-4 rounded-2xl border border-slate-200 space-y-3"
-                style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
-              >
-                <p className="text-sm font-bold text-black">Reset password</p>
+              <div className="admin-login-forgot-in p-4 rounded-2xl space-y-3 bg-white/90 border border-[#c4b896]">
+                <p className="text-sm font-bold" style={{ color: theme.darkGreen }}>Reset password</p>
                 <div className="space-y-3">
                   <input
                     type="email"
                     value={forgotEmail}
                     onChange={(e) => setForgotEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full px-3.5 py-2.5 text-sm rounded-xl text-black placeholder-slate-500 focus:ring-2 focus:ring-primary/40 outline-none transition-all duration-300 ease-out"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.7)' }}
+                    className="w-full px-3.5 py-2.5 text-sm rounded-xl placeholder-[#5c7355]/60 focus:ring-2 focus:ring-[#1a3d24]/30 outline-none transition-all duration-300 ease-out border border-[#c4b896] bg-white"
                   />
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => { setShowForgotPassword(false); setForgotEmail(''); setForgotSuccess(''); setError(''); }}
-                      className="flex-1 py-2 text-sm font-semibold text-black rounded-xl border border-slate-300 hover:bg-white/70 transition-all duration-300 ease-out"
-                      style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                      className="flex-1 py-2 text-sm font-semibold rounded-xl border border-[#c4b896] bg-white hover:bg-[#f5f0e6] transition-all duration-300 ease-out"
+                      style={{ color: theme.darkGreen }}
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       disabled={forgotLoading}
-                      className="flex-1 py-2 text-sm font-bold text-white rounded-xl bg-primary hover:bg-primary-dark disabled:opacity-60 transition-all duration-300 ease-out"
+                      className="flex-1 py-2 text-sm font-bold text-white rounded-xl disabled:opacity-60 transition-all duration-300 ease-out hover:opacity-95"
+                      style={{ backgroundColor: theme.darkGreen }}
                     >
                       {forgotLoading ? (
                         <span className="inline-flex items-center justify-center gap-1.5">
@@ -197,7 +197,7 @@ export default function AdminLogin() {
                   </div>
                 </div>
                 {forgotSuccess && (
-                  <p className="admin-login-success-in text-sm text-black font-semibold flex items-center gap-1.5">
+                  <p className="admin-login-success-in text-sm font-semibold flex items-center gap-1.5" style={{ color: theme.darkGreen }}>
                     <iconify-icon icon="mdi:check-circle-outline" width="18" height="18"></iconify-icon>
                     {forgotSuccess}
                   </p>
@@ -207,35 +207,32 @@ export default function AdminLogin() {
 
             {isRegister && (
               <div className="admin-login-admin-code">
-                <label className="block text-sm font-bold text-black mb-1.5">Admin Code</label>
+                <label className="block text-sm font-bold mb-1.5" style={{ color: theme.darkGreen }}>Admin Code</label>
                 <div className="relative flex items-center">
                   <input
                     type={showAdminCode ? 'text' : 'password'}
                     value={adminCode}
                     onChange={(e) => setAdminCode(e.target.value)}
                     required
-                    className="w-full px-3.5 py-2.5 pr-12 text-sm rounded-xl text-black placeholder-slate-500 focus:ring-2 focus:ring-primary/40 focus:border-primary transition-all duration-300 ease-out outline-none"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(16px)', WebkitBackdropFilter: 'blur(16px)', border: '1px solid rgba(255,255,255,0.7)' }}
+                    className="w-full px-3.5 py-2.5 pr-12 text-sm rounded-xl placeholder-[#5c7355]/60 focus:ring-2 focus:ring-[#1a3d24]/30 transition-all duration-300 ease-out outline-none bg-white border border-[#c4b896]"
                     placeholder="Enter admin registration code"
                   />
                   <button
                     type="button"
                     onClick={() => setShowAdminCode((p) => !p)}
-                    className="absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center rounded-r-xl text-slate-600 hover:text-black hover:bg-white/50 transition-all duration-300 ease-out"
+                    className="absolute right-0 top-0 bottom-0 w-11 flex items-center justify-center rounded-r-xl transition-all duration-300 ease-out"
+                    style={{ color: theme.mutedGreen }}
                     aria-label={showAdminCode ? 'Hide admin code' : 'Show admin code'}
                   >
                     <iconify-icon icon={showAdminCode ? 'mdi:eye-off-outline' : 'mdi:eye-outline'} width="20" height="20"></iconify-icon>
                   </button>
                 </div>
-                <p className="text-xs text-black/80 mt-2 font-medium">Only users with the correct Admin Code can register as Admin.</p>
+                <p className="text-xs mt-2 font-medium" style={{ color: theme.mutedGreen }}>Only users with the correct Admin Code can register as Admin.</p>
               </div>
             )}
 
             {error && (
-              <div
-                className="admin-login-error-in flex items-start gap-2 p-3 rounded-xl border border-red-300/80"
-                style={{ backgroundColor: 'rgba(254,226,226,0.4)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(248,113,113,0.5)' }}
-              >
+              <div className="admin-login-error-in flex items-start gap-2 p-3 rounded-xl bg-red-50/90 border border-red-300">
                 <iconify-icon icon="mdi:alert-circle-outline" className="text-red-600 shrink-0 mt-0.5" width="18" height="18"></iconify-icon>
                 <p className="text-sm text-red-800 font-semibold leading-snug">{error}</p>
               </div>
@@ -245,7 +242,8 @@ export default function AdminLogin() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full h-[44px] flex items-center justify-center py-0 text-sm mt-4 bg-gradient-to-b from-primary to-primary-dark text-white font-bold rounded-xl shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40 hover:-translate-y-0.5 focus:ring-4 focus:ring-primary/40 transition-all duration-300 ease-out disabled:opacity-100 disabled:cursor-wait disabled:hover:translate-y-0 transform active:scale-[0.98] ring-2 ring-primary/20"
+                className="w-full h-[44px] flex items-center justify-center py-0 text-sm mt-4 text-white font-bold rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-0.5 focus:ring-4 focus:ring-[#1a3d24]/30 transition-all duration-300 ease-out disabled:opacity-70 disabled:cursor-wait disabled:hover:translate-y-0 transform active:scale-[0.98]"
+                style={{ backgroundColor: theme.darkGreen }}
               >
                 {loading ? (
                   <span className="login-loading-inner">
@@ -259,13 +257,13 @@ export default function AdminLogin() {
             )}
             </form>
 
-            <div className="mt-5 pt-5 border-t border-slate-200 flex flex-col items-center">
+            <div className="mt-5 pt-5 flex flex-col items-center border-t" style={{ borderColor: theme.lightKhaki }}>
             {isRegister ? (
               <button
                 type="button"
                 onClick={() => { setIsRegister(false); setError(''); }}
-                className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-bold text-black border border-slate-300 hover:border-slate-400 transition-all duration-300 ease-out active:scale-[0.98]"
-                style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-bold border border-[#c4b896] bg-white hover:bg-[#f5f0e6] transition-all duration-300 ease-out active:scale-[0.98]"
+                style={{ color: theme.darkGreen }}
               >
                 Login
               </button>
@@ -274,16 +272,16 @@ export default function AdminLogin() {
                 <button
                   type="button"
                   onClick={() => { setIsRegister(true); setError(''); }}
-                  className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-bold text-black border border-slate-300 hover:border-slate-400 transition-all duration-300 ease-out active:scale-[0.98]"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                  className="inline-flex items-center px-4 py-2 rounded-2xl text-sm font-bold border border-[#c4b896] bg-white hover:bg-[#f5f0e6] transition-all duration-300 ease-out active:scale-[0.98]"
+                  style={{ color: theme.darkGreen }}
                 >
                   Register
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowForgotPassword(true); setError(''); setForgotSuccess(''); }}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl text-sm font-bold text-black border border-slate-300 hover:border-slate-400 transition-all duration-300 ease-out active:scale-[0.98]"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)' }}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 rounded-2xl text-sm font-bold border border-[#c4b896] bg-white hover:bg-[#f5f0e6] transition-all duration-300 ease-out active:scale-[0.98]"
+                  style={{ color: theme.darkGreen }}
                 >
                   <iconify-icon icon="mdi:lock-reset" width="18" height="18"></iconify-icon>
                   Forgot Password?

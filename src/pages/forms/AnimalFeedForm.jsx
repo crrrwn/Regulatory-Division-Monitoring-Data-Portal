@@ -356,16 +356,6 @@ export default function AnimalFeedForm() {
                      placeholder="Enter any additional recommendations or remarks..." 
                    />
                 </div>
-             </div>
-          </div>
-
-          {/* --- SECTION 8: FINALIZATION --- */}
-          <div className="animal-feed-section animal-feed-section-8 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
-             <h3 className={sectionTitleClass}>
-               <iconify-icon icon="mdi:file-check-outline" width="18" class="opacity-90"></iconify-icon>
-               Finalization
-             </h3>
-             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                 <div>
                    <label className={labelClass}>Attachments</label>
                    <div className="flex items-center gap-3">
@@ -383,6 +373,16 @@ export default function AnimalFeedForm() {
                      {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 700KB (Images/PDF)'}
                    </p>
                 </div>
+             </div>
+          </div>
+
+          {/* --- SECTION 8: FINALIZATION --- */}
+          <div className="animal-feed-section animal-feed-section-8 bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+             <h3 className={sectionTitleClass}>
+               <iconify-icon icon="mdi:file-check-outline" width="18" class="opacity-90"></iconify-icon>
+               Finalization
+             </h3>
+             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 items-start">
                 <div>
                    <label className={labelClass}>Status / Remarks</label>
                    <AppSelect value={form.remarks} onChange={(v) => update('remarks', v)} placeholder="Select Status" options={[{ value: '', label: 'Select Status' }, ...REMARKS_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Status" />

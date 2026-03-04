@@ -7,7 +7,6 @@ import {
   MapPin, 
   Search, 
   FileText, 
-  Link as LinkIcon, 
   ClipboardList,
   MessageSquare,
   Save,
@@ -32,8 +31,10 @@ const initialState = {
   province: '',
   location: '',
   dateOfSurveillance: '',
+  dateOfRelease: '',
   remarks: '',
-  linkFile: '',
+  attachmentFileName: '',
+  attachmentData: '',
   ratingQuantity: '',
   ratingServicesPersonnel: '',
   ratingTraining: '',
@@ -42,12 +43,36 @@ const initialState = {
   recommendation: '',
 }
 
+const MAX_ATTACHMENT_SIZE = 700 * 1024 // ~700 KB
+
 export default function OrganicPostMarketForm() {
   const [form, setForm] = useState(initialState)
-  const { submit, loading, message } = useFormSubmit('organicPostMarket')
+  const { submit, loading, message, setMessage } = useFormSubmit('organicPostMarket')
   
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
+
+  const handleAttachmentChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      update('attachmentFileName', '')
+      update('attachmentData', '')
+      return
+    }
+    if (file.size > MAX_ATTACHMENT_SIZE) {
+      setMessage({ type: 'error', text: `File too large. Max ${Math.round(MAX_ATTACHMENT_SIZE / 1024)} KB.` })
+      e.target.value = ''
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const data = reader.result
+      const base64 = typeof data === 'string' ? data.split(',')[1] || data : ''
+      setForm((f) => ({ ...f, attachmentFileName: file.name, attachmentData: base64 }))
+      setMessage(null)
+    }
+    reader.readAsDataURL(file)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -225,13 +250,22 @@ export default function OrganicPostMarketForm() {
             <Search className="w-5 h-5 text-[#1e4d2b] opacity-90" /> Surveillance Findings
           </h3>
 
-          <div className="grid gap-6">
+          <div className="grid sm:grid-cols-2 gap-6">
             <div className="w-full sm:max-w-xs">
               <label className={labelClass}>Date of Surveillance</label>
               <input 
                 type="date" 
                 value={form.dateOfSurveillance} 
                 onChange={(e) => update('dateOfSurveillance', e.target.value)} 
+                className={inputClass} 
+              />
+            </div>
+            <div className="w-full sm:max-w-xs">
+              <label className={labelClass}>Date of Release</label>
+              <input 
+                type="date" 
+                value={form.dateOfRelease} 
+                onChange={(e) => update('dateOfRelease', e.target.value)} 
                 className={inputClass} 
               />
             </div>
@@ -246,21 +280,6 @@ export default function OrganicPostMarketForm() {
               />
             </div>
 
-            <div>
-              <label className={labelClass}>Related File Link</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <LinkIcon className="h-4 w-4 text-[#1e4d2b] group-focus-within:text-[#153019] transition-colors duration-300" />
-                </div>
-                <input 
-                  type="url" 
-                  value={form.linkFile} 
-                  onChange={(e) => update('linkFile', e.target.value)} 
-                  className={`${urlInputClass} pl-10`} 
-                  placeholder="https://drive.google.com/..." 
-                />
-              </div>
-            </div>
           </div>
         </div>
 
@@ -287,6 +306,24 @@ export default function OrganicPostMarketForm() {
                   placeholder="Enter final recommendation regarding the product/market..." 
                 />
               </div>
+            </div>
+
+            <div>
+              <label className={labelClass}>Attachments</label>
+              <div className="flex items-center gap-3">
+                <label className="flex-1 cursor-pointer group">
+                  <span className="sr-only">Choose file</span>
+                  <input type="file" onChange={handleAttachmentChange} className="block w-full text-sm text-[#5c574f] file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1e4d2b]/10 file:text-[#1e4d2b] hover:file:bg-[#1e4d2b]/20 transition-all duration-300 border-2 border-dashed border-[#e8e0d4] rounded-xl group-hover:border-[#1e4d2b]/50 py-3 px-4" />
+                </label>
+                {form.attachmentFileName && (
+                  <button type="button" onClick={() => { update('attachmentFileName', ''); update('attachmentData', '') }} className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl hover:scale-110 active:scale-95 transition-all duration-300" title="Remove File">
+                    <iconify-icon icon="mdi:trash-can-outline" width="20"></iconify-icon>
+                  </button>
+                )}
+              </div>
+              <p className="mt-2 text-[10px] text-[#5c574f]">
+                {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 700KB (Images/PDF)'}
+              </p>
             </div>
           </div>
         </div>

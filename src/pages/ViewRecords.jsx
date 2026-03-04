@@ -94,7 +94,10 @@ export default function ViewRecords() {
   const [deleteConfirming, setDeleteConfirming] = useState(null) // { id, name } or { ids: string[], count } or null
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [loadError, setLoadError] = useState(null)
+  const [currentPage, setCurrentPage] = useState(1)
   const { user, role, userAllowedSections } = useAuth()
+
+  const PAGE_SIZE = 10
   const { showNotification } = useNotification()
 
   const allowedUnitIds = userAllowedSections && role === 'staff' ? getUnitIdsForSections(userAllowedSections) : null
@@ -115,6 +118,7 @@ export default function ViewRecords() {
   }, [enabledCollectionIds, selectedCollection])
 
   const VIEW_RECORDS_LIMIT = 5000
+  const MAX_ATTACHMENT_SIZE = 700 * 1024 // 700 KB, same as forms
 
   useEffect(() => setSelectedIds(new Set()), [selectedCollection])
 
@@ -156,12 +160,21 @@ export default function ViewRecords() {
   const filteredGapMonitoring = isGAP ? filtered.filter((d) => d.formType === 'monitoring') : []
   const filteredGapOther = isGAP ? filtered.filter((d) => d.formType !== 'gapCertification' && d.formType !== 'monitoring') : []
 
+  const displayList = isGAP ? [...filteredGapCert, ...filteredGapMonitoring, ...filteredGapOther] : filtered
+  const totalPages = Math.max(1, Math.ceil(displayList.length / PAGE_SIZE))
+  const paginatedList = displayList.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [selectedCollection, search, filterMonth, filterProvince])
+  useEffect(() => {
+    if (currentPage > totalPages) setCurrentPage(totalPages)
+  }, [totalPages, currentPage])
+
   const canEdit = (docItem) => role === 'admin' || docItem.createdBy === user?.uid
   const canDelete = () => role === 'admin'
 
-  const allDisplayedIds = isGAP
-    ? [...filteredGapCert, ...filteredGapMonitoring, ...filteredGapOther].map((d) => d.id)
-    : filtered.map((d) => d.id)
+  const allDisplayedIds = paginatedList.map((d) => d.id)
 
   const toggleSelect = (id) => {
     setSelectedIds((prev) => {
@@ -549,7 +562,7 @@ export default function ViewRecords() {
       )
     }
 
-    // Uploaded file (base64) — display with filename, Download, Remove
+    // Uploaded file (base64) — display with filename, Download, Remove, and file input to upload/replace
     if (key === 'attachmentData') {
       const base64 = value && String(value)
       const fileName = editForm.attachmentFileName || 'attachment'
@@ -571,14 +584,44 @@ export default function ViewRecords() {
         updateEditField('attachmentData', '')
         updateEditField('attachmentFileName', '')
       }
-      if (!base64 || base64.length === 0) {
-        return <span className="text-sm text-[#5c7355]">No file uploaded</span>
+      const handleAttachmentChange = (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (file.size > MAX_ATTACHMENT_SIZE) {
+          alert(`File too large. Max ${Math.round(MAX_ATTACHMENT_SIZE / 1024)} KB.`)
+          e.target.value = ''
+          return
+        }
+        const reader = new FileReader()
+        reader.onload = () => {
+          const data = reader.result
+          const b64 = typeof data === 'string' ? data.split(',')[1] || data : ''
+          updateEditField('attachmentData', b64)
+          updateEditField('attachmentFileName', file.name)
+        }
+        reader.readAsDataURL(file)
+        e.target.value = ''
       }
       return (
-        <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border-2 border-[#e8e0d4] bg-[#faf8f5]">
-          <span className="text-sm font-semibold text-[#1e4d2b] truncate flex-1 min-w-0" title={fileName}>{fileName}</span>
-          <button type="button" onClick={download} className="px-3 py-2 min-h-[44px] bg-[#1e4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#153019] whitespace-nowrap touch-manipulation">Download</button>
-          <button type="button" onClick={removeAttachment} className="px-3 py-2 min-h-[44px] border-2 border-red-400 text-red-600 rounded-xl text-sm font-bold hover:bg-red-50 whitespace-nowrap touch-manipulation">Remove</button>
+        <div className="space-y-3">
+          {base64 && base64.length > 0 ? (
+            <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border-2 border-[#e8e0d4] bg-[#faf8f5]">
+              <span className="text-sm font-semibold text-[#1e4d2b] truncate flex-1 min-w-0" title={fileName}>{fileName}</span>
+              <button type="button" onClick={download} className="px-3 py-2 min-h-[44px] bg-[#1e4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#153019] whitespace-nowrap touch-manipulation">Download</button>
+              <button type="button" onClick={removeAttachment} className="px-3 py-2 min-h-[44px] border-2 border-red-400 text-red-600 rounded-xl text-sm font-bold hover:bg-red-50 whitespace-nowrap touch-manipulation">Remove</button>
+            </div>
+          ) : (
+            <p className="text-sm text-[#5c7355]">No file uploaded</p>
+          )}
+          <label className="block">
+            <span className="sr-only">Choose file to upload or replace</span>
+            <input
+              type="file"
+              onChange={handleAttachmentChange}
+              className="block w-full text-sm text-[#5c574f] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1e4d2b]/10 file:text-[#1e4d2b] hover:file:bg-[#1e4d2b]/20 border-2 border-dashed border-[#e8e0d4] rounded-xl py-2.5 px-3"
+            />
+          </label>
+          <p className="text-[10px] text-[#5c574f]">Max 700 KB (images or PDF). Same as in forms.</p>
         </div>
       )
     }
@@ -809,17 +852,20 @@ export default function ViewRecords() {
                   </th>
                 )}
                 <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Name / Identifier</th>
+                {isGAP && (
+                  <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Type</th>
+                )}
                 {RATING_COLLECTIONS[selectedCollection] && (
                   <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Avg. Rating</th>
                 )}
                 <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Date</th>
-                <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider text-center w-24 sm:w-28">Actions</th>
+                <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider text-center w-20 sm:w-24">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e8e0d4]">
-              {filtered.length === 0 ? (
+              {displayList.length === 0 ? (
                 <tr>
-                  <td colSpan={(RATING_COLLECTIONS[selectedCollection] ? 4 : 3) + (canDelete() ? 1 : 0)} className="px-6 py-16 text-center">
+                  <td colSpan={4 + (isGAP ? 1 : 0) + (RATING_COLLECTIONS[selectedCollection] ? 1 : 0) + (canDelete() ? 1 : 0)} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-[#5c7355] rounded-xl border-2 border-dashed border-[#1e4d2b]/25 bg-[#f0f5ee]/80 py-12 mx-4">
                       <iconify-icon icon="mdi:database-off-outline" width="56" class="opacity-60 animate-pulse"></iconify-icon>
                       <p className="mt-3 font-semibold text-[#1e4d2b]">No records found</p>
@@ -827,218 +873,8 @@ export default function ViewRecords() {
                     </div>
                   </td>
                 </tr>
-              ) : isGAP ? (
-                <>
-                  {/* GAP Certification section */}
-                  <tr className="bg-[#1e4d2b]/10 border-y-2 border-[#1e4d2b]/20">
-                    <td colSpan={(RATING_COLLECTIONS[selectedCollection] ? 4 : 3) + (canDelete() ? 1 : 0)} className="px-5 py-2.5">
-                      <span className="text-xs font-black text-[#1e4d2b] uppercase tracking-wider">GAP Certification</span>
-                      {filteredGapCert.length > 0 && <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapCert.length} record(s))</span>}
-                    </td>
-                  </tr>
-                  {filteredGapCert.map((docItem) => (
-                    <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
-                      {canDelete() && (
-                        <td className="px-2 sm:px-3 py-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(docItem.id)}
-                            onChange={() => toggleSelect(docItem.id)}
-                            className="w-4 h-4 rounded border-2 border-[#1e4d2b]/40 text-[#1e4d2b] focus:ring-[#1e4d2b]/50"
-                            aria-label={`Select ${getDisplayName(docItem, selectedCollection)}`}
-                          />
-                        </td>
-                      )}
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50 group-hover:scale-105 group-hover:from-[#1e4d2b]/20 group-hover:to-[#5c7355]/15 transition-all duration-300">
-                            {getDisplayName(docItem, selectedCollection).charAt(0).toUpperCase()}
-                          </div>
-                          <div className="font-bold text-[#1e4d2b] group-hover:text-[#153019] transition-colors duration-300 max-w-xs sm:max-w-md truncate" title={getDisplayName(docItem, selectedCollection)}>
-                            {getDisplayName(docItem, selectedCollection)}
-                          </div>
-                        </div>
-                      </td>
-                      {RATING_COLLECTIONS[selectedCollection] && (
-                        <td className="px-5 py-3.5 whitespace-nowrap">
-                          {(() => {
-                            const avg = getAvgRating(docItem, selectedCollection)
-                            return avg ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#b8a066]/15 text-[#1e4d2b] font-bold text-xs border border-[#b8a066]/30 group-hover:bg-[#b8a066]/25 group-hover:border-[#b8a066]/50 transition-all duration-300">
-                                <iconify-icon icon="mdi:star" width="14" class="text-[#b8a066]"></iconify-icon>
-                                {avg}/5
-                              </span>
-                            ) : <span className="text-[#8a857c] text-sm">—</span>
-                          })()}
-                        </td>
-                      )}
-                      <td className="px-5 py-3.5 whitespace-nowrap">
-                        <div className="text-[#1e4d2b] text-xs font-semibold">
-                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                        </div>
-                        <div className="text-[#5c7355] text-[10px] font-medium">
-                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {canEdit(docItem) && (
-                            <button onClick={() => openEdit(docItem)} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm bg-[#1e4d2b]/10 border-2 border-[#1e4d2b]/30 text-[#1e4d2b] hover:bg-[#1e4d2b]/20 hover:border-[#1e4d2b] hover:shadow-md hover:shadow-[#1e4d2b]/20 active:scale-[0.98] transition-all duration-300" title="Edit Record">
-                              <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
-                              <span>Edit</span>
-                            </button>
-                          )}
-                          {canDelete() && (
-                            <button onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm bg-red-50 border-2 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-400 hover:shadow-md hover:shadow-red-200/30 active:scale-[0.98] transition-all duration-300" title="Delete Record">
-                              <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
-                              <span>Delete</span>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {/* GAP Monitoring section */}
-                  <tr className="bg-[#1e4d2b]/10 border-y-2 border-[#1e4d2b]/20">
-                    <td colSpan={(RATING_COLLECTIONS[selectedCollection] ? 4 : 3) + (canDelete() ? 1 : 0)} className="px-5 py-2.5">
-                      <span className="text-xs font-black text-[#1e4d2b] uppercase tracking-wider">Monitoring of GAP Certified Farmer</span>
-                      {filteredGapMonitoring.length > 0 && <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapMonitoring.length} record(s))</span>}
-                    </td>
-                  </tr>
-                  {filteredGapMonitoring.map((docItem) => (
-                    <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
-                      {canDelete() && (
-                        <td className="px-2 sm:px-3 py-3.5 text-center">
-                          <input
-                            type="checkbox"
-                            checked={selectedIds.has(docItem.id)}
-                            onChange={() => toggleSelect(docItem.id)}
-                            className="w-4 h-4 rounded border-2 border-[#1e4d2b]/40 text-[#1e4d2b] focus:ring-[#1e4d2b]/50"
-                            aria-label={`Select ${getDisplayName(docItem, selectedCollection)}`}
-                          />
-                        </td>
-                      )}
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50 group-hover:scale-105 group-hover:from-[#1e4d2b]/20 group-hover:to-[#5c7355]/15 transition-all duration-300">
-                            {getDisplayName(docItem, selectedCollection).charAt(0).toUpperCase()}
-                          </div>
-                          <div className="font-bold text-[#1e4d2b] group-hover:text-[#153019] transition-colors duration-300 max-w-xs sm:max-w-md truncate" title={getDisplayName(docItem, selectedCollection)}>
-                            {getDisplayName(docItem, selectedCollection)}
-                          </div>
-                        </div>
-                      </td>
-                      {RATING_COLLECTIONS[selectedCollection] && (
-                        <td className="px-5 py-3.5 whitespace-nowrap">
-                          {(() => {
-                            const avg = getAvgRating(docItem, selectedCollection)
-                            return avg ? (
-                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#b8a066]/15 text-[#1e4d2b] font-bold text-xs border border-[#b8a066]/30 group-hover:bg-[#b8a066]/25 group-hover:border-[#b8a066]/50 transition-all duration-300">
-                                <iconify-icon icon="mdi:star" width="14" class="text-[#b8a066]"></iconify-icon>
-                                {avg}/5
-                              </span>
-                            ) : <span className="text-[#8a857c] text-sm">—</span>
-                          })()}
-                        </td>
-                      )}
-                      <td className="px-5 py-3.5 whitespace-nowrap">
-                        <div className="text-[#1e4d2b] text-xs font-semibold">
-                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                        </div>
-                        <div className="text-[#5c7355] text-[10px] font-medium">
-                          {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          {canEdit(docItem) && (
-                            <button onClick={() => openEdit(docItem)} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm bg-[#1e4d2b]/10 border-2 border-[#1e4d2b]/30 text-[#1e4d2b] hover:bg-[#1e4d2b]/20 hover:border-[#1e4d2b] hover:shadow-md hover:shadow-[#1e4d2b]/20 active:scale-[0.98] transition-all duration-300" title="Edit Record">
-                              <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
-                              <span>Edit</span>
-                            </button>
-                          )}
-                          {canDelete() && (
-                            <button onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm bg-red-50 border-2 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-400 hover:shadow-md hover:shadow-red-200/30 active:scale-[0.98] transition-all duration-300" title="Delete Record">
-                              <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
-                              <span>Delete</span>
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredGapOther.length > 0 && (
-                    <>
-                      <tr className="bg-[#b8a066]/10 border-y-2 border-[#b8a066]/20">
-                        <td colSpan={(RATING_COLLECTIONS[selectedCollection] ? 4 : 3) + (canDelete() ? 1 : 0)} className="px-5 py-2.5">
-                          <span className="text-xs font-black text-[#5c574f] uppercase tracking-wider">Other</span>
-                          <span className="ml-2 text-[10px] font-semibold text-[#5c7355]">({filteredGapOther.length} record(s))</span>
-                        </td>
-                      </tr>
-                      {filteredGapOther.map((docItem) => (
-                        <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
-                          {canDelete() && (
-                            <td className="px-2 sm:px-3 py-3.5 text-center">
-                              <input
-                                type="checkbox"
-                                checked={selectedIds.has(docItem.id)}
-                                onChange={() => toggleSelect(docItem.id)}
-                                className="w-4 h-4 rounded border-2 border-[#1e4d2b]/40 text-[#1e4d2b] focus:ring-[#1e4d2b]/50"
-                                aria-label={`Select ${getDisplayName(docItem, selectedCollection)}`}
-                              />
-                            </td>
-                          )}
-                          <td className="px-5 py-3.5">
-                            <div className="flex items-center gap-3">
-                              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#1e4d2b]/15 to-[#5c7355]/10 text-[#1e4d2b] flex items-center justify-center font-black text-sm shrink-0 border border-[#e8e0d4]/50">
-                                {getDisplayName(docItem, selectedCollection).charAt(0).toUpperCase()}
-                              </div>
-                              <div className="font-bold text-[#1e4d2b] max-w-xs sm:max-w-md truncate" title={getDisplayName(docItem, selectedCollection)}>
-                                {getDisplayName(docItem, selectedCollection)}
-                              </div>
-                            </div>
-                          </td>
-                          {RATING_COLLECTIONS[selectedCollection] && (
-                            <td className="px-5 py-3.5 whitespace-nowrap">
-                              {getAvgRating(docItem, selectedCollection) ? (
-                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#b8a066]/15 text-[#1e4d2b] font-bold text-xs border border-[#b8a066]/30">
-                                  <iconify-icon icon="mdi:star" width="14" class="text-[#b8a066]"></iconify-icon>
-                                  {getAvgRating(docItem, selectedCollection)}/5
-                                </span>
-                              ) : <span className="text-[#8a857c] text-sm">—</span>}
-                            </td>
-                          )}
-                          <td className="px-5 py-3.5 whitespace-nowrap">
-                            <div className="text-[#1e4d2b] text-xs font-semibold">
-                              {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                            </div>
-                            <div className="text-[#5c7355] text-[10px] font-medium">
-                              {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                            </div>
-                          </td>
-                          <td className="px-5 py-3.5 text-center">
-                            <div className="flex items-center justify-center gap-2">
-                              {canEdit(docItem) && (
-                                <button onClick={() => openEdit(docItem)} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm bg-[#1e4d2b]/10 border-2 border-[#1e4d2b]/30 text-[#1e4d2b] hover:bg-[#1e4d2b]/20 hover:border-[#1e4d2b] hover:shadow-md hover:shadow-[#1e4d2b]/20 active:scale-[0.98] transition-all duration-300" title="Edit Record">
-                                  <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
-                                  <span>Edit</span>
-                                </button>
-                              )}
-                              {canDelete() && (
-                                <button onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })} className="inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm bg-red-50 border-2 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-400 hover:shadow-md hover:shadow-red-200/30 active:scale-[0.98] transition-all duration-300" title="Delete Record">
-                                  <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
-                                  <span>Delete</span>
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </>
-                  )}
-                </>
               ) : (
-                filtered.map((docItem) => (
+                paginatedList.map((docItem) => (
                   <tr key={docItem.id} className="hover:bg-[#faf8f5]/90 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] group">
                     {canDelete() && (
                       <td className="px-2 sm:px-3 py-3.5 text-center">
@@ -1061,6 +897,11 @@ export default function ViewRecords() {
                         </div>
                       </div>
                     </td>
+                    {isGAP && (
+                      <td className="px-5 py-3.5 whitespace-nowrap text-xs font-semibold text-[#5c574f]">
+                        {docItem.formType === 'gapCertification' ? 'GAP Certification' : docItem.formType === 'monitoring' ? 'Monitoring' : 'Other'}
+                      </td>
+                    )}
                     {RATING_COLLECTIONS[selectedCollection] && (
                       <td className="px-5 py-3.5 whitespace-nowrap">
                         {(() => {
@@ -1083,25 +924,15 @@ export default function ViewRecords() {
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-center">
-                      <div className="flex items-center justify-center gap-2">
+                      <div className="flex items-center justify-center gap-1.5">
                         {canEdit(docItem) && (
-                          <button
-                            onClick={() => openEdit(docItem)}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm bg-[#1e4d2b]/10 border-2 border-[#1e4d2b]/30 text-[#1e4d2b] hover:bg-[#1e4d2b]/20 hover:border-[#1e4d2b] hover:shadow-md hover:shadow-[#1e4d2b]/20 active:scale-[0.98] transition-all duration-300"
-                            title="Edit Record"
-                          >
+                          <button onClick={() => openEdit(docItem)} className="p-2 rounded-xl bg-[#1e4d2b]/10 border-2 border-[#1e4d2b]/30 text-[#1e4d2b] hover:bg-[#1e4d2b]/20 hover:border-[#1e4d2b] hover:shadow-md active:scale-95 transition-all duration-300" title="Edit">
                             <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
-                            <span>Edit</span>
                           </button>
                         )}
                         {canDelete() && (
-                          <button
-                            onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })}
-                            className="inline-flex items-center gap-2 px-3 py-2 rounded-xl font-semibold text-sm bg-red-50 border-2 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-400 hover:shadow-md hover:shadow-red-200/30 active:scale-[0.98] transition-all duration-300"
-                            title="Delete Record"
-                          >
+                          <button onClick={() => setDeleteConfirming({ id: docItem.id, name: getDisplayName(docItem, selectedCollection) })} className="p-2 rounded-xl bg-red-50 border-2 border-red-200 text-red-700 hover:bg-red-100 hover:border-red-400 hover:shadow-md active:scale-95 transition-all duration-300" title="Delete">
                             <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
-                            <span>Delete</span>
                           </button>
                         )}
                       </div>
@@ -1113,12 +944,38 @@ export default function ViewRecords() {
           </table>
         </div>
         <div className="shrink-0 bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] border-t-2 border-[#1e4d2b]/15 px-5 py-2.5 flex flex-wrap justify-between items-center gap-2 text-[11px] font-bold text-[#5c7355] transition-colors duration-300">
-          <span>Showing {filtered.length} record(s)</span>
+          <span>
+            {displayList.length === 0 ? 'No records' : `Showing ${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, displayList.length)} of ${displayList.length}`}
+          </span>
           <span className="flex items-center gap-2">
             {docs.length >= VIEW_RECORDS_LIMIT && (
               <span className="italic text-amber-700">First {VIEW_RECORDS_LIMIT} loaded — use filters to narrow</span>
             )}
-            {filtered.length > 20 && <span className="italic">Scroll for more</span>}
+            {displayList.length > PAGE_SIZE && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="min-w-[32px] h-8 px-2 rounded-lg border-2 border-[#1e4d2b]/30 text-[#1e4d2b] font-bold hover:bg-[#1e4d2b]/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  aria-label="Previous page"
+                >
+                  <iconify-icon icon="mdi:chevron-left" width="18"></iconify-icon>
+                </button>
+                <span className="px-2 text-[#1e4d2b] whitespace-nowrap">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="min-w-[32px] h-8 px-2 rounded-lg border-2 border-[#1e4d2b]/30 text-[#1e4d2b] font-bold hover:bg-[#1e4d2b]/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  aria-label="Next page"
+                >
+                  <iconify-icon icon="mdi:chevron-right" width="18"></iconify-icon>
+                </button>
+              </div>
+            )}
           </span>
         </div>
       </div>
@@ -1209,8 +1066,8 @@ export default function ViewRecords() {
                     if (formFields?.length) order = formFields
                   }
                   const labels = COLLECTION_FIELD_LABELS?.[selectedCollection]
-                  // Hide attachmentFileName row when we show attachmentData (one combined "Attachment" row)
-                  const filterKey = (k) => !skip.includes(k) && !(k === 'attachmentFileName' && editForm.attachmentData)
+                  // Hide attachmentFileName row; attachmentData row shows combined "Attachments" upload/download UI for all units
+                  const filterKey = (k) => !skip.includes(k) && !(k === 'attachmentFileName' && order && order.includes('attachmentData'))
                   const entries = order?.length
                     ? order.filter(filterKey).map((k) => [k, editForm[k]])
                     : Object.entries(editForm).filter(([k]) => filterKey(k))
