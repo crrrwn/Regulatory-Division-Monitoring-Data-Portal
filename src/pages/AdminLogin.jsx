@@ -4,6 +4,7 @@ import { sendPasswordResetEmail } from 'firebase/auth'
 import { useAuth } from '../context/AuthContext'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../lib/firebase'
+import { colorTheme, getLandingGradient } from '../lib/colorTheme'
 import { getAdminRegistrationCode } from '../lib/settings'
 import { addSystemLog } from '../lib/systemLogs'
 import { getPublicImageUrl } from '../utils/publicAssets'
@@ -86,20 +87,12 @@ export default function AdminLogin() {
     setLoading(false)
   }
 
-  // Color theme: dark green, muted green, light khaki/beige, pale cream
-  const theme = {
-    darkGreen: '#1a3d24',
-    mutedGreen: '#5c7355',
-    lightKhaki: '#c4b896',
-    paleCream: '#f5f0e6',
-  }
+  const theme = colorTheme
 
   return (
     <div
       className="min-h-screen w-full relative flex flex-col items-center justify-center py-12 px-4 sm:px-6"
-      style={{
-        background: `linear-gradient(180deg, ${theme.darkGreen} 0%, ${theme.mutedGreen} 28%, ${theme.lightKhaki} 55%, ${theme.paleCream} 100%)`,
-      }}
+      style={{ background: getLandingGradient() }}
     >
       <div className="admin-login-page w-full max-w-[420px]">
         <div className="admin-login-card relative w-full rounded-3xl overflow-hidden transition-all duration-500 ease-out shadow-xl border-2 border-white/20" style={{ backgroundColor: theme.paleCream }}>

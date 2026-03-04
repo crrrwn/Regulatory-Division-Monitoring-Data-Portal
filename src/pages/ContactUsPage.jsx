@@ -1,16 +1,13 @@
-import { getPublicImageUrl } from '../utils/publicAssets'
+import { getLandingGradient } from '../lib/colorTheme'
 
 export default function ContactUsPage() {
   return (
-    <div className="min-h-screen flex flex-col page-bg-pattern">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: getLandingGradient() }}
+    >
       {/* Hero */}
-      <section
-        className="relative flex-1 flex flex-col justify-center min-h-[60vh] md:min-h-[70vh] py-20 px-4 sm:px-6 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${getPublicImageUrl('CONTACTUS.png')})` }}
-      >
-        <div className="absolute inset-0 bg-slate-900/60" aria-hidden="true" />
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background via-background/90 to-transparent" aria-hidden="true" />
-
+      <section className="relative flex flex-col justify-center min-h-[60vh] md:min-h-[70vh] py-20 px-4 sm:px-6">
         <div className="contact-hero relative z-10 max-w-3xl mx-auto w-full flex flex-col items-center text-center">
           <div className="space-y-3">
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight drop-shadow-lg leading-tight">
@@ -25,10 +22,10 @@ export default function ContactUsPage() {
 
       <div className="relative z-20 max-w-4xl mx-auto w-full px-4 sm:px-6 pb-16 space-y-14 -mt-8">
 
-        {/* Our Offices */}
+        {/* Our Offices — section title on gradient, white */}
         <section className="space-y-8">
           <div className="contact-offices-title text-center space-y-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-content tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-md">
               Our Offices
             </h2>
           </div>
@@ -58,10 +55,10 @@ export default function ContactUsPage() {
           </div>
         </section>
 
-        {/* Contact Details */}
+        {/* Contact Details — section title on gradient, white */}
         <section className="space-y-8">
           <div className="contact-details-title text-center space-y-2">
-            <h2 className="text-xl sm:text-2xl font-bold text-content tracking-tight">
+            <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-md">
               Contact Details
             </h2>
           </div>

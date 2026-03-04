@@ -1,19 +1,14 @@
 import { Link } from 'react-router-dom'
-import { getPublicImageUrl } from '../utils/publicAssets'
+import { getLandingGradient } from '../lib/colorTheme'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col page-bg-pattern">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: getLandingGradient() }}
+    >
       {/* Hero */}
-      <section
-        className="relative flex-1 flex flex-col justify-center min-h-[72vh] py-24 sm:py-28 px-4 sm:px-6 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${getPublicImageUrl('DA HOMEPAGE.png')})` }}
-      >
-        {/* Light green fade sa TAAS lang — hindi na umaabot sa Admin/Staff portal buttons */}
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/30 via-primary/12 to-transparent [mask-image:linear-gradient(to_bottom,black_0%,black_45%,transparent_70%)]" aria-hidden="true" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_40%_at_50%_20%,rgba(255,255,255,0.04),transparent_50%)]" aria-hidden="true" />
-        <div className="absolute inset-x-0 bottom-0 h-44 bg-gradient-to-t from-background via-background/98 to-transparent" aria-hidden="true" />
-
+      <section className="relative flex flex-col justify-center min-h-[72vh] py-24 sm:py-28 px-4 sm:px-6">
         <div className="relative z-10 max-w-4xl mx-auto w-full flex flex-col items-center text-center space-y-14 -translate-y-6">
           <div className="space-y-6">
             <h1 className="home-hero-title text-3xl sm:text-4xl md:text-5xl lg:text-[2.85rem] font-black text-white tracking-tight leading-[1.12] drop-shadow-lg [text-shadow:0_2px_20px_rgba(0,0,0,0.2)]">
@@ -73,10 +68,10 @@ export default function HomePage() {
 
         <section className="space-y-12">
           <div className="text-center space-y-4 home-section-title">
-            <h2 className="text-2xl sm:text-3xl font-bold text-content tracking-tight">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight drop-shadow-md">
               Core Operational Units
             </h2>
-            <p className="text-text-muted text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+            <p className="text-white/90 text-sm sm:text-base max-w-lg mx-auto leading-relaxed drop-shadow-sm">
               Registration, quality control, and surveillance services under the Regulatory Division.
             </p>
           </div>
@@ -123,12 +118,12 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* Footer strip */}
-        <footer className="home-footer text-center py-8 border-t border-border/80">
-          <p className="text-text-muted text-sm font-medium">
+        {/* Footer strip — on gradient, white text */}
+        <footer className="home-footer text-center py-8 border-t border-white/20">
+          <p className="text-white text-sm font-medium drop-shadow-sm">
             Regulatory Division · Monitoring Data Portal
           </p>
-          <p className="text-text-muted/80 text-xs mt-1">
+          <p className="text-white/80 text-xs mt-1">
             Agricultural & veterinary services · Secure, centralized access
           </p>
         </footer>

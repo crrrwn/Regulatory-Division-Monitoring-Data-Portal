@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
+import { colorTheme, getHeaderGradient } from '../lib/colorTheme'
 import { getPublicImageUrl } from '../utils/publicAssets'
 
 const navLinks = [
@@ -21,8 +22,8 @@ export default function TopNav() {
     <header
       className="sticky top-0 z-50 pt-[env(safe-area-inset-top)] transition-shadow duration-300"
       style={{
-        background: 'linear-gradient(180deg, #153019 0%, #1e4d2b 50%, #1a4328 100%)',
-        boxShadow: '0 4px 24px -4px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.06) inset',
+        background: getHeaderGradient(),
+        boxShadow: '0 4px 24px -4px rgba(0,0,0,0.25), 0 0 0 1px rgba(255,255,255,0.08) inset',
       }}
     >
       <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-accent/50 to-transparent opacity-80" aria-hidden="true" />
@@ -47,11 +48,12 @@ export default function TopNav() {
             </span>
           </Link>
 
-          {/* Mobile menu button */}
+          {/* Mobile menu button — dark so visible on gradient */}
           <button
             type="button"
             onClick={() => setMenuOpen(!menuOpen)}
-            className="lg:hidden p-3 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-xl text-white hover:bg-white/10 active:bg-white/15 transition-all duration-300 ease-out active:scale-95"
+            className="lg:hidden p-3 min-w-[48px] min-h-[48px] flex items-center justify-center rounded-xl hover:bg-white/70 active:bg-white/80 transition-all duration-300 ease-out active:scale-95"
+            style={{ color: colorTheme.darkGreen }}
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
           >
@@ -63,7 +65,7 @@ export default function TopNav() {
             />
           </button>
 
-          {/* Desktop nav links */}
+          {/* Desktop nav links — dark text so visible on gradient */}
           <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.to
@@ -75,16 +77,20 @@ export default function TopNav() {
                   className={`
                     group relative px-4 py-2.5 rounded-xl font-medium text-[15px] transition-all duration-300 ease-out
                     ${isActive
-                      ? 'text-accent-light bg-white/12'
-                      : 'text-white/90 hover:text-white hover:bg-white/10'
+                      ? 'bg-white/90 shadow-sm'
+                      : 'hover:bg-white/70 active:bg-white/80'
                     }
                   `}
+                  style={{ color: colorTheme.darkGreen }}
                 >
                   <span className="relative block py-0.5">{link.label}</span>
-                  <span
-                    className={`absolute bottom-1.5 left-1/2 w-6 h-0.5 rounded-full bg-accent-light -translate-x-1/2 origin-center transition-transform duration-300 ease-out ${isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}
-                    aria-hidden="true"
-                  />
+                  {isActive && (
+                    <span
+                      className="absolute bottom-1.5 left-1/2 w-6 h-0.5 rounded-full -translate-x-1/2"
+                      style={{ backgroundColor: colorTheme.darkGreen }}
+                      aria-hidden="true"
+                    />
+                  )}
                 </Link>
               )
             })}
@@ -100,7 +106,7 @@ export default function TopNav() {
         <div
           className={`lg:hidden overflow-hidden transition-all duration-300 ease-out ${menuOpen ? 'max-h-[320px]' : 'max-h-0'}`}
         >
-          <div className="py-3 flex flex-col gap-0.5 border-t border-white/10" role="dialog" aria-label="Navigation menu">
+          <div className="py-3 flex flex-col gap-0.5 border-t border-black/10" role="dialog" aria-label="Navigation menu">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.to
               return (
@@ -111,10 +117,13 @@ export default function TopNav() {
                   className={`
                     min-h-[48px] flex items-center py-3 px-4 rounded-xl font-medium transition-all duration-300 ease-out
                     ${isActive
-                      ? 'text-accent-light bg-white/12 border-l-2 border-accent-light -ml-0.5 pl-[calc(1rem+2px)]'
-                      : 'text-white/90 hover:bg-white/10 active:bg-white/15'
+                      ? 'bg-white/90 border-l-2 -ml-0.5 pl-[calc(1rem+2px)]'
+                      : 'hover:bg-white/70 active:bg-white/80'
                     }
                   `}
+                  style={{
+                    color: colorTheme.darkGreen,
+                  }}
                 >
                   {link.label}
                 </Link>
