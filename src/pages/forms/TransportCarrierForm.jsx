@@ -32,7 +32,7 @@ export default function TransportCarrierForm() {
 
   const { submit, loading, message, setMessage } = useFormSubmit('transportCarrier')
 
-  const MAX_ATTACHMENT_SIZE = 700 * 1024
+  const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB (Firestore doc limit ~1 MB)
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
     if (!file) { setAttachmentFileName(''); setAttachmentData(''); return }
@@ -241,7 +241,7 @@ export default function TransportCarrierForm() {
                   )}
                 </div>
                 <p className="mt-2 text-[10px] text-[#5c574f]">
-                  {attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {attachmentFileName}</span> : 'Max file size: 700KB (Images/PDF)'}
+                  {attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {attachmentFileName}</span> : 'Max file size: 768 KB (Images/PDF)'}
                 </p>
               </div>
             </div>

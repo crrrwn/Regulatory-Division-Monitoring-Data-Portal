@@ -42,7 +42,7 @@ const initialState = {
   attachmentData: '',
 }
 
-const MAX_ATTACHMENT_SIZE = 700 * 1024
+const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB (Firestore doc limit ~1 MB)
 
 export default function AnimalDiseaseSurveillanceForm() {
   const [form, setForm] = useState(initialState)
@@ -277,7 +277,7 @@ export default function AnimalDiseaseSurveillanceForm() {
               )}
             </div>
             <p className="mt-2 text-[10px] text-[#5c574f]">
-              {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 700KB (Images/PDF)'}
+              {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 768 KB (Images/PDF)'}
             </p>
           </div>
         </div>
