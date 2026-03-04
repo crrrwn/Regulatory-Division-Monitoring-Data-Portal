@@ -237,10 +237,25 @@ export default function ViewRecords() {
     setEditing(id)
   }
 
+  // Firestore does not accept undefined. Sanitize so all units can save even with blank/optional fields.
+  const sanitizePayloadForFirestore = (obj) => {
+    if (obj === undefined) return null
+    if (obj === null || typeof obj !== 'object') return obj
+    if (Array.isArray(obj)) return obj.map(sanitizePayloadForFirestore)
+    const out = {}
+    Object.keys(obj).forEach((k) => {
+      const v = obj[k]
+      out[k] = v === undefined ? null : sanitizePayloadForFirestore(v)
+    })
+    return out
+  }
+
   const saveEdit = async () => {
     if (!editing) return
     try {
-      await updateDoc(doc(db, selectedCollection, editing), { ...editForm, updatedAt: new Date().toISOString() })
+      const payload = { ...editForm, updatedAt: new Date().toISOString() }
+      const sanitized = sanitizePayloadForFirestore(payload)
+      await updateDoc(doc(db, selectedCollection, editing), sanitized)
       setEditing(null)
       showNotification({ type: 'success', title: 'Changes saved', message: 'Record updated successfully.' })
       addSystemLog({ action: 'record_updated', userId: user?.uid, userEmail: user?.email, role: role || 'staff', details: `${selectedCollection} record updated.` }).catch(() => {})

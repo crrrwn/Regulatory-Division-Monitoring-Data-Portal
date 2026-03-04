@@ -65,7 +65,7 @@ export default function Dashboard() {
             iconColor="text-white"
           />
           <StatCard 
-            title="Data Points" 
+            title="Months with Data" 
             value={Object.keys(stats.byMonth).length} 
             icon={Calendar} 
             gradient="from-[#b8a066] to-[#d4c4a0]"
