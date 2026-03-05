@@ -6,14 +6,14 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
-import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS } from '../lib/collections'
+import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS, COLLECTION_DATE_FIELD_FOR_YEAR } from '../lib/collections'
 import { useDisabledUnits } from '../context/DisabledUnitsContext'
 import { getUnitIdsForSections } from '../lib/sections'
 import {
-  getMonthFromDoc,
+  getYearFromDoc,
   getProvinceFromDoc,
-  getMonthsFromDocs,
-  formatMonthLabel,
+  getYearsFromDocs,
+  formatYearLabel,
   docToRow,
   toTitleCase,
   PROVINCES,
@@ -86,7 +86,8 @@ export default function ViewRecords() {
   const [selectedCollection, setSelectedCollection] = useState(COLLECTIONS[0].id)
   const [docs, setDocs] = useState([])
   const [search, setSearch] = useState('')
-  const [filterMonth, setFilterMonth] = useState('')
+  const [filterYear, setFilterYear] = useState('')
+  const [filterSemester, setFilterSemester] = useState('')
   const [filterProvince, setFilterProvince] = useState('')
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({})
@@ -95,6 +96,7 @@ export default function ViewRecords() {
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [loadError, setLoadError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [backfillingSemester, setBackfillingSemester] = useState(false)
   const { user, role, userAllowedSections } = useAuth()
 
   const PAGE_SIZE = 10
@@ -139,7 +141,7 @@ export default function ViewRecords() {
     return () => unsub()
   }, [selectedCollection])
 
-  const months = getMonthsFromDocs(docs)
+  const years = getYearsFromDocs(docs, selectedCollection)
   const collectionLabel = COLLECTIONS.find((c) => c.id === selectedCollection)?.label || selectedCollection
 
   let filtered = docs
@@ -147,8 +149,11 @@ export default function ViewRecords() {
     const q = search.trim().toLowerCase()
     filtered = filtered.filter((d) => flattenForSearch(d).toLowerCase().includes(q))
   }
-  if (filterMonth) {
-    filtered = filtered.filter((d) => getMonthFromDoc(d) === filterMonth)
+  if (filterYear) {
+    filtered = filtered.filter((d) => getYearFromDoc(d, selectedCollection) === filterYear)
+  }
+  if (filterSemester) {
+    filtered = filtered.filter((d) => (d.semester || '') === filterSemester)
   }
   if (filterProvince) {
     filtered = filtered.filter((d) => getProvinceFromDoc(d) === filterProvince)
@@ -166,7 +171,7 @@ export default function ViewRecords() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedCollection, search, filterMonth, filterProvince])
+  }, [selectedCollection, search, filterYear, filterSemester, filterProvince])
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages)
   }, [totalPages, currentPage])
@@ -191,6 +196,449 @@ export default function ViewRecords() {
   }
 
   const clearSelection = () => setSelectedIds(new Set())
+
+  const clearSemesterForCurrentUnit = async () => {
+    // Currently only used for Livestock Handlers as requested
+    if (selectedCollection !== 'livestockHandlers') return
+    if (backfillingSemester) return
+
+    const withSemester = docs.filter((d) => d.semester)
+    if (withSemester.length === 0) {
+      showNotification({
+        type: 'success',
+        title: 'Nothing to clear',
+        message: 'No Livestock Handlers records currently have a semester value.',
+      })
+      return
+    }
+
+    try {
+      setBackfillingSemester(true)
+      await Promise.all(
+        withSemester.map((d) =>
+          updateDoc(doc(db, 'livestockHandlers', d.id), {
+            semester: null,
+          })
+        )
+      )
+      showNotification({
+        type: 'success',
+        title: 'Semester cleared',
+        message: `Removed semester for ${withSemester.length} Livestock Handlers record(s).`,
+      })
+    } catch (err) {
+      showNotification({
+        type: 'error',
+        title: 'Failed to clear semester',
+        message: err?.message || 'There was a problem clearing the semester values.',
+      })
+    } finally {
+      setBackfillingSemester(false)
+    }
+  }
+
+  const backfillSemesterForCurrentUnit = async () => {
+    if (backfillingSemester) return
+
+    // Animal Feeds: all existing records are 1st Semester
+    if (selectedCollection === 'animalFeed') {
+      const missing = docs.filter((d) => !d.semester)
+      if (missing.length === 0) {
+        showNotification({
+          type: 'success',
+          title: 'Nothing to update',
+          message: 'All Animal Feeds records already have a semester value.',
+        })
+        return
+      }
+
+      try {
+        setBackfillingSemester(true)
+        await Promise.all(
+          missing.map((d) =>
+            updateDoc(doc(db, 'animalFeed', d.id), {
+              semester: '1st Semester',
+            })
+          )
+        )
+        showNotification({
+          type: 'success',
+          title: 'Semester filled',
+          message: `Set "1st Semester" for ${missing.length} Animal Feeds record(s).`,
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update semester',
+          message: err?.message || 'There was a problem updating the records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
+    // Animal Welfare: mix of 1st and 2nd semester based on Registration No. (certificateNo)
+    if (selectedCollection === 'animalWelfare') {
+      const firstSemRegs = new Set([
+        'KNL-0470',
+        'PLT-L-0844',
+        'GRM-0481',
+        'PLT-L-0940',
+        'SWN-0186',
+        'SWN-0187',
+        'SWN-0188',
+        'STYD-0063',
+        'STYD-0064',
+        'STYD-0065',
+        'SWN-0223',
+        'VET-NS-0583',
+        'SWN-0070',
+        'GMF-0068',
+        'STYD-0020',
+        'STYD-0023',
+        'VET-S-0176',
+        'SWN-0012',
+        'GMF-0057',
+        'STYD-0011',
+      ])
+
+      const secondSemRegs = new Set([
+        'STYD-0061',
+        'STYD-0066',
+        'PLT-L-1232',
+        'QUA-0010',
+        'PYF-1476',
+      ])
+
+      const toUpdate = docs
+        .filter((d) => !d.semester && typeof d.certificateNo === 'string' && d.certificateNo.trim() !== '')
+        .map((d) => {
+          const reg = d.certificateNo.trim()
+          if (firstSemRegs.has(reg)) return { id: d.id, semester: '1st Semester', reg }
+          if (secondSemRegs.has(reg)) return { id: d.id, semester: '2nd Semester', reg }
+          return null
+        })
+        .filter(Boolean)
+
+      if (toUpdate.length === 0) {
+        showNotification({
+          type: 'info',
+          title: 'No matching records',
+          message: 'No Animal Welfare records without semester matched the provided registration numbers.',
+        })
+        return
+      }
+
+      try {
+        setBackfillingSemester(true)
+        await Promise.all(
+          toUpdate.map((item) =>
+            updateDoc(doc(db, 'animalWelfare', item.id), {
+              semester: item.semester,
+            })
+          )
+        )
+        const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+        const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+        showNotification({
+          type: 'success',
+          title: 'Semester filled',
+          message: `Updated ${firstCount} record(s) to 1st Semester and ${secondCount} record(s) to 2nd Semester for Animal Welfare.`,
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update semester',
+          message: err?.message || 'There was a problem updating the records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
+    // Livestock Handlers: mix of 1st and 2nd semester based on Registration No. (registrationNo)
+    if (selectedCollection === 'livestockHandlers') {
+      const firstSemRegs = new Set([
+        // CY 2024 - FIRST SEMESTER - NEW APPLICATION
+        '24-01-05-001',
+        '24-01-08-002',
+        '24-01-10-005',
+        '24-01-12-006',
+        '24-01-12-007',
+        '24-01-15-009',
+        '24-01-19-012',
+        '24-01-23-015',
+        '24-01-25-016',
+        '24-01-29-017',
+        '24-01-31-018',
+        '24-01-31-020',
+        '24-01-31-021',
+        '24-01-31-022',
+        '24-02-06-023',
+        '24-02-06-024',
+        '24-02-08-026',
+        '24-02-08-027',
+        '24-02-14-028',
+        '24-02-19-029',
+        '24-02-20-031',
+        '24-02-20-032',
+        '24-02-21-033',
+        '24-02-21-034',
+        '24-02-26-035',
+        '24-02-27-036',
+        '24-02-28-037',
+        '24-02-29-038',
+        '24-03-07-039',
+        '24-03-21-040',
+        '24-03-22-041',
+        '24-03-26-042',
+        '24-04-11-045',
+        '24-04-15-046',
+        '24-04-18-049',
+        '24-04-24-050',
+        '24-04-26-051',
+        '24-04-29-052',
+        '24-05-03-054',
+        '24-05-17-056',
+        '24-05--058',
+        '24-05-23-059',
+        '24-06-07-062',
+        // CY 2024 - FIRST SEMESTER - RENEWAL APPLICATION
+        '2021-003099-DARFO4B',
+        '2021-001811-DARFO4B',
+        '2023-005960-DARFO4B',
+        '2021-001803-DARFO4B',
+        '2023-006937-DARFO4B',
+        '2020-001475-DARFO4B',
+        '2021-001810-DARFO4B',
+        '2022-004879-DARFO4B',
+        '2021-DARFO-IVB-1978',
+        '2021-003103-DARFO4B',
+        '2021-DARFO-IVB-2154',
+        '2022-004570-DARFO4B',
+        '2023-DARFO4B-002975',
+        '2020-001463-DARFO4B',
+        '2022-004844-DARFO4B',
+        '2020-00541-DARFO4B',
+        '2022-004847-DARFO4B',
+        '2022-001814-DARFO4B',
+        '2020-001467-DARFO4B',
+        '2020-012583-DARFO4B',
+        '2022-004842-DARFO4B',
+        '2008-01968-DARFO4B',
+        '2022-004843-DARFO4B',
+        '2022-004710-DARFO4B',
+        '2021-002153-DARFO4B',
+        '2019-10756-DARFO4B',
+        '2018-8647-DARFO4B',
+        '2021-001975-DARFO4B',
+        '2022-005095-DARFO4B',
+        '2021-04112-DARFO4B',
+        '2021-000411-DARFO4B',
+        '2023-DARFO-IV-B-005940',
+        '2024-DARFO-IV-B-004830',
+        '2022-DARFO4B-005317',
+        '2022-005429-DARFO4B',
+        '2021-DARFO4B-002648',
+        '2021-002648-DARFO4B',
+        '2020-000540-DARFO4B',
+        '2023-006167-DARFO4B',
+        '2021-DARFO-IV-B-002899',
+        '2022-DARFO-IV-B-005906',
+        '2021-DARFO-IV-B-002955',
+        '2021-DARFO-IV-B-002610',
+        '2020-DARFO-IV-B-000031',
+      ])
+
+      const secondSemRegs = new Set([
+        // CY 2024 - SECOND SEMESTER - NEW APPLICATION
+        '24-07-02-064',
+        '24-07-12-065',
+        '24-07-26-067',
+        '24-08-12-070',
+        '24-08-14-071',
+        '24-08-16-072',
+        '24-08-20-073',
+        '24-08-20-074',
+        '24-08-22-075',
+        '24-08-29-076',
+        '24-09-04-078',
+        '24-09-12-079',
+        '24-09-12-080',
+        '24-09-12-082',
+        '24-09-11-083',
+        '24-09-24-084',
+        '24-09-25-087',
+        '24-09-12-088',
+        '24-09-30-089',
+        '24-10-02-091',
+        '24-10-07-092',
+        '24-10-11-096',
+        '24-11-06-097',
+        '24-12-11-102',
+        // CY 2024 - SECOND SEMESTER - RENEWAL APPLICATION
+        '2020-DARFO-IV-B-000068',
+        '2023-DARFO-IV-B-002636',
+        '2021-DARFO-IV-B-002008',
+        '2021-DARFO4B--IV-B-003217',
+        '2021-DARFO-IV-B-004808',
+        '2021-DARFO-IV-B-10184',
+        '2023-DARFO-IV-B-002644',
+        '2021-DARFO-IV-B-002861',
+        '2020-DARFO-IV-B-000071',
+        '2007-DARFO-IV-B-0000848',
+        '2023-DARFO-IV-B-015714',
+        '2021-DARFO-IV-B-002990',
+        '2021-DARFO-IV-B-003321',
+        '2021-DARFO-IV-B-003474',
+        '2023-DARFO-IV-B-002627',
+        '2023-DARFO-IV-B-002988',
+        '2022-DARFO-IV-B-005901',
+        '2021-DARFO-IV-B-004111',
+        '2021-DARFO-IV-B-003104',
+        '2023-DARFO-IV-B-002976',
+        '2021-DARFO-IV-B-003216',
+        '2023-DARFO-IV-B-002949',
+        '2020-DARFO-IV-B-001482',
+        '2023-DARFO-IV-B-015758',
+        '2018-DARFO-IV-B-009989',
+        '2023-DARFO-IV-B-003396',
+        '2023-DARFO-IV-B-015713',
+        '2020-DARFO-IV-B-000564',
+        '2021-DARFO-IV-B-003101',
+        '2020-DARFO-IV-B-000539',
+        '2023-DARFO-IV-B-003508',
+        '2023-DARFO-IV-B-003157',
+        '2021-DARFO-IV-B-004070',
+        '2021-DARFO-IV-B-003100',
+        '2020-DARFO-IV-B-001483',
+        '2023-DARFO-IV-B-015703',
+        '2023-DARFO-IV-B-003070',
+        '2020-DARFO-IV-B-012582',
+        '2023-DARFO-IV-B-003590',
+        '2021-DARFO-IV-B-001806',
+        '2021-DARFO-IV-B-001821',
+        '2023-DARFO-IV-B-003382',
+        '2023-DARFO-IV-B-003375',
+        '2023-DARFO-IV-B-003288',
+        '2022-DARFO-IV-B-0001481',
+      ])
+
+      const toUpdate = docs
+        .filter((d) => !d.semester && typeof d.registrationNo === 'string' && d.registrationNo.trim() !== '')
+        .map((d) => {
+          const reg = d.registrationNo.trim()
+          if (firstSemRegs.has(reg)) return { id: d.id, semester: '1st Semester', reg }
+          if (secondSemRegs.has(reg)) return { id: d.id, semester: '2nd Semester', reg }
+          return null
+        })
+        .filter(Boolean)
+
+      if (toUpdate.length === 0) {
+        showNotification({
+          type: 'info',
+          title: 'No matching records',
+          message: 'No Livestock Handlers records without semester matched the provided registration numbers.',
+        })
+        return
+      }
+
+      try {
+        setBackfillingSemester(true)
+        await Promise.all(
+          toUpdate.map((item) =>
+            updateDoc(doc(db, 'livestockHandlers', item.id), {
+              semester: item.semester,
+            })
+          )
+        )
+        const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+        const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+        showNotification({
+          type: 'success',
+          title: 'Semester filled',
+          message: `Updated ${firstCount} record(s) to 1st Semester and ${secondCount} record(s) to 2nd Semester for Livestock Handlers.`,
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update semester',
+          message: err?.message || 'There was a problem updating the records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
+    // Generic fallback: derive semester from the unit's primary date field (Jan–Jun = 1st, Jul–Dec = 2nd)
+    const dateField = COLLECTION_DATE_FIELD_FOR_YEAR[selectedCollection]
+    if (!dateField) {
+      showNotification({
+        type: 'info',
+        title: 'Backfill not configured',
+        message: 'Automatic semester fill is not configured for this unit.',
+      })
+      return
+    }
+
+    const candidates = docs.filter((d) => !d.semester && d[dateField])
+    if (candidates.length === 0) {
+      showNotification({
+        type: 'success',
+        title: 'Nothing to update',
+        message: 'All records for this unit already have a semester value.',
+      })
+      return
+    }
+
+    const toUpdate = []
+    candidates.forEach((d) => {
+      const raw = d[dateField]
+      const dt = raw ? new Date(raw) : null
+      if (!dt || Number.isNaN(dt.getTime())) return
+      const month = dt.getMonth() + 1
+      const semester = month <= 6 ? '1st Semester' : '2nd Semester'
+      toUpdate.push({ id: d.id, semester })
+    })
+
+    if (toUpdate.length === 0) {
+      showNotification({
+        type: 'info',
+        title: 'No valid dates',
+        message: 'No records without semester had a valid date to derive semester from.',
+      })
+      return
+    }
+
+    try {
+      setBackfillingSemester(true)
+      await Promise.all(
+        toUpdate.map((item) =>
+          updateDoc(doc(db, selectedCollection, item.id), {
+            semester: item.semester,
+          })
+        )
+      )
+      const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+      const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+      showNotification({
+        type: 'success',
+        title: 'Semester filled',
+        message: `Updated ${firstCount} record(s) to 1st Semester and ${secondCount} record(s) to 2nd Semester for this unit.`,
+      })
+    } catch (err) {
+      showNotification({
+        type: 'error',
+        title: 'Failed to update semester',
+        message: err?.message || 'There was a problem updating the records.',
+      })
+    } finally {
+      setBackfillingSemester(false)
+    }
+  }
 
   const handleDelete = async (idOrIds) => {
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds]
@@ -386,7 +834,8 @@ export default function ViewRecords() {
       return '<th>' + parts.join('<br>') + '</th>'
     }).join('')
     const metaParts = []
-    if (filterMonth) metaParts.push(`Month: ${formatMonthLabel(filterMonth)}`)
+    if (filterYear) metaParts.push(`Year: ${formatYearLabel(filterYear)}`)
+    if (filterSemester) metaParts.push(`Semester: ${filterSemester}`)
     if (filterProvince) metaParts.push(`Province: ${filterProvince}`)
     metaParts.push(`Printed: ${new Date().toLocaleString()}`)
     metaParts.push(`Total: ${filtered.length} record(s)`)
@@ -738,62 +1187,9 @@ export default function ViewRecords() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
           <span className="relative z-10 text-[10px] font-black text-white uppercase tracking-widest">Filters & Search</span>
         </div>
-        <div className="p-4 sm:p-5 border-l-4 border-[#b8a066]/25 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_1.25fr] gap-4 lg:gap-5 lg:items-end">
+        <div className="p-4 sm:p-5 border-l-4 border-[#b8a066]/25 space-y-4">
+          {/* Primary search bar */}
           <div className="flex flex-col min-w-0">
-            <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5 transition-colors duration-300">Select Unit</label>
-            <AppSelect
-              value={selectedCollection}
-              onChange={(v) => setSelectedCollection(v)}
-              groups={UNIT_GROUPS.map((g) => ({
-                sectionLabel: g.sectionLabel,
-                options: g.unitIds.map((id) => {
-                  const c = COLLECTIONS.find((col) => col.id === id)
-                  const appDisabled = disabledUnitIds.includes(id)
-                  const sectionRestricted = allowedUnitIds !== null && !allowedUnitIds.includes(id)
-                  const disabled = appDisabled || sectionRestricted
-                  const suffix = sectionRestricted ? ' (Not in your section)' : appDisabled ? ' (Disabled)' : ''
-                  return {
-                    value: id,
-                    label: c ? `${c.label}${suffix}` : id,
-                    disabled,
-                  }
-                }),
-              }))}
-              leftIcon={<iconify-icon icon="mdi:folder-table-outline" width="20"></iconify-icon>}
-              aria-label="Select Unit"
-            />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Month</label>
-            <AppSelect
-              value={filterMonth}
-              onChange={setFilterMonth}
-              placeholder="All Months"
-              options={[
-                { value: '', label: 'All Months' },
-                ...months.map((m) => ({ value: m, label: formatMonthLabel(m) })),
-              ]}
-              leftIcon={<iconify-icon icon="mdi:calendar-month-outline" width="18"></iconify-icon>}
-              aria-label="Month"
-              className="min-w-0"
-            />
-          </div>
-          <div className="flex flex-col min-w-0">
-            <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Province</label>
-            <AppSelect
-              value={filterProvince}
-              onChange={setFilterProvince}
-              placeholder="All Provinces"
-              options={[
-                { value: '', label: 'All Provinces' },
-                ...PROVINCES.map((p) => ({ value: p, label: p })),
-              ]}
-              leftIcon={<iconify-icon icon="mdi:map-marker-outline" width="18"></iconify-icon>}
-              aria-label="Province"
-              className="min-w-0"
-            />
-          </div>
-          <div className="flex flex-col min-w-0 sm:col-span-2 lg:col-span-1">
             <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Search Records</label>
             <div className="relative group flex items-stretch">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#5c7355] group-focus-within:text-[#1e4d2b] transition-colors duration-300">
@@ -807,10 +1203,87 @@ export default function ViewRecords() {
                 className="w-full min-h-[42px] pl-10 pr-10 py-2.5 bg-white border-2 border-[#e8e0d4] rounded-xl text-[#1e4d2b] text-sm font-medium focus:ring-2 focus:ring-[#1e4d2b]/40 focus:border-[#1e4d2b] hover:border-[#1e4d2b]/50 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] placeholder:text-[#8a857c] box-border"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#5c7355] hover:text-[#1e4d2b] hover:scale-110 transition-all duration-200">
+                <button
+                  onClick={() => setSearch('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#5c7355] hover:text-[#1e4d2b] hover:scale-110 transition-all duration-200"
+                >
                   <iconify-icon icon="mdi:close-circle" width="18"></iconify-icon>
                 </button>
               )}
+            </div>
+          </div>
+
+          {/* Filter row */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 lg:items-end">
+            <div className="flex flex-col min-w-0">
+              <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5 transition-colors duration-300">Select Unit</label>
+              <AppSelect
+                value={selectedCollection}
+                onChange={(v) => setSelectedCollection(v)}
+                groups={UNIT_GROUPS.map((g) => ({
+                  sectionLabel: g.sectionLabel,
+                  options: g.unitIds.map((id) => {
+                    const c = COLLECTIONS.find((col) => col.id === id)
+                    const appDisabled = disabledUnitIds.includes(id)
+                    const sectionRestricted = allowedUnitIds !== null && !allowedUnitIds.includes(id)
+                    const disabled = appDisabled || sectionRestricted
+                    const suffix = sectionRestricted ? ' (Not in your section)' : appDisabled ? ' (Disabled)' : ''
+                    return {
+                      value: id,
+                      label: c ? `${c.label}${suffix}` : id,
+                      disabled,
+                    }
+                  }),
+                }))}
+                leftIcon={<iconify-icon icon="mdi:folder-table-outline" width="20"></iconify-icon>}
+                aria-label="Select Unit"
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Year</label>
+              <AppSelect
+                value={filterYear}
+                onChange={setFilterYear}
+                placeholder="All Years"
+                options={[
+                  { value: '', label: 'All Years' },
+                  ...years.map((y) => ({ value: y, label: formatYearLabel(y) })),
+                ]}
+                leftIcon={<iconify-icon icon="mdi:calendar-outline" width="18"></iconify-icon>}
+                aria-label="Year"
+                className="min-w-0"
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Semester</label>
+              <AppSelect
+                value={filterSemester}
+                onChange={setFilterSemester}
+                placeholder="All Semesters"
+                options={[
+                  { value: '', label: 'All Semesters' },
+                  { value: '1st Semester', label: '1st Semester' },
+                  { value: '2nd Semester', label: '2nd Semester' },
+                ]}
+                leftIcon={<iconify-icon icon="mdi:calendar-month-outline" width="18"></iconify-icon>}
+                aria-label="Semester"
+                className="min-w-0"
+              />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Province</label>
+              <AppSelect
+                value={filterProvince}
+                onChange={setFilterProvince}
+                placeholder="All Provinces"
+                options={[
+                  { value: '', label: 'All Provinces' },
+                  ...PROVINCES.map((p) => ({ value: p, label: p })),
+                ]}
+                leftIcon={<iconify-icon icon="mdi:map-marker-outline" width="18"></iconify-icon>}
+                aria-label="Province"
+                className="min-w-0"
+              />
             </div>
           </div>
         </div>
@@ -820,9 +1293,37 @@ export default function ViewRecords() {
       <div className="view-records-anim-3 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden flex flex-col min-h-[400px] hover:shadow-xl hover:shadow-[#1e4d2b]/10 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
         <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 sm:px-6 py-3 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.08),transparent_50%)]" />
-          <div className="relative z-10 flex items-center justify-between">
-            <span className="text-sm font-black text-white uppercase tracking-tight">Records</span>
-            <span className="text-[11px] font-semibold text-white/85">{collectionLabel}</span>
+          <div className="relative z-10 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-black text-white uppercase tracking-tight">Records</span>
+              <span className="text-[11px] font-semibold text-white/85">{collectionLabel}</span>
+            </div>
+            {role === 'admin' && (
+              <div className="flex flex-wrap gap-2">
+                {(selectedCollection === 'animalFeed' || selectedCollection === 'animalWelfare' || selectedCollection === 'livestockHandlers') && (
+                  <button
+                    type="button"
+                    onClick={backfillSemesterForCurrentUnit}
+                    disabled={backfillingSemester}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/10 text-white border border-white/40 hover:bg-white/20 hover:border-white/60 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                  >
+                    <iconify-icon icon="mdi:auto-fix" width="16"></iconify-icon>
+                    <span>{backfillingSemester ? 'Filling Semesters…' : 'Fill Semester for Existing Records'}</span>
+                  </button>
+                )}
+                {selectedCollection === 'livestockHandlers' && (
+                  <button
+                    type="button"
+                    onClick={clearSemesterForCurrentUnit}
+                    disabled={backfillingSemester}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-red-500/15 text-red-50 border border-red-300/60 hover:bg-red-500/25 hover:border-red-200 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
+                  >
+                    <iconify-icon icon="mdi:eraser" width="16"></iconify-icon>
+                    <span>Clear Semester (Livestock Handlers)</span>
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
         {canDelete() && selectedIds.size > 0 && (

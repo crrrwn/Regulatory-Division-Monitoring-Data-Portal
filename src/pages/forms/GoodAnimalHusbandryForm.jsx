@@ -6,8 +6,11 @@ import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
+const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
+
 const initialState = {
   province: '',
+  semester: '',
   ratingQuantity: '',
   ratingServicesPersonnel: '',
   ratingTraining: '',
@@ -56,6 +59,10 @@ export default function GoodAnimalHusbandryForm() {
   return (
     <FormLayout title="Good Animal Husbandry Practices (GAHP) Unit">
       <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl">
+        <div>
+          <label className={labelClass}>Semester</label>
+          <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+        </div>
         <div>
           <label className={labelClass}>Province</label>
           <AppSelect value={form.province} onChange={(v) => update('province', v)} placeholder="Select Province" options={[{ value: '', label: 'Select Province' }, ...PROVINCES.map((p) => ({ value: p, label: p }))]} aria-label="Province" />

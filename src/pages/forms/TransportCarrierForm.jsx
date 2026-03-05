@@ -7,8 +7,10 @@ import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
 const TYPE_OF_APPLICATION_OPTIONS = ['New', 'Renewal', 'Amendment', 'Others']
+const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
 
 export default function TransportCarrierForm() {
+  const [semester, setSemester] = useState('')
   const [controlNo, setControlNo] = useState('')
   const [registrationNo, setRegistrationNo] = useState('')
   const [nameOfEstablishment, setNameOfEstablishment] = useState('')
@@ -52,6 +54,7 @@ export default function TransportCarrierForm() {
   }
 
   const buildPayload = () => ({
+    semester,
     controlNo,
     registrationNo,
     nameOfEstablishment,
@@ -76,6 +79,7 @@ export default function TransportCarrierForm() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     await submit(buildPayload())
+    setSemester('')
     setControlNo('')
     setRegistrationNo('')
     setNameOfEstablishment('')
@@ -131,6 +135,10 @@ export default function TransportCarrierForm() {
               Application Details
             </h3>
             <div className="grid sm:grid-cols-2 gap-5">
+              <div>
+                <label className={labelClass}>Semester</label>
+                <AppSelect value={semester} onChange={setSemester} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+              </div>
               <div>
                 <label className={labelClass}>No.</label>
                 <input type="text" value={controlNo} onChange={(e) => setControlNo(e.target.value)} className={inputClass} placeholder="Control / Reference No." />

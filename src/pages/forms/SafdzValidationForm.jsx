@@ -24,8 +24,11 @@ import 'iconify-icon'
 
 const STATUS_OPTIONS = ['Pending', 'On-Process', 'Approved', 'Denied']
 
+const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
+
 const initialState = {
   explorationPermitApplicationNo: '',
+  semester: '',
   nameOfApplicant: '',
   dateReceived: '',
   province: '',
@@ -123,6 +126,10 @@ export default function SafdzValidationForm() {
           </h3>
           
           <div className="grid sm:grid-cols-2 gap-6">
+            <div>
+              <label className={labelClass}>Semester</label>
+              <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+            </div>
             <div>
               <label className={labelClass}>Exploration Permit App. No.</label>
               <div className="relative group">

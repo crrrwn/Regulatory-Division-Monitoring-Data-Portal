@@ -13,8 +13,11 @@ const FORM_TYPES = [
 
 const STATUS_OPTIONS = ['Pending', 'On-Process', 'Approved', 'Denied', 'Certified']
 
+const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
+
 export default function GoodAgriPracticesForm() {
   const [formType, setFormType] = useState('')
+  const [semester, setSemester] = useState('')
   const [controlNo, setControlNo] = useState('')
   // GAP Certification fields
   const [dateOfRequest, setDateOfRequest] = useState('')
@@ -61,7 +64,7 @@ export default function GoodAgriPracticesForm() {
   }
 
   const buildPayload = () => {
-    const base = { formType, controlNo, location, province, area, remarks, ...ratings, recommendation, attachmentFileName, attachmentData }
+    const base = { formType, semester, controlNo, location, province, area, remarks, ...ratings, recommendation, attachmentFileName, attachmentData }
     if (formType === 'gapCertification') {
       return {
         ...base,
@@ -87,6 +90,7 @@ export default function GoodAgriPracticesForm() {
   }
 
   const resetForm = () => {
+    setSemester('')
     setControlNo('')
     setDateOfRequest('')
     setNameOfApplicant('')
@@ -177,6 +181,7 @@ export default function GoodAgriPracticesForm() {
                     GAP Certification Form
                   </h3>
                   <div className="grid sm:grid-cols-2 gap-5">
+                    <div><label className={labelClass}>Semester</label><AppSelect value={semester} onChange={setSemester} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" /></div>
                     <div><label className={labelClass}>No.</label><input type="text" value={controlNo} onChange={(e) => setControlNo(e.target.value)} className={inputClass} placeholder="Control / Reference No." /></div>
                     <div><label className={labelClass}>Date of Request</label><input type="date" value={dateOfRequest} onChange={(e) => setDateOfRequest(e.target.value)} className={inputClass} /></div>
                     <div className="sm:col-span-2"><label className={labelClass}>Name of Applicant</label><input type="text" value={nameOfApplicant} onChange={(e) => setNameOfApplicant(e.target.value)} className={inputClass} placeholder="Full Name" /></div>
@@ -201,6 +206,7 @@ export default function GoodAgriPracticesForm() {
                     Monitoring of GAP Certified Farmer
                   </h3>
                   <div className="grid sm:grid-cols-2 gap-5">
+                    <div><label className={labelClass}>Semester</label><AppSelect value={semester} onChange={setSemester} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" /></div>
                     <div><label className={labelClass}>No.</label><input type="text" value={controlNo} onChange={(e) => setControlNo(e.target.value)} className={inputClass} placeholder="Control / Reference No." /></div>
                     <div><label className={labelClass}>Date of Monitoring</label><input type="date" value={dateOfMonitoring} onChange={(e) => setDateOfMonitoring(e.target.value)} className={inputClass} /></div>
                     <div className="sm:col-span-2"><label className={labelClass}>Name of Farmer</label><input type="text" value={nameOfFarmer} onChange={(e) => setNameOfFarmer(e.target.value)} className={inputClass} placeholder="Name of Farmer" /></div>

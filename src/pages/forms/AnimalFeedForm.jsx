@@ -9,6 +9,11 @@ import 'iconify-icon'
 const NATURE_OPTIONS = ['Mixed Feed', 'Feed Ingredient Manufacturer', 'Toll Manufacturer', 'Importer', 'Indentor', 'Supplier', 'Distributor', 'Retailer']
 const ORG_OPTIONS = ['Sole Proprietorship', 'Partnership', 'Corporate', 'Cooperative']
 const REMARKS_OPTIONS = ['New', 'Renewal', 'Amendment']
+const SEMESTER_OPTIONS = [
+  { value: '', label: 'Select semester...' },
+  { value: '1st Semester', label: '1st Semester' },
+  { value: '2nd Semester', label: '2nd Semester' },
+]
 
 const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB (Firestore doc limit ~1 MB; base64 ~33% larger)
 
@@ -25,7 +30,7 @@ function buildFullName({ lastName = '', firstName = '', middleName = '', nameExt
 }
 
 const initialState = {
-  date: '', province: '', controlNo: '', registrationNo: '', dateOfInspection: '', dateOfMonitoring: '',
+  date: '', semester: '', province: '', controlNo: '', registrationNo: '', dateOfInspection: '', dateOfMonitoring: '',
   companyName: '', lastName: '', middleName: '', firstName: '', nameExt: '', completeName: '', birthDate: '',
   barangay: '', municipality: '', completeAddress: '', officeAddress: '', plantAddress: '',
   cellphone: '', email: '',
@@ -120,6 +125,10 @@ export default function AnimalFeedForm() {
               <div>
                 <label className={labelClass}>Date of Application</label>
                 <input type="date" value={form.date} onChange={(e) => update('date', e.target.value)} className={inputClass} required />
+              </div>
+              <div>
+                <label className={labelClass}>Semester</label>
+                <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
               </div>
               <div>
                 <label className={labelClass}>Province Scope</label>

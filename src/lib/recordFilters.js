@@ -1,4 +1,5 @@
 import { PROVINCES } from './regions'
+import { COLLECTION_DATE_FIELD_FOR_YEAR } from './collections'
 
 /** Municipality → Province mapping (when province field contains municipality instead of province) */
 const MUNICIPALITY_TO_PROVINCE = {
@@ -54,6 +55,40 @@ export function getMonthsFromDocs(docs) {
     if (m) set.add(m)
   })
   return Array.from(set).sort().reverse()
+}
+
+/** Get year (e.g. "2024") from doc using collection’s date-of-application field (for Master Records by year). */
+export function getYearFromDoc(doc, collectionId) {
+  const fieldOrFields = COLLECTION_DATE_FIELD_FOR_YEAR?.[collectionId]
+  if (fieldOrFields == null) return null
+  const fields = Array.isArray(fieldOrFields) ? fieldOrFields : [fieldOrFields]
+  for (const field of fields) {
+    const d = doc[field]
+    if (d == null || d === '') continue
+    const date = typeof d === 'string' ? new Date(d) : d
+    if (typeof date?.toDate === 'function') {
+      const jsDate = date.toDate()
+      if (!isNaN(jsDate.getTime())) return String(jsDate.getFullYear())
+    }
+    if (date && !isNaN(date.getTime())) return String(date.getFullYear())
+  }
+  return null
+}
+
+/** Get list of unique years from docs for dropdown (newest first), using date of application per collection. */
+export function getYearsFromDocs(docs, collectionId) {
+  const set = new Set()
+  docs.forEach((d) => {
+    const y = getYearFromDoc(d, collectionId)
+    if (y) set.add(y)
+  })
+  return Array.from(set).sort((a, b) => Number(b) - Number(a))
+}
+
+/** Format year for display */
+export function formatYearLabel(year) {
+  if (!year) return 'All Years'
+  return year
 }
 
 /** Format month key to display label */

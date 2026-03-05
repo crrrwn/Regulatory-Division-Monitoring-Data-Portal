@@ -16,8 +16,11 @@ const RATING_OPTIONS = [
   { value: '5', label: 'Excellent (5)' },
 ]
 
+const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
+
 const initialState = {
   application: '',
+  semester: '',
   nameOfGroup: '',
   nameOfApplicant: '',
   province: '',
@@ -118,7 +121,10 @@ export default function OrganicAgriForm() {
                <label className={labelClass}>Application / Project Name</label>
                <input type="text" value={form.application} onChange={updateUpper('application')} className={`${inputClass} font-semibold`} placeholder="PROJECT TITLE OR REFERENCE" required />
             </div>
-
+            <div className="mb-5">
+               <label className={labelClass}>Semester</label>
+               <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+            </div>
             <div className="grid sm:grid-cols-2 gap-5 mb-5">
               <div>
                 <label className={labelClass}>Name of Group</label>

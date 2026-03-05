@@ -7,9 +7,11 @@ import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
 const STATUS_OPTIONS = ['Pending', 'On-Process', 'Approved', 'Denied', 'Expired']
+const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
 
 const initialState = {
   applicant: '',
+  semester: '',
   operator: '',
   province: '',
   location: '',
@@ -109,6 +111,10 @@ export default function PlantMaterialForm() {
               <div>
                 <label className={labelClass}>Name of Applicant</label>
                 <input type="text" value={form.applicant} onChange={updateUpper('applicant')} className={`${inputClass} font-semibold`} placeholder="FULL NAME" required />
+              </div>
+              <div>
+                <label className={labelClass}>Semester</label>
+                <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
               </div>
               <div>
                 <label className={labelClass}>Name of Operator</label>

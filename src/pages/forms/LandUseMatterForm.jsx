@@ -21,8 +21,11 @@ import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
+const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
+
 const initialState = {
   controlNo: '',
+  semester: '',
   nameOfApplicant: '',
   purposeOfApplication: '',
   sizeOfArea: '',
@@ -117,6 +120,10 @@ export default function LandUseMatterForm() {
           </h3>
           
           <div className="grid sm:grid-cols-12 gap-6">
+            <div className="sm:col-span-4">
+              <label className={labelClass}>Semester</label>
+              <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+            </div>
             <div className="sm:col-span-4">
               <label className={labelClass}>Control No.</label>
               <div className="relative group">

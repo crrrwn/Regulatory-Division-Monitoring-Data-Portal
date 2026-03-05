@@ -8,24 +8,34 @@ import 'iconify-icon'
 
 const FACILITY_TYPES = ['Pet Shop', 'Veterinary Clinic', 'Grooming Center', 'Breeding Kennel', 'Animal Shelter', 'Zoo / Wildlife', 'Research Facility', 'Pound']
 const STATUS_OPTIONS = ['Pending Inspection', 'Inspected - Passed', 'Inspected - Failed', 'Registered', 'Expired']
+const APPLICATION_TYPE_OPTIONS = ['New', 'Renewal']
+const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
 
 const initialState = {
-  dateApplied: '', 
-  facilityName: '', 
-  ownerName: '', 
+  dateApplied: '',
+  semester: '',
+  facilityName: '',
+  ownerName: '',
   province: '',
-  address: '', 
+  address: '',
   facilityType: '',
-  speciesHandled: '', 
-  headVet: '', 
-  prcLicenseNo: '', 
-  certificateNo: '', 
-  validityDate: '', 
+  certificateNo: '',
+  dateOfInspection: '',
+  orNo: '',
+  orDate: '',
+  fee: '',
+  endorsementToBAI: '',
+  registrationDate: '',
+  validityDate: '',
   status: '',
-  ratingQuantity: '', 
-  ratingServicesPersonnel: '', 
-  ratingTraining: '', 
-  ratingAttitude: '', 
+  applicationType: '',
+  speciesHandled: '',
+  headVet: '',
+  prcLicenseNo: '',
+  ratingQuantity: '',
+  ratingServicesPersonnel: '',
+  ratingTraining: '',
+  ratingAttitude: '',
   ratingPromptness: '',
   recommendation: '',
   attachmentFileName: '',
@@ -142,6 +152,10 @@ export default function AnimalWelfareForm() {
                     required 
                   />
                </div>
+               <div>
+                  <label className={labelClass}>Semester</label>
+                  <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+               </div>
 
                <div>
                   <label className={labelClass}>Province</label>
@@ -212,28 +226,46 @@ export default function AnimalWelfareForm() {
                </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                <div>
-                  <label className={labelClass}>Certificate No. (AWC)</label>
-                  <input 
-                    type="text" 
-                    value={form.certificateNo} 
-                    onChange={(e) => update('certificateNo', e.target.value)} 
-                    className={inputClass} 
-                  />
+                  <label className={labelClass}>Certificate No. (AWC) / Registration No.</label>
+                  <input type="text" value={form.certificateNo} onChange={(e) => update('certificateNo', e.target.value)} className={inputClass} />
+               </div>
+               <div>
+                  <label className={labelClass}>Date of Inspection</label>
+                  <input type="date" value={form.dateOfInspection} onChange={(e) => update('dateOfInspection', e.target.value)} className={inputClass} />
+               </div>
+               <div>
+                  <label className={labelClass}>OR Number</label>
+                  <input type="text" value={form.orNo} onChange={(e) => update('orNo', e.target.value)} className={inputClass} placeholder="Official Receipt No." />
+               </div>
+               <div>
+                  <label className={labelClass}>OR Date</label>
+                  <input type="date" value={form.orDate} onChange={(e) => update('orDate', e.target.value)} className={inputClass} />
+               </div>
+               <div>
+                  <label className={labelClass}>Amount of Fee Collected</label>
+                  <input type="text" value={form.fee} onChange={(e) => update('fee', e.target.value)} className={inputClass} placeholder="Fee" />
+               </div>
+               <div>
+                  <label className={labelClass}>Endorsement to BAI</label>
+                  <input type="text" value={form.endorsementToBAI} onChange={(e) => update('endorsementToBAI', e.target.value)} className={inputClass} placeholder="Date or reference" />
+               </div>
+               <div>
+                  <label className={labelClass}>Registration Date</label>
+                  <input type="date" value={form.registrationDate} onChange={(e) => update('registrationDate', e.target.value)} className={inputClass} />
                </div>
                <div>
                   <label className={labelClass}>Validity Date</label>
-                  <input 
-                    type="date" 
-                    value={form.validityDate} 
-                    onChange={(e) => update('validityDate', e.target.value)} 
-                    className={inputClass} 
-                  />
+                  <input type="date" value={form.validityDate} onChange={(e) => update('validityDate', e.target.value)} className={inputClass} />
                </div>
                <div>
                   <label className={labelClass}>Current Status</label>
                   <AppSelect value={form.status} onChange={(v) => update('status', v)} placeholder="Select Status..." options={[{ value: '', label: 'Select Status...' }, ...STATUS_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Status" />
+               </div>
+               <div>
+                  <label className={labelClass}>New / Renewal</label>
+                  <AppSelect value={form.applicationType} onChange={(v) => update('applicationType', v)} placeholder="Select..." options={[{ value: '', label: 'Select...' }, ...APPLICATION_TYPE_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Application Type" />
                </div>
             </div>
           </div>

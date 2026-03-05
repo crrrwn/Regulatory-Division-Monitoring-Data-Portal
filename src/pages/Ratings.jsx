@@ -97,7 +97,7 @@ export default function Ratings() {
                 </div>
                 <div className="min-w-0">
                   <h1 className="text-xl sm:text-2xl font-black uppercase tracking-tight leading-tight text-white drop-shadow-sm">
-                    {selectedRatingUnit ? 'Unit Performance' : 'Satisfaction Ratings'}
+                    {selectedRatingUnit ? 'Unit Performance' : 'REGULATORY DIVISION RATINGS'}
                   </h1>
                   {selectedRatingUnit && (
                     <p className="text-[11px] font-semibold text-white/80 tracking-widest uppercase mt-1.5">Detailed feedback analysis</p>
@@ -171,10 +171,6 @@ export default function Ratings() {
                     >
                       <div className={`px-5 py-4 ${group.bgHeader} flex flex-col items-center text-center gap-2 relative overflow-hidden shrink-0`}>
                         <div className="absolute inset-0 bg-[linear-gradient(135deg,transparent_0%,rgba(0,0,0,0.08)_100%)] opacity-60" />
-                        <group.icon className="absolute -right-4 -top-4 w-20 h-20 text-white/10 rotate-12" size={80} strokeWidth={1.5} />
-                        <div className="relative z-10 p-3 rounded-2xl bg-white/25 backdrop-blur-sm border border-white/40 shadow-inner">
-                          <group.icon size={24} strokeWidth={2} className="text-white" />
-                        </div>
                         <h4 className={`font-black text-[11px] uppercase tracking-[0.2em] ${group.textHeader} relative z-10 leading-tight`}>{group.title}</h4>
                         <div className={`relative z-10 w-full mt-2 px-3 py-2.5 rounded-xl border backdrop-blur-sm ${hasSectionRating ? 'bg-white/25 border-white/40 shadow-inner' : 'bg-white/10 border-white/20'}`}>
                           {hasSectionRating ? (
