@@ -18,8 +18,18 @@ const RATING_OPTIONS = [
 
 const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
 
+/** Derive semester from date (Jan–Jun = 1st Semester, Jul–Dec = 2nd Semester). Returns '' if invalid. */
+function semesterFromDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return ''
+  const dt = new Date(dateStr)
+  if (Number.isNaN(dt.getTime())) return ''
+  const month = dt.getMonth() + 1
+  return month <= 6 ? '1st Semester' : '2nd Semester'
+}
+
 const initialState = {
   application: '',
+  dateOfApplication: '',
   semester: '',
   nameOfGroup: '',
   nameOfApplicant: '',
@@ -48,7 +58,16 @@ const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB (Firestore doc limit ~1 MB)
 export default function OrganicAgriForm() {
   const [form, setForm] = useState(initialState)
   const { submit, loading, message, setMessage } = useFormSubmit('organicAgri')
-  const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+  const update = (key, value) => {
+    setForm((f) => {
+      const next = { ...f, [key]: value }
+      if (key === 'dateOfApplication' && value) {
+        const derived = semesterFromDate(value)
+        if (derived) next.semester = derived
+      }
+      return next
+    })
+  }
   const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
 
   const handleAttachmentChange = (e) => {
@@ -75,7 +94,11 @@ export default function OrganicAgriForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const ok = await submit(form)
+    const payload = { ...form }
+    if (!payload.semester && payload.dateOfApplication) {
+      payload.semester = semesterFromDate(payload.dateOfApplication)
+    }
+    const ok = await submit(payload)
     if (ok) {
       setForm(initialState)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -121,9 +144,16 @@ export default function OrganicAgriForm() {
                <label className={labelClass}>Application / Project Name</label>
                <input type="text" value={form.application} onChange={updateUpper('application')} className={`${inputClass} font-semibold`} placeholder="PROJECT TITLE OR REFERENCE" required />
             </div>
-            <div className="mb-5">
-               <label className={labelClass}>Semester</label>
-               <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+            <div className="grid sm:grid-cols-2 gap-5 mb-5">
+              <div>
+                <label className={labelClass}>Date of Application</label>
+                <input type="date" value={form.dateOfApplication} onChange={(e) => update('dateOfApplication', e.target.value)} className={inputClass} />
+              </div>
+              <div>
+                <label className={labelClass}>Semester</label>
+                <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+                <p className="text-[10px] text-[#5c7355] mt-1">Auto-filled from Date of Application (Jan–Jun = 1st Sem, Jul–Dec = 2nd Sem)</p>
+              </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-5 mb-5">
               <div>

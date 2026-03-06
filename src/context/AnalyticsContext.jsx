@@ -2,11 +2,12 @@ import { createContext, useContext, useState, useCallback, useEffect } from 'rea
 import { collection, getDocs } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { COLLECTIONS, RATING_FIELD_KEYS } from '../lib/collections'
-import { getMonthFromDoc, getProvinceFromDoc } from '../lib/recordFilters'
+import { getMonthFromDoc, getProvinceFromDoc, getYearFromDoc } from '../lib/recordFilters'
 
 const defaultStats = {
   total: 0,
   byMonth: {},
+  byYear: {},
   byProvince: {},
   byUnit: {},
   unitRatings: {},
@@ -20,6 +21,7 @@ function parseRatingVal(v) {
 
 async function fetchAnalytics() {
   const byMonth = {}
+  const byYear = {}
   const byProvince = {}
   const byUnit = {}
   const unitRatings = {}
@@ -40,6 +42,12 @@ async function fetchAnalytics() {
       const data = d.data()
       const month = getMonthFromDoc(data)
       if (month) byMonth[month] = (byMonth[month] || 0) + 1
+      let year = getYearFromDoc(data, id)
+      if (!year) {
+        const month = getMonthFromDoc(data)
+        if (month) year = month.slice(0, 4)
+      }
+      if (year) byYear[year] = (byYear[year] || 0) + 1
       const province = getProvinceFromDoc(data)
       if (province) byProvince[province] = (byProvince[province] || 0) + 1
 
@@ -81,7 +89,7 @@ async function fetchAnalytics() {
     }
   }
 
-  return { total, byMonth, byProvince, byUnit, unitRatings }
+  return { total, byMonth, byYear, byProvince, byUnit, unitRatings }
 }
 
 const AnalyticsContext = createContext(null)

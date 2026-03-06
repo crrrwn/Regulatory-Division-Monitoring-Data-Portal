@@ -11,7 +11,9 @@ import {
   MessageSquare,
   Save,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Plus,
+  Trash2
 } from 'lucide-react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
@@ -22,13 +24,22 @@ import 'iconify-icon'
 
 const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
 
+/** Derive semester from date (Jan–Jun = 1st Semester, Jul–Dec = 2nd Semester). Returns '' if invalid. */
+function semesterFromDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return ''
+  const dt = new Date(dateStr)
+  if (Number.isNaN(dt.getTime())) return ''
+  const month = dt.getMonth() + 1
+  return month <= 6 ? '1st Semester' : '2nd Semester'
+}
+
 const initialState = {
   requestLetterDate: '',
   semester: '',
   identifiedMarketOutlet: '',
   dateOfCommunicationLetter: '',
-  nameOfProduct: '',
-  commodity: '',
+  nameOfProduct: [''],
+  commodity: [''],
   certification: '',
   nameOfOwnerManager: '',
   province: '',
@@ -52,7 +63,16 @@ export default function OrganicPostMarketForm() {
   const [form, setForm] = useState(initialState)
   const { submit, loading, message, setMessage } = useFormSubmit('organicPostMarket')
   
-  const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+  const update = (key, value) => {
+    setForm((f) => {
+      const next = { ...f, [key]: value }
+      if (key === 'dateOfCommunicationLetter' && value) {
+        const derived = semesterFromDate(value)
+        if (derived) next.semester = derived
+      }
+      return next
+    })
+  }
   const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
 
   const handleAttachmentChange = (e) => {
@@ -79,12 +99,27 @@ export default function OrganicPostMarketForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const ok = await submit(form)
+    const payload = {
+      ...form,
+      nameOfProduct: Array.isArray(form.nameOfProduct) ? form.nameOfProduct.filter((s) => s != null && String(s).trim() !== '') : [form.nameOfProduct].filter(Boolean),
+      commodity: Array.isArray(form.commodity) ? form.commodity.filter((s) => s != null && String(s).trim() !== '') : [form.commodity].filter(Boolean),
+    }
+    if (!payload.semester && payload.dateOfCommunicationLetter) {
+      payload.semester = semesterFromDate(payload.dateOfCommunicationLetter)
+    }
+    const ok = await submit(payload)
     if (ok) {
       setForm(initialState)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
+
+  const setProductItem = (index, val) => setForm((f) => ({ ...f, nameOfProduct: f.nameOfProduct.map((v, i) => (i === index ? val : v)) }))
+  const addProduct = () => setForm((f) => ({ ...f, nameOfProduct: [...f.nameOfProduct, ''] }))
+  const removeProduct = (index) => setForm((f) => ({ ...f, nameOfProduct: f.nameOfProduct.filter((_, i) => i !== index) }))
+  const setCommodityItem = (index, val) => setForm((f) => ({ ...f, commodity: f.commodity.map((v, i) => (i === index ? val : v)) }))
+  const addCommodity = () => setForm((f) => ({ ...f, commodity: [...f.commodity, ''] }))
+  const removeCommodity = (index) => setForm((f) => ({ ...f, commodity: f.commodity.filter((_, i) => i !== index) }))
 
   // --- STYLING (app theme: green #1e4d2b, khaki #b8a066) ---
   const sectionTitleClass = "text-sm font-black text-[#1e4d2b] uppercase tracking-wide border-b-2 border-[#1e4d2b]/15 pb-3 mb-5 flex items-center gap-2.5 transition-colors duration-300"
@@ -143,6 +178,7 @@ export default function OrganicPostMarketForm() {
             <div>
               <label className={labelClass}>Semester</label>
               <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+              <p className="text-[10px] text-[#5c7355] mt-1">Auto-filled from Date of Communication Letter (Jan–Jun = 1st Sem, Jul–Dec = 2nd Sem)</p>
             </div>
           </div>
         </div>
@@ -208,33 +244,61 @@ export default function OrganicPostMarketForm() {
               </div>
             </div>
 
-            {/* Product Name - 6 Cols */}
+            {/* Product Name - 6 Cols (multiple entries + Add) */}
             <div className="sm:col-span-6">
               <label className={labelClass}>Name of Product</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Tag className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
-                </div>
-                <input 
-                  type="text" 
-                  value={form.nameOfProduct} 
-                  onChange={updateUpper('nameOfProduct')} 
-                  className={`${inputClass} pl-10`} 
-                  placeholder="Product Brand/Name" 
-                />
+              <div className="space-y-2">
+                {(Array.isArray(form.nameOfProduct) ? form.nameOfProduct : [form.nameOfProduct || '']).map((item, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <div className="relative group flex-1 min-w-0">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Tag className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                      </div>
+                      <input
+                        type="text"
+                        value={item}
+                        onChange={(e) => setProductItem(i, (e.target.value || '').toUpperCase())}
+                        className={`${inputClass} pl-10`}
+                        placeholder="Product Brand/Name"
+                      />
+                    </div>
+                    {(Array.isArray(form.nameOfProduct) ? form.nameOfProduct : []).length > 1 && (
+                      <button type="button" onClick={() => removeProduct(i)} className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl shrink-0" title="Remove">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={addProduct} className="inline-flex items-center gap-2 px-3 py-2.5 border-2 border-dashed border-[#1e4d2b]/40 text-[#1e4d2b] rounded-xl font-bold text-sm hover:bg-[#1e4d2b]/10 transition-all">
+                  <Plus className="h-4 w-4" /> Add
+                </button>
               </div>
             </div>
 
-            {/* Commodity - 3 Cols */}
+            {/* Commodity - 3 Cols (multiple entries + Add) */}
             <div className="sm:col-span-3">
               <label className={labelClass}>Commodity</label>
-              <input 
-                type="text" 
-                value={form.commodity} 
-                onChange={updateUpper('commodity')} 
-                className={inputClass} 
-                placeholder="e.g. Rice" 
-              />
+              <div className="space-y-2">
+                {(Array.isArray(form.commodity) ? form.commodity : [form.commodity || '']).map((item, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={item}
+                      onChange={(e) => setCommodityItem(i, (e.target.value || '').toUpperCase())}
+                      className={inputClass}
+                      placeholder="e.g. Rice"
+                    />
+                    {(Array.isArray(form.commodity) ? form.commodity : []).length > 1 && (
+                      <button type="button" onClick={() => removeCommodity(i)} className="p-2.5 text-red-600 bg-red-50 hover:bg-red-100 rounded-xl shrink-0" title="Remove">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                <button type="button" onClick={addCommodity} className="inline-flex items-center gap-2 px-3 py-2.5 border-2 border-dashed border-[#1e4d2b]/40 text-[#1e4d2b] rounded-xl font-bold text-sm hover:bg-[#1e4d2b]/10 transition-all">
+                  <Plus className="h-4 w-4" /> Add
+                </button>
+              </div>
             </div>
 
             {/* Certification - 3 Cols */}

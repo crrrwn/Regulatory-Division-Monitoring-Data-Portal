@@ -26,6 +26,15 @@ const STATUS_OPTIONS = ['Pending', 'On-Process', 'Approved', 'Denied']
 
 const SEMESTER_OPTIONS = [{ value: '', label: 'Select semester...' }, { value: '1st Semester', label: '1st Semester' }, { value: '2nd Semester', label: '2nd Semester' }]
 
+/** Derive semester from date (Jan–Jun = 1st Semester, Jul–Dec = 2nd Semester). Returns '' if invalid. */
+function semesterFromDate(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return ''
+  const dt = new Date(dateStr)
+  if (Number.isNaN(dt.getTime())) return ''
+  const month = dt.getMonth() + 1
+  return month <= 6 ? '1st Semester' : '2nd Semester'
+}
+
 const initialState = {
   explorationPermitApplicationNo: '',
   semester: '',
@@ -60,7 +69,16 @@ export default function SafdzValidationForm() {
   const [form, setForm] = useState(initialState)
   const { submit, loading, message, setMessage } = useFormSubmit('safdzValidation')
 
-  const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
+  const update = (key, value) => {
+    setForm((f) => {
+      const next = { ...f, [key]: value }
+      if (key === 'dateReceived' && value) {
+        const derived = semesterFromDate(value)
+        if (derived) next.semester = derived
+      }
+      return next
+    })
+  }
   const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
 
   const handleAttachmentChange = (e) => {
@@ -83,7 +101,11 @@ export default function SafdzValidationForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const ok = await submit(form)
+    const payload = { ...form }
+    if (!payload.semester && payload.dateReceived) {
+      payload.semester = semesterFromDate(payload.dateReceived)
+    }
+    const ok = await submit(payload)
     if (ok) {
       setForm(initialState)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -129,6 +151,7 @@ export default function SafdzValidationForm() {
             <div>
               <label className={labelClass}>Semester</label>
               <AppSelect value={form.semester} onChange={(v) => update('semester', v)} placeholder="Select semester..." options={SEMESTER_OPTIONS} aria-label="Semester" />
+              <p className="text-[10px] text-[#5c7355] mt-1">Auto-filled from Date Received (Jan–Jun = 1st Sem, Jul–Dec = 2nd Sem)</p>
             </div>
             <div>
               <label className={labelClass}>Exploration Permit App. No.</label>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
-import { collection, query, limit, onSnapshot, deleteDoc, doc, updateDoc } from 'firebase/firestore'
+import { collection, query, limit, onSnapshot, deleteDoc, doc, updateDoc, addDoc } from 'firebase/firestore'
 import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
@@ -19,6 +19,9 @@ import {
   PROVINCES,
 } from '../lib/recordFilters'
 import { exportToExcel } from '../lib/exportExcel'
+import { TRANSPORT_FIRST_SEM_REG_NOS, TRANSPORT_SECOND_SEM_REG_NOS, TRANSPORT_MASTER_LIST } from '../lib/transportCarrierSemesterList'
+import { GAP_CERT_MASTER_LIST, MONITORING_MASTER_LIST, normalizeNameForGAP, normalizeDateForGAP } from '../lib/goodAgriPracticesSemesterList'
+import { SAFDZ_MASTER_LIST } from '../lib/safdzValidationMasterList'
 import AppSelect from '../components/AppSelect'
 
 // --- HELPER FUNCTIONS ---
@@ -89,6 +92,7 @@ export default function ViewRecords() {
   const [filterYear, setFilterYear] = useState('')
   const [filterSemester, setFilterSemester] = useState('')
   const [filterProvince, setFilterProvince] = useState('')
+  const [filterFormType, setFilterFormType] = useState('') // Good Agri Practices only: '' | 'gapCertification' | 'monitoring' | 'other'
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({})
   const [exporting, setExporting] = useState(false)
@@ -123,6 +127,9 @@ export default function ViewRecords() {
   const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB, same as forms (Firestore doc limit ~1 MB)
 
   useEffect(() => setSelectedIds(new Set()), [selectedCollection])
+  useEffect(() => {
+    if (selectedCollection !== 'goodAgriPractices') setFilterFormType('')
+  }, [selectedCollection])
 
   useEffect(() => {
     setLoadError(null)
@@ -159,8 +166,16 @@ export default function ViewRecords() {
     filtered = filtered.filter((d) => getProvinceFromDoc(d) === filterProvince)
   }
 
-  // GoodAgriPractices: split for separate GAP Certification vs Monitoring sections in table and print
   const isGAP = selectedCollection === 'goodAgriPractices'
+  if (isGAP && filterFormType) {
+    if (filterFormType === 'other') {
+      filtered = filtered.filter((d) => d.formType !== 'gapCertification' && d.formType !== 'monitoring')
+    } else {
+      filtered = filtered.filter((d) => d.formType === filterFormType)
+    }
+  }
+
+  // GoodAgriPractices: split for separate GAP Certification vs Monitoring sections in table and print (uses filtered above)
   const filteredGapCert = isGAP ? filtered.filter((d) => d.formType === 'gapCertification') : []
   const filteredGapMonitoring = isGAP ? filtered.filter((d) => d.formType === 'monitoring') : []
   const filteredGapOther = isGAP ? filtered.filter((d) => d.formType !== 'gapCertification' && d.formType !== 'monitoring') : []
@@ -171,7 +186,7 @@ export default function ViewRecords() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedCollection, search, filterYear, filterSemester, filterProvince])
+  }, [selectedCollection, search, filterYear, filterSemester, filterProvince, filterFormType])
   useEffect(() => {
     if (currentPage > totalPages) setCurrentPage(totalPages)
   }, [totalPages, currentPage])
@@ -526,7 +541,8 @@ export default function ViewRecords() {
         '2022-DARFO-IV-B-0001481',
       ])
 
-      const toUpdate = docs
+      // 1) Assign by registration number list (known 1st / 2nd sem)
+      let toUpdate = docs
         .filter((d) => !d.semester && typeof d.registrationNo === 'string' && d.registrationNo.trim() !== '')
         .map((d) => {
           const reg = d.registrationNo.trim()
@@ -536,11 +552,28 @@ export default function ViewRecords() {
         })
         .filter(Boolean)
 
+      const updatedIds = new Set(toUpdate.map((x) => x.id))
+      const dateField = 'dateOfApplicationReceivedAndEvaluated'
+
+      // 2) For records still without semester, derive from date (Jan–Jun = 1st, Jul–Dec = 2nd)
+      docs
+        .filter((d) => !d.semester && !updatedIds.has(d.id) && d[dateField])
+        .forEach((d) => {
+          const raw = d[dateField]
+          const dt = raw && typeof raw.toDate === 'function' ? raw.toDate() : raw ? new Date(raw) : null
+          if (dt && !Number.isNaN(dt.getTime())) {
+            const month = dt.getMonth() + 1
+            const semester = month <= 6 ? '1st Semester' : '2nd Semester'
+            toUpdate.push({ id: d.id, semester })
+            updatedIds.add(d.id)
+          }
+        })
+
       if (toUpdate.length === 0) {
         showNotification({
           type: 'info',
-          title: 'No matching records',
-          message: 'No Livestock Handlers records without semester matched the provided registration numbers.',
+          title: 'No records to update',
+          message: 'No Livestock Handlers records without semester. Or add "Date of Application Received and Evaluated" so semester can be derived from date.',
         })
         return
       }
@@ -573,9 +606,554 @@ export default function ViewRecords() {
       return
     }
 
+    // Transport Carrier: 1st/2nd semester from master list, then by date; add missing records from list
+    if (selectedCollection === 'transportCarrier') {
+      const firstSemRegs = new Set(TRANSPORT_FIRST_SEM_REG_NOS)
+      const secondSemRegs = new Set(TRANSPORT_SECOND_SEM_REG_NOS)
+      const dateField = 'dateOfApplicationReceivedAndEvaluated'
+
+      // 1) Assign by registration number list
+      let toUpdate = docs
+        .filter((d) => !d.semester && typeof d.registrationNo === 'string' && d.registrationNo.trim() !== '')
+        .map((d) => {
+          const reg = d.registrationNo.trim()
+          if (firstSemRegs.has(reg)) return { id: d.id, semester: '1st Semester', reg }
+          if (secondSemRegs.has(reg)) return { id: d.id, semester: '2nd Semester', reg }
+          return null
+        })
+        .filter(Boolean)
+
+      const updatedIds = new Set(toUpdate.map((x) => x.id))
+
+      // 2) For records still without semester, derive from date (Jan–Jun = 1st, Jul–Dec = 2nd)
+      docs
+        .filter((d) => !d.semester && !updatedIds.has(d.id) && d[dateField])
+        .forEach((d) => {
+          const raw = d[dateField]
+          const dt = raw && typeof raw.toDate === 'function' ? raw.toDate() : raw ? new Date(raw) : null
+          if (dt && !Number.isNaN(dt.getTime())) {
+            const month = dt.getMonth() + 1
+            const semester = month <= 6 ? '1st Semester' : '2nd Semester'
+            toUpdate.push({ id: d.id, semester })
+            updatedIds.add(d.id)
+          }
+        })
+
+      const existingRegNos = new Set(docs.map((d) => (d.registrationNo && String(d.registrationNo).trim()) || '').filter(Boolean))
+
+      // 3) Add missing records: in master list but not in system (with Date of Application for year segregation)
+      const uniqueToAdd = []
+      const seenReg = new Set()
+      TRANSPORT_MASTER_LIST.forEach((entry) => {
+        const reg = (entry.registrationNo && String(entry.registrationNo).trim()) || ''
+        if (!reg || existingRegNos.has(reg) || seenReg.has(reg)) return
+        seenReg.add(reg)
+        uniqueToAdd.push({
+          registrationNo: reg,
+          semester: entry.semester,
+          dateOfApplicationReceivedAndEvaluated: entry.dateOfApplicationReceivedAndEvaluated || null,
+        })
+      })
+
+      try {
+        setBackfillingSemester(true)
+
+        if (toUpdate.length > 0) {
+          await Promise.all(
+            toUpdate.map((item) =>
+              updateDoc(doc(db, 'transportCarrier', item.id), {
+                semester: item.semester,
+              })
+            )
+          )
+        }
+
+        if (uniqueToAdd.length > 0) {
+          const collRef = collection(db, 'transportCarrier')
+          await Promise.all(
+            uniqueToAdd.map((item) => {
+              const { dateOfApplicationReceivedAndEvaluated, ...rest } = item
+              return addDoc(collRef, {
+                ...rest,
+                ...(dateOfApplicationReceivedAndEvaluated && { dateOfApplicationReceivedAndEvaluated }),
+                typeOfApplication: 'TRANSPORT CARRIER',
+                createdBy: user?.uid || null,
+              })
+            })
+          )
+        }
+
+        const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+        const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+        const parts = []
+        if (toUpdate.length > 0) parts.push(`Updated ${firstCount} to 1st Semester and ${secondCount} to 2nd Semester.`)
+        if (uniqueToAdd.length > 0) parts.push(`Added ${uniqueToAdd.length} missing record(s) from master list.`)
+        showNotification({
+          type: 'success',
+          title: 'Transport Carrier semester',
+          message: parts.length ? parts.join(' ') : 'No records to update or add.',
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update Transport Carrier',
+          message: err?.message || 'There was a problem updating or adding records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
+    // Good Agri Practices: match by date + name to master list (GAP Certification / Monitoring); fallback to date-derived semester
+    if (selectedCollection === 'goodAgriPractices') {
+      const certLookup = new Map()
+      GAP_CERT_MASTER_LIST.forEach((row) => {
+        const key = `${normalizeDateForGAP(row.dateOfRequest)}|${normalizeNameForGAP(row.nameOfApplicant)}`
+        certLookup.set(key, row.semester)
+      })
+      const monitoringLookup = new Map()
+      MONITORING_MASTER_LIST.forEach((row) => {
+        const key = `${normalizeDateForGAP(row.dateOfMonitoring)}|${normalizeNameForGAP(row.nameOfFarmer)}`
+        monitoringLookup.set(key, row.semester)
+      })
+
+      const dateFields = ['dateOfRequest', 'dateOfMonitoring']
+      const toUpdate = []
+      docs
+        .filter((d) => !d.semester)
+        .forEach((d) => {
+          const formType = d.formType
+          const isCert = formType === 'gapCertification'
+          const isMonitoring = formType === 'monitoring'
+          const dateField = isCert ? 'dateOfRequest' : isMonitoring ? 'dateOfMonitoring' : null
+          const nameField = isCert ? 'nameOfApplicant' : isMonitoring ? 'nameOfFarmer' : null
+          const lookup = isCert ? certLookup : isMonitoring ? monitoringLookup : null
+
+          let raw = null
+          for (const field of dateFields) {
+            if (d[field] != null && d[field] !== '') {
+              raw = d[field]
+              break
+            }
+          }
+          if (!raw) return
+          const normDate = normalizeDateForGAP(raw)
+          if (!normDate) return
+
+          let semester = null
+          if (lookup && nameField && (d[nameField] != null && d[nameField] !== '')) {
+            const key = `${normDate}|${normalizeNameForGAP(d[nameField])}`
+            semester = lookup.get(key)
+          }
+          if (!semester) {
+            const dt = raw && typeof raw.toDate === 'function' ? raw.toDate() : raw ? new Date(raw) : null
+            if (!dt || Number.isNaN(dt.getTime())) return
+            const month = dt.getMonth() + 1
+            semester = month <= 6 ? '1st Semester' : '2nd Semester'
+          }
+          toUpdate.push({ id: d.id, semester })
+        })
+
+      if (toUpdate.length === 0) {
+        showNotification({
+          type: 'success',
+          title: 'Nothing to update',
+          message: 'All Good Agri Practices records already have a semester value, or no date (Date of Request / Date of Monitoring) to derive from.',
+        })
+        return
+      }
+
+      try {
+        setBackfillingSemester(true)
+        await Promise.all(
+          toUpdate.map((item) =>
+            updateDoc(doc(db, 'goodAgriPractices', item.id), {
+              semester: item.semester,
+            })
+          )
+        )
+        const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+        const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+        showNotification({
+          type: 'success',
+          title: 'Semester filled',
+          message: `Updated ${firstCount} record(s) to 1st Semester and ${secondCount} record(s) to 2nd Semester for Good Agri Practices.`,
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update semester',
+          message: err?.message || 'There was a problem updating the records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
+    // Organic Agriculture: derive semester from Date of Application (Jan–Jun = 1st Semester, Jul–Dec = 2nd Semester)
+    // Tries: dateOfApplication → dateOfEvaluation → application (in case date was stored as text from Excel import)
+    if (selectedCollection === 'organicAgri') {
+      const parseDate = (raw) => {
+        if (raw == null || raw === '') return null
+        const dt = raw && typeof raw.toDate === 'function' ? raw.toDate() : new Date(raw)
+        return dt && !Number.isNaN(dt.getTime()) ? dt : null
+      }
+      const dateFields = ['dateOfApplication', 'dateOfEvaluation', 'application']
+      const toUpdate = []
+      docs
+        .filter((d) => !d.semester)
+        .forEach((d) => {
+          let dt = null
+          for (const field of dateFields) {
+            const raw = d[field]
+            if (raw == null || raw === '') continue
+            dt = parseDate(raw)
+            if (dt) break
+          }
+          if (dt) {
+            const month = dt.getMonth() + 1
+            const semester = month <= 6 ? '1st Semester' : '2nd Semester'
+            toUpdate.push({ id: d.id, semester })
+          }
+        })
+
+      if (toUpdate.length === 0) {
+        const withSemester = docs.filter((d) => d.semester).length
+        const withoutDate = docs.filter((d) => !d.semester).length
+        const msg = withSemester === docs.length
+          ? 'All Organic Agriculture records already have a semester.'
+          : withoutDate > 0
+            ? `${withoutDate} record(s) have no semester and no date field (Date of Application, Date of Evaluation, or Application) to derive from. Add a date in Edit Record.`
+            : 'No records to update.'
+        showNotification({
+          type: 'info',
+          title: 'Nothing to update',
+          message: msg,
+        })
+        return
+      }
+
+      try {
+        setBackfillingSemester(true)
+        await Promise.all(
+          toUpdate.map((item) =>
+            updateDoc(doc(db, 'organicAgri', item.id), {
+              semester: item.semester,
+            })
+          )
+        )
+        const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+        const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+        showNotification({
+          type: 'success',
+          title: 'Semester filled',
+          message: `Organic Agriculture: ${firstCount} record(s) → 1st Semester, ${secondCount} record(s) → 2nd Semester (based on Date of Application).`,
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update semester',
+          message: err?.message || 'There was a problem updating the records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
+    // Organic Post Market: derive semester from Date of Communication Letter (Jan–Jun = 1st Semester, Jul–Dec = 2nd Semester)
+    // Tries: dateOfCommunicationLetter → requestLetterDate → dateOfSurveillance (fallbacks for imported records)
+    if (selectedCollection === 'organicPostMarket') {
+      const parseDate = (raw) => {
+        if (raw == null || raw === '') return null
+        const dt = raw && typeof raw.toDate === 'function' ? raw.toDate() : new Date(raw)
+        return dt && !Number.isNaN(dt.getTime()) ? dt : null
+      }
+      const dateFields = ['dateOfCommunicationLetter', 'requestLetterDate', 'dateOfSurveillance']
+      const toUpdate = []
+      docs
+        .filter((d) => !d.semester)
+        .forEach((d) => {
+          let dt = null
+          for (const field of dateFields) {
+            const raw = d[field]
+            if (raw == null || raw === '') continue
+            dt = parseDate(raw)
+            if (dt) break
+          }
+          if (dt) {
+            const month = dt.getMonth() + 1
+            const semester = month <= 6 ? '1st Semester' : '2nd Semester'
+            toUpdate.push({ id: d.id, semester })
+          }
+        })
+
+      if (toUpdate.length === 0) {
+        const withSemester = docs.filter((d) => d.semester).length
+        const withoutDate = docs.filter((d) => !d.semester).length
+        const msg = withSemester === docs.length
+          ? 'All Organic Post Market records already have a semester.'
+          : withoutDate > 0
+            ? `${withoutDate} record(s) have no semester and no date field (Date of Communication Letter, Request Letter Date, or Date of Surveillance) to derive from. Add a date in Edit Record.`
+            : 'No records to update.'
+        showNotification({
+          type: 'info',
+          title: 'Nothing to update',
+          message: msg,
+        })
+        return
+      }
+
+      try {
+        setBackfillingSemester(true)
+        await Promise.all(
+          toUpdate.map((item) =>
+            updateDoc(doc(db, 'organicPostMarket', item.id), {
+              semester: item.semester,
+            })
+          )
+        )
+        const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+        const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+        showNotification({
+          type: 'success',
+          title: 'Semester filled',
+          message: `Organic Post Market: ${firstCount} record(s) → 1st Semester, ${secondCount} record(s) → 2nd Semester (based on Date of Communication Letter).`,
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update semester',
+          message: err?.message || 'There was a problem updating the records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
+    // Land Use Matter: derive semester from Date of Request (Jan–Jun = 1st Semester, Jul–Dec = 2nd Semester)
+    // Tries: dateOfRequest → dateReceivedAndEvaluated → dateOfEndorsement (fallbacks for imported records)
+    if (selectedCollection === 'landUseMatter') {
+      const parseDate = (raw) => {
+        if (raw == null || raw === '') return null
+        const dt = raw && typeof raw.toDate === 'function' ? raw.toDate() : new Date(raw)
+        return dt && !Number.isNaN(dt.getTime()) ? dt : null
+      }
+      const dateFields = ['dateOfRequest', 'dateReceivedAndEvaluated', 'dateOfEndorsement']
+      const toUpdate = []
+      docs
+        .filter((d) => !d.semester)
+        .forEach((d) => {
+          let dt = null
+          for (const field of dateFields) {
+            const raw = d[field]
+            if (raw == null || raw === '') continue
+            dt = parseDate(raw)
+            if (dt) break
+          }
+          if (dt) {
+            const month = dt.getMonth() + 1
+            const semester = month <= 6 ? '1st Semester' : '2nd Semester'
+            toUpdate.push({ id: d.id, semester })
+          }
+        })
+
+      if (toUpdate.length === 0) {
+        const withSemester = docs.filter((d) => d.semester).length
+        const withoutDate = docs.filter((d) => !d.semester).length
+        const msg = withSemester === docs.length
+          ? 'All Land Use Matter records already have a semester.'
+          : withoutDate > 0
+            ? `${withoutDate} record(s) have no semester and no date field (Date of Request, Date Received and Evaluated, or Date of Endorsement) to derive from. Add a date in Edit Record.`
+            : 'No records to update.'
+        showNotification({
+          type: 'info',
+          title: 'Nothing to update',
+          message: msg,
+        })
+        return
+      }
+
+      try {
+        setBackfillingSemester(true)
+        await Promise.all(
+          toUpdate.map((item) =>
+            updateDoc(doc(db, 'landUseMatter', item.id), {
+              semester: item.semester,
+            })
+          )
+        )
+        const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+        const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+        showNotification({
+          type: 'success',
+          title: 'Semester filled',
+          message: `Land Use Matter: ${firstCount} record(s) → 1st Semester, ${secondCount} record(s) → 2nd Semester (based on Date of Request).`,
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update semester',
+          message: err?.message || 'There was a problem updating the records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
+    // SAFDZ Validation: sync to master list (6 records only), fill semester, add missing
+    // Keeps ONLY records that match the master list; removes others; adds missing
+    if (selectedCollection === 'safdzValidation') {
+      const parseDate = (raw) => {
+        if (raw == null || raw === '') return null
+        const dt = raw && typeof raw.toDate === 'function' ? raw.toDate() : new Date(raw)
+        return dt && !Number.isNaN(dt.getTime()) ? dt : null
+      }
+      const toYyyyMmDd = (raw) => {
+        const dt = parseDate(raw)
+        if (!dt) return ''
+        return dt.toISOString().slice(0, 10)
+      }
+      const masterListKeys = new Set()
+      SAFDZ_MASTER_LIST.forEach((entry) => {
+        const epa = (entry.explorationPermitApplicationNo && String(entry.explorationPermitApplicationNo).trim()) || ''
+        const name = (entry.nameOfApplicant && String(entry.nameOfApplicant).trim()) || ''
+        const date = (entry.dateReceived && String(entry.dateReceived).slice(0, 10)) || ''
+        masterListKeys.add(`${epa}|${name}|${date}`)
+      })
+
+      const toDelete = []
+      docs.forEach((d) => {
+        const epa = (d.explorationPermitApplicationNo && String(d.explorationPermitApplicationNo).trim()) || ''
+        const name = (d.nameOfApplicant && String(d.nameOfApplicant).trim()) || ''
+        const date = toYyyyMmDd(d.dateReceived)
+        const key = `${epa}|${name}|${date}`
+        if (!masterListKeys.has(key)) toDelete.push({ id: d.id, name: name || epa || d.id })
+      })
+
+      if (toDelete.length > 0 && !window.confirm(
+        `${toDelete.length} record(s) are not in the master list and will be removed. SAFDZ Validation will contain only the 6 master list records. Continue?`
+      )) return
+
+      const dateFields = ['dateReceived', 'dateOfReplyToRequest', 'endorsementToBSWM']
+      const toUpdate = []
+      docs
+        .filter((d) => !toDelete.some((x) => x.id === d.id) && !d.semester)
+        .forEach((d) => {
+          let dt = null
+          for (const field of dateFields) {
+            const raw = d[field]
+            if (raw == null || raw === '') continue
+            dt = parseDate(raw)
+            if (dt) break
+          }
+          if (dt) {
+            const month = dt.getMonth() + 1
+            const semester = month <= 6 ? '1st Semester' : '2nd Semester'
+            toUpdate.push({ id: d.id, semester })
+          }
+        })
+
+      const existingKeys = new Set()
+      docs.filter((d) => !toDelete.some((x) => x.id === d.id)).forEach((d) => {
+        const epa = (d.explorationPermitApplicationNo && String(d.explorationPermitApplicationNo).trim()) || ''
+        const name = (d.nameOfApplicant && String(d.nameOfApplicant).trim()) || ''
+        const date = toYyyyMmDd(d.dateReceived)
+        if (epa || name || date) existingKeys.add(`${epa}|${name}|${date}`)
+      })
+
+      const uniqueToAdd = []
+      const seenKey = new Set()
+      SAFDZ_MASTER_LIST.forEach((entry) => {
+        const epa = (entry.explorationPermitApplicationNo && String(entry.explorationPermitApplicationNo).trim()) || ''
+        const name = (entry.nameOfApplicant && String(entry.nameOfApplicant).trim()) || ''
+        const date = (entry.dateReceived && String(entry.dateReceived).slice(0, 10)) || ''
+        const key = `${epa}|${name}|${date}`
+        if (!key || existingKeys.has(key) || seenKey.has(key)) return
+        seenKey.add(key)
+        uniqueToAdd.push({
+          explorationPermitApplicationNo: epa,
+          nameOfApplicant: name,
+          dateReceived: date || null,
+          semester: entry.semester || (parseDate(date) ? (new Date(date).getMonth() + 1 <= 6 ? '1st Semester' : '2nd Semester') : null),
+          province: entry.province || null,
+          location: entry.location || null,
+          area: entry.area || null,
+          dateOfReplyToRequest: entry.dateOfReplyToRequest || null,
+          endorsementToBSWM: entry.endorsementToBSWM || null,
+          endorsementToMGB: entry.endorsementToMGB || null,
+          fieldValidation: entry.fieldValidation || null,
+        })
+      })
+
+      if (toDelete.length === 0 && toUpdate.length === 0 && uniqueToAdd.length === 0) {
+        showNotification({
+          type: 'info',
+          title: 'Nothing to update',
+          message: 'SAFDZ Validation already has exactly the 6 master list records with semester filled.',
+        })
+        return
+      }
+
+      try {
+        setBackfillingSemester(true)
+        if (toDelete.length > 0) {
+          for (const item of toDelete) {
+            await deleteDoc(doc(db, 'safdzValidation', item.id))
+          }
+        }
+        if (toUpdate.length > 0) {
+          await Promise.all(
+            toUpdate.map((item) =>
+              updateDoc(doc(db, 'safdzValidation', item.id), {
+                semester: item.semester,
+              })
+            )
+          )
+        }
+        if (uniqueToAdd.length > 0) {
+          const collRef = collection(db, 'safdzValidation')
+          await Promise.all(
+            uniqueToAdd.map((item) =>
+              addDoc(collRef, {
+                ...item,
+                createdBy: user?.uid || null,
+              })
+            )
+          )
+        }
+        const parts = []
+        if (toDelete.length > 0) parts.push(`Removed ${toDelete.length} record(s) not in master list.`)
+        if (toUpdate.length > 0) {
+          const firstCount = toUpdate.filter((x) => x.semester === '1st Semester').length
+          const secondCount = toUpdate.filter((x) => x.semester === '2nd Semester').length
+          parts.push(`Updated ${firstCount} to 1st Semester and ${secondCount} to 2nd Semester.`)
+        }
+        if (uniqueToAdd.length > 0) parts.push(`Added ${uniqueToAdd.length} missing record(s).`)
+        showNotification({
+          type: 'success',
+          title: 'SAFDZ Validation',
+          message: parts.length ? parts.join(' ') : 'Sync complete. 6 records only.',
+        })
+      } catch (err) {
+        showNotification({
+          type: 'error',
+          title: 'Failed to update SAFDZ Validation',
+          message: err?.message || 'There was a problem syncing records.',
+        })
+      } finally {
+        setBackfillingSemester(false)
+      }
+      return
+    }
+
     // Generic fallback: derive semester from the unit's primary date field (Jan–Jun = 1st, Jul–Dec = 2nd)
-    const dateField = COLLECTION_DATE_FIELD_FOR_YEAR[selectedCollection]
-    if (!dateField) {
+    const dateFieldOrFields = COLLECTION_DATE_FIELD_FOR_YEAR[selectedCollection]
+    if (!dateFieldOrFields) {
       showNotification({
         type: 'info',
         title: 'Backfill not configured',
@@ -584,7 +1162,11 @@ export default function ViewRecords() {
       return
     }
 
-    const candidates = docs.filter((d) => !d.semester && d[dateField])
+    const dateFields = Array.isArray(dateFieldOrFields) ? dateFieldOrFields : [dateFieldOrFields]
+    const candidates = docs.filter((d) => {
+      if (d.semester) return false
+      return dateFields.some((f) => d[f] != null && d[f] !== '')
+    })
     if (candidates.length === 0) {
       showNotification({
         type: 'success',
@@ -596,8 +1178,14 @@ export default function ViewRecords() {
 
     const toUpdate = []
     candidates.forEach((d) => {
-      const raw = d[dateField]
-      const dt = raw ? new Date(raw) : null
+      let raw = null
+      for (const field of dateFields) {
+        if (d[field] != null && d[field] !== '') {
+          raw = d[field]
+          break
+        }
+      }
+      const dt = raw && typeof raw.toDate === 'function' ? raw.toDate() : raw ? new Date(raw) : null
       if (!dt || Number.isNaN(dt.getTime())) return
       const month = dt.getMonth() + 1
       const semester = month <= 6 ? '1st Semester' : '2nd Semester'
@@ -837,6 +1425,10 @@ export default function ViewRecords() {
     if (filterYear) metaParts.push(`Year: ${formatYearLabel(filterYear)}`)
     if (filterSemester) metaParts.push(`Semester: ${filterSemester}`)
     if (filterProvince) metaParts.push(`Province: ${filterProvince}`)
+    if (selectedCollection === 'goodAgriPractices' && filterFormType) {
+      const formTypeLabel = filterFormType === 'gapCertification' ? 'GAP Certification' : filterFormType === 'monitoring' ? 'Monitoring of GAP Certified Farmer' : 'Other'
+      metaParts.push(`Form Type: ${formTypeLabel}`)
+    }
     metaParts.push(`Printed: ${new Date().toLocaleString()}`)
     metaParts.push(`Total: ${filtered.length} record(s)`)
     const metaLine = metaParts.join(' • ')
@@ -963,7 +1555,12 @@ export default function ViewRecords() {
     )) return
     setExporting(true)
     try {
-      await exportToExcel(filtered, selectedCollection, collectionLabel)
+      await exportToExcel(filtered, selectedCollection, collectionLabel, {
+        filterYear,
+        filterSemester,
+        filterProvince,
+        formatYearLabel,
+      })
     } catch (err) {
       alert(err.message || 'Export failed.')
     }
@@ -980,6 +1577,12 @@ export default function ViewRecords() {
     { value: '5', label: 'Excellent (5)' },
   ]
 
+  const SEMESTER_OPTIONS_EDIT = [
+    { value: '', label: 'Select semester...' },
+    { value: '1st Semester', label: '1st Semester' },
+    { value: '2nd Semester', label: '2nd Semester' },
+  ]
+
   // Keys that should use date input (settable date picker)
   const isDateField = (k) => {
     if (!k || typeof k !== 'string') return false
@@ -989,7 +1592,11 @@ export default function ViewRecords() {
 
   const toDateInputValue = (val) => {
     if (val == null || val === '') return ''
-    if (typeof val === 'string') return val.slice(0, 10)
+    if (typeof val === 'string') {
+      const s = val.trim().slice(0, 10)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s
+      return ''
+    }
     if (val && typeof val.toDate === 'function') return val.toDate().toISOString().slice(0, 10)
     return ''
   }
@@ -1010,6 +1617,20 @@ export default function ViewRecords() {
             className="w-full"
           />
         </div>
+      )
+    }
+
+    if (key === 'semester') {
+      const semesterValue = value != null && value !== '' ? String(value) : ''
+      return (
+        <AppSelect
+          options={SEMESTER_OPTIONS_EDIT}
+          value={semesterValue}
+          onChange={(v) => updateEditField(key, v)}
+          placeholder="Select semester..."
+          aria-label="Semester"
+          className="w-full"
+        />
       )
     }
 
@@ -1104,6 +1725,49 @@ export default function ViewRecords() {
             </a>
           )}
           <input type="url" value={urlVal} onChange={(e) => updateEditField(key, e.target.value)} className={inputClass} placeholder="https://..." />
+        </div>
+      )
+    }
+
+    // Organic Post Market: Name of Product & Commodity — multiple entries with Add (horizontal wrap, compact)
+    if (selectedCollection === 'organicPostMarket' && (key === 'nameOfProduct' || key === 'commodity')) {
+      const arr = Array.isArray(value) ? [...value] : (value != null && value !== '' ? [String(value)] : [''])
+      return (
+        <div className="flex flex-wrap gap-2 items-center">
+          {arr.map((item, i) => (
+            <div key={i} className="flex gap-1.5 items-center min-w-0 max-w-full sm:max-w-[200px]">
+              <input
+                type="text"
+                value={item}
+                onChange={(e) => {
+                  const next = [...arr]
+                  next[i] = e.target.value
+                  updateEditField(key, next)
+                }}
+                className={`${inputClass} min-w-0 flex-1`}
+                placeholder={key === 'nameOfProduct' ? 'Product' : 'e.g. Rice'}
+                aria-label={`${key} ${i + 1}`}
+              />
+              {arr.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => updateEditField(key, arr.filter((_, j) => j !== i))}
+                  className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg shrink-0"
+                  title="Remove"
+                >
+                  <iconify-icon icon="mdi:trash-can-outline" width="16"></iconify-icon>
+                </button>
+              )}
+            </div>
+          ))}
+          <button
+            type="button"
+            onClick={() => updateEditField(key, [...arr, ''])}
+            className="inline-flex items-center gap-1.5 px-2.5 py-2 border-2 border-dashed border-[#1e4d2b]/40 text-[#1e4d2b] rounded-lg font-bold text-xs hover:bg-[#1e4d2b]/10 transition-all shrink-0"
+          >
+            <iconify-icon icon="mdi:plus" width="16"></iconify-icon>
+            Add
+          </button>
         </div>
       )
     }
@@ -1214,7 +1878,7 @@ export default function ViewRecords() {
           </div>
 
           {/* Filter row */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5 lg:items-end">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5 lg:items-end ${selectedCollection === 'goodAgriPractices' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
             <div className="flex flex-col min-w-0">
               <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5 transition-colors duration-300">Select Unit</label>
               <AppSelect
@@ -1285,6 +1949,25 @@ export default function ViewRecords() {
                 className="min-w-0"
               />
             </div>
+            {selectedCollection === 'goodAgriPractices' && (
+              <div className="flex flex-col min-w-0">
+                <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Form Type</label>
+                <AppSelect
+                  value={filterFormType}
+                  onChange={setFilterFormType}
+                  placeholder="All Forms"
+                  options={[
+                    { value: '', label: 'All Forms' },
+                    { value: 'gapCertification', label: 'GAP Certification' },
+                    { value: 'monitoring', label: 'Monitoring of GAP Certified Farmer' },
+                    { value: 'other', label: 'Other' },
+                  ]}
+                  leftIcon={<iconify-icon icon="mdi:file-document-outline" width="18"></iconify-icon>}
+                  aria-label="Form Type"
+                  className="min-w-0"
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1300,7 +1983,7 @@ export default function ViewRecords() {
             </div>
             {role === 'admin' && (
               <div className="flex flex-wrap gap-2">
-                {(selectedCollection === 'animalFeed' || selectedCollection === 'animalWelfare' || selectedCollection === 'livestockHandlers') && (
+                {(selectedCollection === 'animalFeed' || selectedCollection === 'animalWelfare' || selectedCollection === 'livestockHandlers' || selectedCollection === 'transportCarrier' || selectedCollection === 'goodAgriPractices' || selectedCollection === 'plantPestSurveillance' || selectedCollection === 'cfsAdmcc' || selectedCollection === 'animalDiseaseSurveillance' || selectedCollection === 'organicAgri' || selectedCollection === 'organicPostMarket' || selectedCollection === 'landUseMatter' || selectedCollection === 'safdzValidation') && (
                   <button
                     type="button"
                     onClick={backfillSemesterForCurrentUnit}
@@ -1309,17 +1992,6 @@ export default function ViewRecords() {
                   >
                     <iconify-icon icon="mdi:auto-fix" width="16"></iconify-icon>
                     <span>{backfillingSemester ? 'Filling Semesters…' : 'Fill Semester for Existing Records'}</span>
-                  </button>
-                )}
-                {selectedCollection === 'livestockHandlers' && (
-                  <button
-                    type="button"
-                    onClick={clearSemesterForCurrentUnit}
-                    disabled={backfillingSemester}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-red-500/15 text-red-50 border border-red-300/60 hover:bg-red-500/25 hover:border-red-200 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-                  >
-                    <iconify-icon icon="mdi:eraser" width="16"></iconify-icon>
-                    <span>Clear Semester (Livestock Handlers)</span>
                   </button>
                 )}
               </div>

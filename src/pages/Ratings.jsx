@@ -73,6 +73,14 @@ const UNIT_GROUPS = [
   },
 ]
 
+const SCORE_LABELS = {
+  1: 'Poor (1)',
+  2: 'Fair (2)',
+  3: 'Satisfied (3)',
+  4: 'Very Satisfied (4)',
+  5: 'Excellent (5)',
+}
+
 export default function Ratings() {
   const { role, userAllowedSections } = useAuth()
   const { stats } = useAnalytics()
@@ -141,6 +149,61 @@ export default function Ratings() {
             </div>
           </div>
         </div>
+
+        {/* Section score % summary (Poor–Excellent) */}
+        {!selectedRatingUnit && (
+          <div className="mb-6 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/6 overflow-hidden">
+            <div className="px-5 sm:px-6 py-3 bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] border-b border-[#e8e0d4]">
+              <p className="text-[10px] font-black text-[#1e4d2b] uppercase tracking-[0.2em]">Customer Feedback Breakdown (Percentage)</p>
+              <p className="text-[11px] font-semibold text-[#5c7355] mt-1">Per section across all rating questions (Quantity, Services, Training, Attitude, Promptness).</p>
+            </div>
+            <div className="p-4 sm:p-5 overflow-x-auto">
+              <table className="w-full min-w-[720px] text-sm border-collapse">
+                <thead>
+                  <tr className="bg-[#1e4d2b] text-white">
+                    <th className="text-left px-4 py-3 text-[10px] font-black uppercase tracking-wider">Section</th>
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <th key={s} className="text-center px-3 py-3 text-[10px] font-black uppercase tracking-wider">{SCORE_LABELS[s]}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#e8e0d4]">
+                  {visibleGroups.map((group) => {
+                    const counts = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
+                    group.units.forEach((unitId) => {
+                      const byScore = stats.unitRatings?.[unitId]?.byScore || {}
+                      ;[1, 2, 3, 4, 5].forEach((s) => {
+                        const raw = byScore[s] ?? byScore[String(s)]
+                        counts[s] += Number(typeof raw === 'number' ? raw : parseInt(raw, 10) || 0)
+                      })
+                    })
+                    const total = counts[1] + counts[2] + counts[3] + counts[4] + counts[5]
+                    const pct = (s) => (total > 0 ? (counts[s] / total) * 100 : 0)
+                    return (
+                      <tr key={group.title} className="hover:bg-[#faf8f5] transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2 h-2 rounded-full ${group.bgHeader}`} />
+                            <span className="text-[11px] font-black text-[#1e4d2b] uppercase tracking-tight">{group.title}</span>
+                            <span className="text-[10px] font-semibold text-[#8a857c]">({total} response{total !== 1 ? 's' : ''})</span>
+                          </div>
+                        </td>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <td key={s} className="px-3 py-3 text-center">
+                            <div className="flex flex-col items-center gap-1">
+                              <span className="text-sm font-black text-[#2d2a26] tabular-nums">{total > 0 ? pct(s).toFixed(1) : '0.0'}%</span>
+                              <span className="text-[10px] font-semibold text-[#8a857c] tabular-nums">({counts[s]})</span>
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="ratings-content rounded-2xl overflow-hidden bg-[#faf8f5] border-2 border-[#e8e0d4] shadow-lg min-h-[400px]">

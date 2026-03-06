@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { COLLECTIONS } from '../lib/collections'
-import { formatMonthLabel } from '../lib/recordFilters'
+import { formatYearLabel } from '../lib/recordFilters'
 import { useAnalytics } from '../context/AnalyticsContext'
 import {
   FileText,
@@ -15,15 +15,15 @@ export default function Dashboard() {
   const { stats } = useAnalytics()
   const [lastRefreshedAt] = useState(() => new Date())
 
-  // Sorting Logic
-  const sortedMonthEntries = Object.entries(stats.byMonth)
+  // By year: same logic as Master Records (per-unit date field via AnalyticsContext)
+  const byYear = stats.byYear || {}
+  const sortedYearEntries = Object.entries(byYear)
     .sort((a, b) => a[0].localeCompare(b[0]))
-    .slice(-12);
 
   const provinceEntries = Object.entries(stats.byProvince).sort((a, b) => b[1] - a[1]);
   const unitEntries = Object.entries(stats.byUnit).sort((a, b) => b[1].count - a[1].count);
 
-  const maxMonthCount = Math.max(...sortedMonthEntries.map(([, c]) => c), 1);
+  const maxYearCount = Math.max(...sortedYearEntries.map(([, c]) => c), 1);
   const maxUnitCount = Math.max(...unitEntries.map(([, v]) => v.count), 1);
 
   return (
@@ -65,8 +65,8 @@ export default function Dashboard() {
             iconColor="text-white"
           />
           <StatCard 
-            title="Months with Data" 
-            value={Object.keys(stats.byMonth).length} 
+            title="Years with Data" 
+            value={Object.keys(stats.byYear || {}).length} 
             icon={Calendar} 
             gradient="from-[#b8a066] to-[#d4c4a0]"
             iconColor="text-[#153019]"
@@ -82,14 +82,14 @@ export default function Dashboard() {
 
         {/* --- MAIN CHARTS --- */}
         <div className="analytics-section grid lg:grid-cols-3 gap-4 h-full" style={{ animationDelay: '160ms' }}>
-          {/* Monthly Trends */}
+          {/* Yearly Trends */}
           <div className="lg:col-span-2 rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 overflow-hidden flex flex-col min-h-[320px] bg-white group/card hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
              <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-4 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
                <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
                <div className="relative z-10 flex items-center justify-between">
                  <div>
-                   <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Monthly Trends</h3>
-                   <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">Volume over time</p>
+                   <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Trends by Year</h3>
+                   <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">Volume by year</p>
                  </div>
                  <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-[#d4c4a0]">
                    <TrendingUp size={18} />
@@ -104,16 +104,16 @@ export default function Dashboard() {
                      <div key={i} className="w-full h-px bg-[#d4cdc0]/40" />
                    ))}
                  </div>
-                 {sortedMonthEntries.length === 0 ? (
+                 {sortedYearEntries.length === 0 ? (
                    <div className="w-full flex items-center justify-center text-[#5c574f] py-8 rounded-lg border-2 border-dashed border-[#1e4d2b]/25 bg-[#f0f5ee]/80">
                      <span className="text-xs font-medium">No data available</span>
                    </div>
                  ) : (
-                   sortedMonthEntries.map(([month, count]) => {
-                     const pct = maxMonthCount > 0 ? (count / maxMonthCount) * 100 : 0
-                     const isPeak = count === maxMonthCount && maxMonthCount > 0
+                   sortedYearEntries.map(([year, count]) => {
+                     const pct = maxYearCount > 0 ? (count / maxYearCount) * 100 : 0
+                     const isPeak = count === maxYearCount && maxYearCount > 0
                      return (
-                       <div key={month} className="group flex flex-col items-center flex-1 min-w-[32px] sm:min-w-[40px] relative z-10">
+                       <div key={year} className="group flex flex-col items-center flex-1 min-w-[48px] sm:min-w-[56px] relative z-10">
                          <div className="mb-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] -translate-y-1 group-hover:translate-y-0 bg-[#1e4d2b] text-white text-[9px] font-bold px-2 py-1 rounded-md shadow-xl whitespace-nowrap z-20 pointer-events-none border border-white/30 backdrop-blur-sm">
                            {count} <span className="opacity-90">records</span>
                          </div>
@@ -126,7 +126,7 @@ export default function Dashboard() {
                            </div>
                          </div>
                          <div className="mt-2 text-[9px] font-bold text-[#5c574f] truncate w-full text-center group-hover:text-[#1e4d2b] transition-colors duration-300">
-                           {formatMonthLabel(month)}
+                           {formatYearLabel(year)}
                          </div>
                        </div>
                      )
