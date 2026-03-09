@@ -97,6 +97,8 @@ export default function ViewRecords() {
   const [editForm, setEditForm] = useState({})
   const [exporting, setExporting] = useState(false)
   const [deleteConfirming, setDeleteConfirming] = useState(null) // { id, name } or { ids: string[], count } or null
+  const [deletePhase, setDeletePhase] = useState('confirm') // 'confirm' | 'deleting'
+  const [deleteProgress, setDeleteProgress] = useState(0) // 0–100 for progress bar
   const [selectedIds, setSelectedIds] = useState(() => new Set())
   const [loadError, setLoadError] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
@@ -127,6 +129,12 @@ export default function ViewRecords() {
   const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB, same as forms (Firestore doc limit ~1 MB)
 
   useEffect(() => setSelectedIds(new Set()), [selectedCollection])
+  useEffect(() => {
+    if (deleteConfirming) {
+      setDeletePhase('confirm')
+      setDeleteProgress(0)
+    }
+  }, [deleteConfirming])
   useEffect(() => {
     if (selectedCollection !== 'goodAgriPractices') setFilterFormType('')
   }, [selectedCollection])
@@ -1230,15 +1238,39 @@ export default function ViewRecords() {
 
   const handleDelete = async (idOrIds) => {
     const ids = Array.isArray(idOrIds) ? idOrIds : [idOrIds]
+    const n = ids.length
+    setDeletePhase('deleting')
+    setDeleteProgress(0)
+
+    // Duration based on record count: min 2s, +600ms per record, max 15s (more records = longer wait)
+    const minDuration = 2000
+    const perRecord = 600
+    const maxDuration = 15000
+    const loadingDuration = Math.min(maxDuration, minDuration + n * perRecord)
+
+    const delay = (ms) => new Promise((r) => setTimeout(r, ms))
+    const startTime = Date.now()
+    const progressInterval = setInterval(() => {
+      const elapsed = Date.now() - startTime
+      const pct = Math.min(100, (elapsed / loadingDuration) * 100)
+      setDeleteProgress(pct)
+      if (pct >= 100) clearInterval(progressInterval)
+    }, 50)
+
     try {
-      for (const id of ids) await deleteDoc(doc(db, selectedCollection, id))
+      const deletePromise = (async () => {
+        for (const id of ids) await deleteDoc(doc(db, selectedCollection, id))
+      })()
+      await Promise.all([deletePromise, delay(loadingDuration)])
+      clearInterval(progressInterval)
+      setDeleteProgress(100)
       setDeleteConfirming(null)
+      setDeletePhase('confirm')
       setSelectedIds(new Set())
-      const n = ids.length
       showNotification({
         type: 'success',
         title: n === 1 ? 'Record deleted' : `${n} records deleted`,
-        message: n === 1 ? 'The record has been permanently deleted.' : `${n} records have been permanently deleted.`,
+        message: n === 1 ? 'Record deleted successfully.' : `${n} records deleted successfully.`,
       })
       addSystemLog({
         action: 'record_deleted',
@@ -1248,6 +1280,9 @@ export default function ViewRecords() {
         details: `${selectedCollection} ${n} record(s) deleted.`,
       }).catch(() => {})
     } catch (err) {
+      clearInterval(progressInterval)
+      setDeletePhase('confirm')
+      setDeleteProgress(0)
       showNotification({ type: 'error', title: 'Delete failed', message: err.message || 'Failed to delete.' })
     }
   }
@@ -1810,13 +1845,6 @@ export default function ViewRecords() {
             </div>
             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
               <button
-                onClick={handlePrint}
-                className="inline-flex items-center gap-2 px-3 py-2.5 sm:px-4 min-h-[44px] bg-white text-[#1e4d2b] rounded-xl hover:bg-[#faf8f5] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs sm:text-sm border border-white/30 touch-manipulation"
-              >
-                <iconify-icon icon="mdi:printer" width="18" className="shrink-0"></iconify-icon>
-                Print List
-              </button>
-              <button
                 onClick={handleExportExcel}
                 disabled={exporting}
                 className="inline-flex items-center gap-2 px-3 py-2.5 sm:px-4 min-h-[44px] bg-[#b8a066] text-[#153019] rounded-xl hover:bg-[#d4c4a0] hover:scale-105 active:scale-[0.98] shadow-md hover:shadow-xl transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] font-bold text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 border border-[#b8a066]/50 touch-manipulation"
@@ -1981,21 +2009,6 @@ export default function ViewRecords() {
               <span className="text-sm font-black text-white uppercase tracking-tight">Records</span>
               <span className="text-[11px] font-semibold text-white/85">{collectionLabel}</span>
             </div>
-            {role === 'admin' && (
-              <div className="flex flex-wrap gap-2">
-                {(selectedCollection === 'animalFeed' || selectedCollection === 'animalWelfare' || selectedCollection === 'livestockHandlers' || selectedCollection === 'transportCarrier' || selectedCollection === 'goodAgriPractices' || selectedCollection === 'plantPestSurveillance' || selectedCollection === 'cfsAdmcc' || selectedCollection === 'animalDiseaseSurveillance' || selectedCollection === 'organicAgri' || selectedCollection === 'organicPostMarket' || selectedCollection === 'landUseMatter' || selectedCollection === 'safdzValidation') && (
-                  <button
-                    type="button"
-                    onClick={backfillSemesterForCurrentUnit}
-                    disabled={backfillingSemester}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold bg-white/10 text-white border border-white/40 hover:bg-white/20 hover:border-white/60 disabled:opacity-60 disabled:cursor-not-allowed transition-all"
-                  >
-                    <iconify-icon icon="mdi:auto-fix" width="16"></iconify-icon>
-                    <span>{backfillingSemester ? 'Filling Semesters…' : 'Fill Semester for Existing Records'}</span>
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         </div>
         {canDelete() && selectedIds.size > 0 && (
@@ -2172,52 +2185,80 @@ export default function ViewRecords() {
       {deleteConfirming && createPortal(
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
           <div
-            className="absolute inset-0 min-h-[100dvh] min-w-full bg-red-950/45 backdrop-blur-md animate-in fade-in duration-300"
+            className="absolute inset-0 min-h-[100dvh] min-w-full bg-[#153019]/80 backdrop-blur-md animate-in fade-in duration-300"
             style={{ top: 0, left: 0, right: 0, bottom: 0 }}
-            onClick={() => setDeleteConfirming(null)}
+            onClick={deletePhase === 'confirm' ? () => setDeleteConfirming(null) : undefined}
           />
           <div className="relative bg-white rounded-xl sm:rounded-2xl border-2 border-[#e8e0d4] shadow-2xl shadow-[#1e4d2b]/20 w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-300 ease-out" style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
-            <div className="shrink-0 bg-gradient-to-r from-red-600 via-red-700 to-red-800 px-6 py-4 flex items-center gap-3 relative overflow-hidden border-b-2 border-red-900/30">
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
-              <span className="relative z-10 p-2 rounded-xl bg-white/15 border border-white/20">
-                <iconify-icon icon="mdi:alert-circle-outline" width="24" class="text-white"></iconify-icon>
-              </span>
-              <div className="relative z-10">
-                <h3 className="text-lg font-black text-white uppercase tracking-tight">
-                  {deleteConfirming.ids ? `Delete ${deleteConfirming.count} Record${deleteConfirming.count !== 1 ? 's' : ''}` : 'Delete Record'}
-                </h3>
-                <p className="text-[11px] font-semibold text-white/90 mt-0.5">This action cannot be undone.</p>
+            {deletePhase === 'deleting' ? (
+              /* --- LOADING: Deleting with progress bar --- */
+              <div className="p-6 sm:p-8 flex flex-col gap-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-black text-[#1e4d2b] uppercase tracking-tight">
+                    Deleting…
+                  </h3>
+                  <p className="text-sm font-medium text-[#5c574f] mt-1">
+                    {deleteConfirming.ids ? `${deleteConfirming.count} record${deleteConfirming.count !== 1 ? 's' : ''}` : '1 record'}
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <div className="w-full h-3 bg-[#e8e0d4] rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-[#1e4d2b] to-[#5c7355] rounded-full transition-[width] duration-500 ease-out"
+                      style={{ width: `${deleteProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-center text-xs font-medium text-[#5c574f]">
+                    Please wait…
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="p-6 border-l-4 border-red-500/30 bg-gradient-to-b from-[#fef2f2] to-[#faf8f5]">
-              <p className="text-sm font-medium text-[#1e293b] mb-1">
-                {deleteConfirming.ids
-                  ? `Are you sure you want to permanently delete ${deleteConfirming.count} record${deleteConfirming.count !== 1 ? 's' : ''}?`
-                  : 'Are you sure you want to permanently delete this record?'}
-              </p>
-              {deleteConfirming.name && deleteConfirming.name !== '—' && (
-                <p className="text-xs text-[#64748b] mt-2 px-3 py-2 rounded-lg bg-white/80 border border-[#e8e0d4]">
-                  <span className="font-semibold text-[#1e4d2b]">{deleteConfirming.name}</span>
-                </p>
-              )}
-            </div>
-            <div className="shrink-0 px-4 sm:px-6 py-4 border-t border-[#e8e0d4] bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setDeleteConfirming(null)}
-                className="min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl border-2 border-[#e8e0d4] text-[#1e4d2b] font-bold hover:bg-white hover:border-[#1e4d2b]/50 hover:scale-105 active:scale-[0.98] transition-all duration-300 text-xs sm:text-sm touch-manipulation"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDelete(deleteConfirming.ids || deleteConfirming.id)}
-                className="min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 hover:scale-105 active:scale-[0.98] shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-sm flex items-center gap-2 touch-manipulation"
-              >
-                <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
-                Delete
-              </button>
-            </div>
+            ) : (
+              /* --- CONFIRM --- */
+              <>
+                <div className="shrink-0 bg-gradient-to-r from-red-600 via-red-700 to-red-800 px-6 py-4 flex items-center gap-3 relative overflow-hidden border-b-2 border-red-900/30">
+                  <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+                  <span className="relative z-10 p-2 rounded-xl bg-white/15 border border-white/20">
+                    <iconify-icon icon="mdi:alert-circle-outline" width="24" class="text-white"></iconify-icon>
+                  </span>
+                  <div className="relative z-10">
+                    <h3 className="text-lg font-black text-white uppercase tracking-tight">
+                      {deleteConfirming.ids ? `Delete ${deleteConfirming.count} Record${deleteConfirming.count !== 1 ? 's' : ''}` : 'Delete Record'}
+                    </h3>
+                    <p className="text-[11px] font-semibold text-white/90 mt-0.5">This action cannot be undone.</p>
+                  </div>
+                </div>
+                <div className="p-6 border-l-4 border-red-500/30 bg-gradient-to-b from-[#fef2f2] to-[#faf8f5]">
+                  <p className="text-sm font-medium text-[#1e293b] mb-1">
+                    {deleteConfirming.ids
+                      ? `Are you sure you want to permanently delete ${deleteConfirming.count} record${deleteConfirming.count !== 1 ? 's' : ''}?`
+                      : 'Are you sure you want to permanently delete this record?'}
+                  </p>
+                  {deleteConfirming.name && deleteConfirming.name !== '—' && (
+                    <p className="text-xs text-[#64748b] mt-2 px-3 py-2 rounded-lg bg-white/80 border border-[#e8e0d4]">
+                      <span className="font-semibold text-[#1e4d2b]">{deleteConfirming.name}</span>
+                    </p>
+                  )}
+                </div>
+                <div className="shrink-0 px-4 sm:px-6 py-4 border-t border-[#e8e0d4] bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] flex justify-end gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeleteConfirming(null)}
+                    className="min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl border-2 border-[#e8e0d4] text-[#1e4d2b] font-bold hover:bg-white hover:border-[#1e4d2b]/50 hover:scale-105 active:scale-[0.98] transition-all duration-300 text-xs sm:text-sm touch-manipulation"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(deleteConfirming.ids || deleteConfirming.id)}
+                    className="min-h-[44px] px-4 sm:px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold hover:bg-red-700 hover:scale-105 active:scale-[0.98] shadow-lg hover:shadow-xl transition-all duration-300 text-xs sm:text-sm flex items-center gap-2 touch-manipulation"
+                  >
+                    <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
+                    Delete
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>,
         document.body

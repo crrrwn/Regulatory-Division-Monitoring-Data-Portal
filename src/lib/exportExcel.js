@@ -61,7 +61,7 @@ export async function exportToExcel(records, collectionId, collectionLabel, opti
   }
 
   const excludeMeta = ['id', 'createdAt', 'createdBy', 'updatedAt']
-  const excludeFromExport = [...RATING_FIELD_KEYS, 'recommendation']
+  const excludeFromExport = [...RATING_FIELD_KEYS, 'recommendation', 'source', 'sourceBulkImport', 'source_bulk_import']
   const allKeys = new Set()
   toExport.forEach((doc) => {
     Object.keys(doc).filter((k) => !excludeMeta.includes(k)).forEach((k) => allKeys.add(k))

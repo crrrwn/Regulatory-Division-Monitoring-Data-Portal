@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { COLLECTIONS } from '../lib/collections'
-import { formatYearLabel } from '../lib/recordFilters'
 import { useAnalytics } from '../context/AnalyticsContext'
 import {
   FileText,
   MapPin,
   Calendar,
   Award,
-  TrendingUp,
   LayoutGrid,
 } from 'lucide-react'
 
@@ -15,16 +13,9 @@ export default function Dashboard() {
   const { stats } = useAnalytics()
   const [lastRefreshedAt] = useState(() => new Date())
 
-  // By year: same logic as Master Records (per-unit date field via AnalyticsContext)
-  const byYear = stats.byYear || {}
-  const sortedYearEntries = Object.entries(byYear)
-    .sort((a, b) => a[0].localeCompare(b[0]))
-
-  const provinceEntries = Object.entries(stats.byProvince).sort((a, b) => b[1] - a[1]);
-  const unitEntries = Object.entries(stats.byUnit).sort((a, b) => b[1].count - a[1].count);
-
-  const maxYearCount = Math.max(...sortedYearEntries.map(([, c]) => c), 1);
-  const maxUnitCount = Math.max(...unitEntries.map(([, v]) => v.count), 1);
+  const provinceEntries = Object.entries(stats?.byProvince || {}).sort((a, b) => b[1] - a[1])
+  const unitEntries = Object.entries(stats?.byUnit || {}).sort((a, b) => (b[1]?.count ?? 0) - (a[1]?.count ?? 0))
+  const maxUnitCount = Math.max(...unitEntries.map(([, v]) => v?.count ?? 0), 1)
 
   return (
     <>
@@ -52,7 +43,7 @@ export default function Dashboard() {
         <div className="analytics-section grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" style={{ animationDelay: '80ms' }}>
           <StatCard 
             title="Total Records" 
-            value={stats.total} 
+            value={stats?.total ?? 0} 
             icon={FileText} 
             gradient="from-[#1e4d2b] to-[#153019]"
             iconColor="text-white"
@@ -66,124 +57,22 @@ export default function Dashboard() {
           />
           <StatCard 
             title="Years with Data" 
-            value={Object.keys(stats.byYear || {}).length} 
+            value={Object.keys(stats?.byYear || {}).filter((y) => y !== 'Unknown').length} 
             icon={Calendar} 
             gradient="from-[#b8a066] to-[#d4c4a0]"
             iconColor="text-[#153019]"
           />
           <StatCard 
             title="Provinces" 
-            value={Object.keys(stats.byProvince).length} 
+            value={Object.keys(stats?.byProvince || {}).length} 
             icon={MapPin} 
             gradient="from-[#9a7b4f] to-[#8f7a45]"
             iconColor="text-white"
           />
         </div>
 
-        {/* --- MAIN CHARTS --- */}
-        <div className="analytics-section grid lg:grid-cols-3 gap-4 h-full" style={{ animationDelay: '160ms' }}>
-          {/* Yearly Trends */}
-          <div className="lg:col-span-2 rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8 overflow-hidden flex flex-col min-h-[320px] bg-white group/card hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
-             <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-4 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
-               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_70%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
-               <div className="relative z-10 flex items-center justify-between">
-                 <div>
-                   <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Trends by Year</h3>
-                   <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">Volume by year</p>
-                 </div>
-                 <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-[#d4c4a0]">
-                   <TrendingUp size={18} />
-                 </div>
-               </div>
-             </div>
-             <div className="flex-1 p-4 sm:p-5 flex flex-col min-h-0 bg-[linear-gradient(180deg,#faf8f5_0%,#f5f0e8_50%,#efe9e0_100%)] border-l-4 border-[#1e4d2b]/25">
-               <div className="flex-1 flex items-end gap-1.5 sm:gap-2 pb-1 overflow-x-auto custom-scrollbar view-records-scroll min-h-[200px] relative">
-                 {/* Subtle horizontal grid lines */}
-                 <div className="absolute inset-0 pointer-events-none flex flex-col justify-between pt-0 pb-8 px-2" aria-hidden>
-                   {[0, 1, 2, 3, 4].map((i) => (
-                     <div key={i} className="w-full h-px bg-[#d4cdc0]/40" />
-                   ))}
-                 </div>
-                 {sortedYearEntries.length === 0 ? (
-                   <div className="w-full flex items-center justify-center text-[#5c574f] py-8 rounded-lg border-2 border-dashed border-[#1e4d2b]/25 bg-[#f0f5ee]/80">
-                     <span className="text-xs font-medium">No data available</span>
-                   </div>
-                 ) : (
-                   sortedYearEntries.map(([year, count]) => {
-                     const pct = maxYearCount > 0 ? (count / maxYearCount) * 100 : 0
-                     const isPeak = count === maxYearCount && maxYearCount > 0
-                     return (
-                       <div key={year} className="group flex flex-col items-center flex-1 min-w-[48px] sm:min-w-[56px] relative z-10">
-                         <div className="mb-1.5 opacity-0 group-hover:opacity-100 transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] -translate-y-1 group-hover:translate-y-0 bg-[#1e4d2b] text-white text-[9px] font-bold px-2 py-1 rounded-md shadow-xl whitespace-nowrap z-20 pointer-events-none border border-white/30 backdrop-blur-sm">
-                           {count} <span className="opacity-90">records</span>
-                         </div>
-                         <div className="relative w-full rounded-t-lg flex items-end overflow-hidden h-[165px] bg-white/50 border border-[#e8e0d4] shadow-inner">
-                           <div
-                             className={`w-full rounded-t-lg transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:brightness-110 relative overflow-hidden ${isPeak ? 'bg-gradient-to-t from-[#0d1f14] via-[#153019] to-[#1e4d2b] shadow-inner' : 'bg-gradient-to-t from-[#153019] via-[#1e4d2b] to-[#5c7355]'}`}
-                             style={{ height: `${Math.max(pct, 4)}%` }}
-                           >
-                             <div className="absolute top-0 left-0 right-0 h-4 bg-gradient-to-b from-white/25 to-transparent rounded-t-lg" />
-                           </div>
-                         </div>
-                         <div className="mt-2 text-[9px] font-bold text-[#5c574f] truncate w-full text-center group-hover:text-[#1e4d2b] transition-colors duration-300">
-                           {formatYearLabel(year)}
-                         </div>
-                       </div>
-                     )
-                   })
-                 )}
-               </div>
-             </div>
-          </div>
-
-          {/* Top Units â€” khaki/gold accent (Quality Control style) */}
-          <div className="rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/15 overflow-hidden flex flex-col max-h-[380px] bg-white hover:shadow-xl hover:shadow-[#b8a066]/20 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
-             <div className="shrink-0 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] px-4 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#b8a066]/25">
-               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
-               <div className="relative z-10 flex items-center justify-between">
-                 <div>
-                   <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Top Units</h3>
-                   <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">By submission volume</p>
-                 </div>
-                 <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-white">
-                   <Award size={18} />
-                 </div>
-               </div>
-             </div>
-             <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 custom-scrollbar view-records-scroll bg-gradient-to-b from-[#faf8f5] to-[#f2ede6] min-h-0 border-l-4 border-[#b8a066]/25">
-               <div className="space-y-2.5">
-                 {unitEntries.map(([id, data], index) => (
-                   <div key={id} className="group relative bg-white/80 backdrop-blur-sm rounded-lg border border-[#e8e0d4] p-2.5 hover:border-[#b8a066]/40 hover:shadow-md hover:bg-white transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
-                     <div className="flex items-center justify-between mb-1.5">
-                       <div className="flex items-center gap-2 overflow-hidden min-w-0">
-                         <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 shadow-md ring-1 ring-black/5
-                            ${index === 0 ? 'bg-gradient-to-br from-[#b8a066] to-[#9a7b4f] text-[#153019]' :
-                              index === 1 ? 'bg-gradient-to-br from-[#9a7b4f] to-[#8f7a45] text-white' :
-                              index === 2 ? 'bg-gradient-to-br from-[#1e4d2b] to-[#153019] text-white' :
-                              'bg-[#e8e0d4] text-[#5c574f]'
-                            }`}
-                         >
-                           {index + 1}
-                         </div>
-                         <span className="text-[11px] font-bold text-[#1e4d2b] truncate uppercase tracking-tight" title={data.label}>{data.label}</span>
-                       </div>
-                       <span className="text-xs font-black text-[#1e4d2b] shrink-0 ml-1.5">{data.count}</span>
-                     </div>
-                     <div className="w-full h-1.5 bg-[#e8e0d4]/80 rounded-full overflow-hidden">
-                       <div
-                         className={`h-full rounded-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${index === 0 ? 'bg-gradient-to-r from-[#b8a066] to-[#9a7b4f]' : index === 1 ? 'bg-gradient-to-r from-[#9a7b4f] to-[#8f7a45]' : 'bg-gradient-to-r from-[#1e4d2b] to-[#153019]'}`}
-                         style={{ width: `${(data.count / maxUnitCount) * 100}%` }}
-                       />
-                     </div>
-                   </div>
-                 ))}
-               </div>
-             </div>
-          </div>
-        </div>
-
-        {/* --- PROVINCE DISTRIBUTION (Geographic Data) â€” khaki/gold (Pest & Disease style) --- */}
-        <div className="analytics-section w-full min-w-0 max-w-full rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/12 overflow-hidden bg-white hover:shadow-xl hover:shadow-[#b8a066]/18 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]" style={{ animationDelay: '240ms' }}>
+        {/* --- PROVINCE DISTRIBUTION (Geographic Data) --- */}
+        <div className="analytics-section w-full min-w-0 max-w-full rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/12 overflow-hidden bg-white hover:shadow-xl hover:shadow-[#b8a066]/18 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]" style={{ animationDelay: '160ms' }}>
            <div className="shrink-0 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] px-3 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#b8a066]/25">
              <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
              <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 min-w-0">
@@ -234,6 +123,53 @@ export default function Dashboard() {
                })}
              </div>
            </div>
+        </div>
+
+        {/* --- TOP UNITS --- */}
+        <div className="analytics-section grid lg:grid-cols-1 gap-4 h-full" style={{ animationDelay: '240ms' }}>
+          <div className="rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/15 overflow-hidden flex flex-col max-h-[380px] bg-white hover:shadow-xl hover:shadow-[#b8a066]/20 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
+             <div className="shrink-0 bg-gradient-to-r from-[#9a7b4f] via-[#b8a066] to-[#8f7a45] px-4 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#b8a066]/25">
+               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
+               <div className="relative z-10 flex items-center justify-between">
+                 <div>
+                   <h3 className="text-base font-black text-white uppercase tracking-tight drop-shadow-sm">Top Units</h3>
+                   <p className="text-[10px] font-semibold text-white/80 tracking-wider mt-0.5">By submission volume</p>
+                 </div>
+                 <div className="p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-white">
+                   <Award size={18} />
+                 </div>
+               </div>
+             </div>
+             <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 custom-scrollbar view-records-scroll bg-gradient-to-b from-[#faf8f5] to-[#f2ede6] min-h-0 border-l-4 border-[#b8a066]/25">
+               <div className="space-y-2.5">
+                 {unitEntries.map(([id, data], index) => (
+                   <div key={id} className="group relative bg-white/80 backdrop-blur-sm rounded-lg border border-[#e8e0d4] p-2.5 hover:border-[#b8a066]/40 hover:shadow-md hover:bg-white transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)]">
+                     <div className="flex items-center justify-between mb-1.5">
+                       <div className="flex items-center gap-2 overflow-hidden min-w-0">
+                         <div className={`w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black shrink-0 shadow-md ring-1 ring-black/5
+                            ${index === 0 ? 'bg-gradient-to-br from-[#b8a066] to-[#9a7b4f] text-[#153019]' :
+                              index === 1 ? 'bg-gradient-to-br from-[#9a7b4f] to-[#8f7a45] text-white' :
+                              index === 2 ? 'bg-gradient-to-br from-[#1e4d2b] to-[#153019] text-white' :
+                              'bg-[#e8e0d4] text-[#5c574f]'
+                            }`}
+                         >
+                           {index + 1}
+                         </div>
+                         <span className="text-[11px] font-bold text-[#1e4d2b] truncate uppercase tracking-tight" title={data?.label}>{data?.label}</span>
+                       </div>
+                       <span className="text-xs font-black text-[#1e4d2b] shrink-0 ml-1.5">{data?.count ?? 0}</span>
+                     </div>
+                     <div className="w-full h-1.5 bg-[#e8e0d4]/80 rounded-full overflow-hidden">
+                       <div
+                         className={`h-full rounded-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${index === 0 ? 'bg-gradient-to-r from-[#b8a066] to-[#9a7b4f]' : index === 1 ? 'bg-gradient-to-r from-[#9a7b4f] to-[#8f7a45]' : 'bg-gradient-to-r from-[#1e4d2b] to-[#153019]'}`}
+                         style={{ width: `${((data?.count ?? 0) / maxUnitCount) * 100}%` }}
+                       />
+                     </div>
+                   </div>
+                 ))}
+               </div>
+             </div>
+          </div>
         </div>
         </div>
       </div>

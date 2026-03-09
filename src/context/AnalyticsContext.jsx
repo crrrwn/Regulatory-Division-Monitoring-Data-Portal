@@ -38,16 +38,19 @@ async function fetchAnalytics() {
     const byScore = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
     let ratedCount = 0
 
+    const currentYear = new Date().getFullYear()
     snap.docs.forEach((d) => {
       const data = d.data()
       const month = getMonthFromDoc(data)
       if (month) byMonth[month] = (byMonth[month] || 0) + 1
       let year = getYearFromDoc(data, id)
       if (!year) {
-        const month = getMonthFromDoc(data)
-        if (month) year = month.slice(0, 4)
+        const monthForYear = getMonthFromDoc(data)
+        if (monthForYear) year = monthForYear.slice(0, 4)
       }
-      if (year) byYear[year] = (byYear[year] || 0) + 1
+      if (year && Number(year) > currentYear) year = 'Unknown'
+      if (!year) year = 'Unknown'
+      byYear[year] = (byYear[year] || 0) + 1
       const province = getProvinceFromDoc(data)
       if (province) byProvince[province] = (byProvince[province] || 0) + 1
 
@@ -116,6 +119,9 @@ export function AnalyticsProvider({ children }) {
 
 export function useAnalytics() {
   const ctx = useContext(AnalyticsContext)
-  if (!ctx) throw new Error('useAnalytics must be used within AnalyticsProvider')
+  if (!ctx) {
+    console.warn('useAnalytics used outside AnalyticsProvider — using default stats')
+    return { stats: defaultStats, refresh: () => Promise.resolve() }
+  }
   return ctx
 }

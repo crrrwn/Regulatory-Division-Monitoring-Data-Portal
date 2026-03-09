@@ -88,6 +88,7 @@ export function getYearsFromDocs(docs, collectionId) {
 /** Format year for display */
 export function formatYearLabel(year) {
   if (!year) return 'All Years'
+  if (year === 'Unknown') return 'No date'
   return year
 }
 
