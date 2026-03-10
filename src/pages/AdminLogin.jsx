@@ -91,7 +91,7 @@ export default function AdminLogin() {
 
   return (
     <div
-      className="min-h-screen w-full relative flex flex-col items-center justify-center py-12 px-4 sm:px-6"
+      className="min-h-screen min-h-[100dvh] w-full relative flex flex-col items-center justify-center py-6 xs:py-12 px-3 xs:px-4 sm:px-6"
       style={{ background: getLandingGradient() }}
     >
       <div className="admin-login-page w-full max-w-[420px]">

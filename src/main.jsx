@@ -6,7 +6,11 @@ import ErrorBoundary from './components/ErrorBoundary'
 import { preloadPublicImages } from './utils/publicAssets'
 import './index.css'
 
-preloadPublicImages()
+try {
+  preloadPublicImages()
+} catch (e) {
+  console.warn('[preload] Images skipped:', e?.message)
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

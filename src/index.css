@@ -30,6 +30,11 @@
     min-height: 44px;
     min-width: 44px;
   }
+  /* Mobile-first: prevent overflow on 6.1" phones (~360px) */
+  .mobile-safe {
+    min-width: 0;
+    max-width: 100%;
+  }
 }
 
 /* Super smooth transitions & animations */

@@ -557,7 +557,7 @@ export default function UserManagement() {
           onClick={(e) => e.target === e.currentTarget && setEditing(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl border-2 border-[#e8e0d4] max-w-md w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 my-auto shrink-0"
+            className="bg-white rounded-2xl shadow-xl border-2 border-[#e8e0d4] max-w-[360px] w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-300 my-auto shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 py-4">
@@ -625,7 +625,7 @@ export default function UserManagement() {
           onClick={(e) => e.target === e.currentTarget && setDeleteConfirming(null)}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl border-2 border-[#e8e0d4] max-w-sm w-full overflow-hidden animate-in fade-in zoom-in-95 duration-300 my-auto shrink-0"
+            className="bg-white rounded-2xl shadow-xl border-2 border-[#e8e0d4] max-w-[320px] w-full overflow-hidden animate-in fade-in zoom-in-95 duration-300 my-auto shrink-0"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 text-center">

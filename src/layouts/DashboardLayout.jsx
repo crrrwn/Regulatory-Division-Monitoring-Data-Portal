@@ -16,7 +16,7 @@ const SIDEBAR_SECTIONS = [
       { path: '/dashboard/forms/animal-welfare', label: 'Animal Welfare Concern' },
       { path: '/dashboard/forms/livestock-handlers', label: 'Livestock & Handlers' },
       { path: '/dashboard/forms/transport-carrier', label: 'Transport Carriers' },
-      { path: '/dashboard/forms/plant-material', label: 'Plant Material / Nursery' },
+      { path: '/dashboard/forms/plant-material', label: 'Plant Nursery' },
       { path: '/dashboard/forms/organic-agri', label: 'Organic Agri Certification' },
     ],
   },
@@ -119,8 +119,8 @@ function DashboardLayout() {
       
       {/* Logout confirmation & success notification modal */}
       {logoutModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && !logoutSuccess && closeLogoutModal()}>
-          <div className="bg-white rounded-2xl shadow-xl border border-border max-w-sm w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-2 xs:p-4 bg-black/50 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && !logoutSuccess && closeLogoutModal()}>
+          <div className="bg-white rounded-2xl shadow-xl border border-border w-full max-w-[320px] overflow-hidden animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
             {!logoutSuccess ? (
               <>
                 <div className="p-6 text-center">
@@ -164,7 +164,7 @@ function DashboardLayout() {
       <aside
         className={`fixed lg:relative inset-y-0 left-0 z-50 flex flex-col bg-primary-dark text-accent-light shadow-2xl border-r border-primary shrink-0
           pt-[env(safe-area-inset-top)]
-          w-[min(296px,85vw)] ${sidebarOpen || mobileMenuOpen ? 'lg:w-[296px] lg:min-w-[296px]' : 'lg:w-[96px] lg:min-w-[96px]'}
+          w-[min(296px,calc(100vw-48px))] xs:w-[min(296px,90vw)] sm:w-[min(296px,85vw)] ${sidebarOpen || mobileMenuOpen ? 'lg:w-[296px] lg:min-w-[296px]' : 'lg:w-[96px] lg:min-w-[96px]'}
           ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
           max-w-full
         `}
@@ -302,7 +302,7 @@ function DashboardLayout() {
       <div className="flex-1 flex flex-col min-h-0 min-w-0 w-full bg-background relative">
         {/* Header */}
         <header
-          className="h-14 sm:h-16 min-h-[44px] sticky top-0 z-30 flex items-center justify-between gap-2 px-3 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top)] pr-[max(0.75rem,env(safe-area-inset-right))] pl-[max(0.75rem,env(safe-area-inset-left))] bg-white/90 backdrop-blur-md border-b border-border shadow-sm shrink-0"
+          className="h-14 sm:h-16 min-h-[44px] sticky top-0 z-30 flex items-center justify-between gap-2 px-2 xs:px-3 sm:px-6 lg:px-8 pt-[env(safe-area-inset-top)] pr-[max(0.5rem,env(safe-area-inset-right))] pl-[max(0.5rem,env(safe-area-inset-left))] bg-white/90 backdrop-blur-md border-b border-border shadow-sm shrink-0"
         >
            {/* Hamburger (Visible on < 1024px) --- */}
            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
@@ -315,7 +315,7 @@ function DashboardLayout() {
               </button>
               
               <div className="flex flex-col justify-center min-w-0">
-                 <h2 className="text-base sm:text-lg font-bold text-primary tracking-tight leading-tight truncate">
+                 <h2 className="text-sm xs:text-base sm:text-lg font-bold text-primary tracking-tight leading-tight truncate max-w-[180px] xs:max-w-[220px] sm:max-w-none">
                     {({ '/dashboard': 'Dashboard', '/dashboard/ratings': 'Ratings', '/dashboard/records': 'Master Records', '/dashboard/settings': 'Settings', '/dashboard/user-management': 'User Management', '/dashboard/system-logs': 'System Logs' }[location.pathname] || SIDEBAR_SECTIONS.flatMap(s => s.items).find(i => i.path === location.pathname)?.label || 'Dashboard')}
                  </h2>
                  <p className="text-xs text-text-muted mt-0.5 hidden sm:block truncate">Regulatory Division Portal</p>
@@ -333,8 +333,8 @@ function DashboardLayout() {
            </div>
         </header>
 
-        {/* Content Body — responsive padding and safe-area for all devices */}
-        <main className="flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto custom-scrollbar view-records-scroll p-3 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] pr-[max(0.75rem,env(safe-area-inset-right))]">
+        {/* Content Body — responsive padding and safe-area for all devices (6.1" phone friendly) */}
+        <main className="flex-1 min-w-0 min-h-0 overflow-x-hidden overflow-y-auto custom-scrollbar view-records-scroll p-2 xs:p-3 sm:p-6 lg:p-8 pb-[max(1rem,env(safe-area-inset-bottom))] pr-[max(0.5rem,env(safe-area-inset-right))]">
            <div className="w-full max-w-7xl mx-auto min-w-0 animate-fade-in-up">
               <Outlet />
            </div>

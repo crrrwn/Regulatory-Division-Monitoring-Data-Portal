@@ -92,7 +92,7 @@ export default function Ratings() {
   const [selectedRatingUnit, setSelectedRatingUnit] = useState(null)
 
   return (
-    <div className="ratings-page min-w-0 w-full max-w-full overflow-x-hidden px-3 sm:px-4 md:px-5 lg:px-6 pb-10 sm:pb-12">
+    <div className="ratings-page min-w-0 w-full max-w-full overflow-x-hidden px-2 xs:px-3 sm:px-4 md:px-5 lg:px-6 pb-6 xs:pb-10 sm:pb-12">
       <div className="w-full max-w-5xl mx-auto min-w-0">
         {/* Page Header */}
         <div className="ratings-header rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden mb-6">

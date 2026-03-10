@@ -28,7 +28,7 @@ export default function TopNav() {
     >
       <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-accent/50 to-transparent opacity-80" aria-hidden="true" />
 
-      <nav className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+      <nav className="max-w-7xl mx-auto px-2 xs:px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-14 sm:h-16 min-h-[52px]">
           {/* Logo + Brand */}
           <Link

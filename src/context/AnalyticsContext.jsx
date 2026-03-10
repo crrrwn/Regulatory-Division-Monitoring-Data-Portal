@@ -27,8 +27,15 @@ async function fetchAnalytics() {
   const unitRatings = {}
   let total = 0
 
-  for (const { id, label } of COLLECTIONS) {
-    const snap = await getDocs(collection(db, id))
+  // Fetch all 15 collections in parallel (instead of sequential) for faster load
+  const snaps = await Promise.all(
+    COLLECTIONS.map(({ id }) => getDocs(collection(db, id)))
+  )
+
+  const currentYear = new Date().getFullYear()
+
+  COLLECTIONS.forEach(({ id, label }, idx) => {
+    const snap = snaps[idx]
     const count = snap.size
     total += count
     byUnit[id] = { count, label }
@@ -38,7 +45,6 @@ async function fetchAnalytics() {
     const byScore = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }
     let ratedCount = 0
 
-    const currentYear = new Date().getFullYear()
     snap.docs.forEach((d) => {
       const data = d.data()
       const month = getMonthFromDoc(data)
@@ -52,7 +58,8 @@ async function fetchAnalytics() {
       if (!year) year = 'Unknown'
       byYear[year] = (byYear[year] || 0) + 1
       const province = getProvinceFromDoc(data)
-      if (province) byProvince[province] = (byProvince[province] || 0) + 1
+      const provKey = province || 'Unknown / No Province'
+      byProvince[provKey] = (byProvince[provKey] || 0) + 1
 
       let hasAnyRating = false
       const rowScores = []
@@ -90,7 +97,7 @@ async function fetchAnalytics() {
       averages,
       byScore,
     }
-  }
+  })
 
   return { total, byMonth, byYear, byProvince, byUnit, unitRatings }
 }
@@ -99,17 +106,29 @@ const AnalyticsContext = createContext(null)
 
 export function AnalyticsProvider({ children }) {
   const [stats, setStats] = useState(defaultStats)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const refresh = useCallback(async () => {
-    const next = await fetchAnalytics()
-    setStats(next)
+    setLoading(true)
+    setError(null)
+    try {
+      const next = await fetchAnalytics()
+      setStats(next)
+    } catch (err) {
+      console.error('[Analytics] Failed to fetch:', err)
+      setError(err?.message || 'Failed to load records')
+      setStats(defaultStats)
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   useEffect(() => {
     refresh()
   }, [refresh])
 
-  const value = { stats, refresh }
+  const value = { stats, refresh, loading, error }
   return (
     <AnalyticsContext.Provider value={value}>
       {children}
@@ -121,7 +140,7 @@ export function useAnalytics() {
   const ctx = useContext(AnalyticsContext)
   if (!ctx) {
     console.warn('useAnalytics used outside AnalyticsProvider — using default stats')
-    return { stats: defaultStats, refresh: () => Promise.resolve() }
+    return { stats: defaultStats, refresh: () => Promise.resolve(), loading: false, error: null }
   }
   return ctx
 }

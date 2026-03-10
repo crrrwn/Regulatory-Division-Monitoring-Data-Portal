@@ -18,19 +18,25 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser)
-      if (!firebaseUser) {
-        setUserDoc(null)
-        setLoading(false)
-        return
-      }
       try {
-        const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
-        setUserDoc(snap.exists() ? snap.data() : null)
-      } catch {
+        setUser(firebaseUser)
+        if (!firebaseUser) {
+          setUserDoc(null)
+          return
+        }
+        try {
+          const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+          setUserDoc(snap.exists() ? snap.data() : null)
+        } catch {
+          setUserDoc(null)
+        }
+      } catch (e) {
+        console.warn('[Auth] onAuthStateChanged error:', e?.message)
+        setUser(null)
         setUserDoc(null)
+      } finally {
+        setLoading(false)
       }
-      setLoading(false)
     })
     return () => unsub()
   }, [])

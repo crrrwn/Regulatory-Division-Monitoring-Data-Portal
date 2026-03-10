@@ -4,13 +4,13 @@ import { useAnalytics } from '../context/AnalyticsContext'
 import {
   FileText,
   MapPin,
-  Calendar,
   Award,
   LayoutGrid,
+  AlertCircle,
 } from 'lucide-react'
 
 export default function Dashboard() {
-  const { stats } = useAnalytics()
+  const { stats, error } = useAnalytics()
   const [lastRefreshedAt] = useState(() => new Date())
 
   const provinceEntries = Object.entries(stats?.byProvince || {}).sort((a, b) => b[1] - a[1])
@@ -19,8 +19,8 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="min-w-0 w-full max-w-full overflow-x-hidden px-3 sm:px-4 md:px-5 lg:px-6 pb-10 sm:pb-12">
-        <div className="w-full max-w-7xl mx-auto min-w-0 space-y-4 sm:space-y-5 pb-8 sm:pb-10 relative font-sans text-[#2d2a26]">
+      <div className="min-w-0 w-full max-w-full overflow-x-hidden px-0 xs:px-2 sm:px-4 md:px-5 lg:px-6 pb-6 xs:pb-8 sm:pb-12">
+        <div className="w-full max-w-7xl mx-auto min-w-0 space-y-3 xs:space-y-4 sm:space-y-5 pb-6 xs:pb-8 sm:pb-10 relative font-sans text-[#2d2a26]">
         
         {/* --- DASHBOARD HEADER --- */}
         <div className="analytics-section rounded-xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden" style={{ animationDelay: '0ms' }}>
@@ -29,18 +29,27 @@ export default function Dashboard() {
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-white uppercase tracking-tight drop-shadow-sm">Dashboard</h2>
-                <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <p className="text-[11px] font-semibold text-white/85 tracking-wider">
-                    Live system data · Updated: {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-                  </p>
-                </div>
+                <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-1">
+                  Live system data · Updated: {lastRefreshedAt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
+        {error && (
+          <div className="flex items-start gap-3 p-4 rounded-xl border-2 border-amber-500/50 bg-amber-50 text-amber-900">
+            <AlertCircle size={20} className="shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm">Hindi ma-load ang records</p>
+              <p className="text-xs mt-1 text-amber-800/90">{error}</p>
+              <p className="text-xs mt-2">I-check ang browser console (F12) para sa detalye.</p>
+            </div>
+          </div>
+        )}
+
         {/* --- HERO STATS CARDS --- */}
-        <div className="analytics-section grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3" style={{ animationDelay: '80ms' }}>
+        <div className="analytics-section grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-3" style={{ animationDelay: '80ms' }}>
           <StatCard 
             title="Total Records" 
             value={stats?.total ?? 0} 
@@ -54,13 +63,6 @@ export default function Dashboard() {
             icon={LayoutGrid} 
             gradient="from-[#5c7355] to-[#4a6b3c]"
             iconColor="text-white"
-          />
-          <StatCard 
-            title="Years with Data" 
-            value={Object.keys(stats?.byYear || {}).filter((y) => y !== 'Unknown').length} 
-            icon={Calendar} 
-            gradient="from-[#b8a066] to-[#d4c4a0]"
-            iconColor="text-[#153019]"
           />
           <StatCard 
             title="Provinces" 
@@ -87,8 +89,8 @@ export default function Dashboard() {
                </div>
            </div>
            </div>
-           <div className="p-3 sm:p-5 bg-[linear-gradient(180deg,#faf8f5_0%,#f5f0e8_50%,#efe9e0_100%)] border-l-4 border-[#b8a066]/25 min-w-0 overflow-x-hidden">
-             <div className="grid grid-cols-1 min-[400px]:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 sm:gap-3 min-w-0">
+           <div className="p-2 xs:p-3 sm:p-5 bg-[linear-gradient(180deg,#faf8f5_0%,#f5f0e8_50%,#efe9e0_100%)] border-l-4 border-[#b8a066]/25 min-w-0 overflow-x-hidden">
+             <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 xs:gap-3 min-w-0">
                {provinceEntries.map(([prov, count], index) => {
                  const maxProv = provinceEntries.length > 0 ? Math.max(...provinceEntries.map(([, c]) => c)) : 1
                  const barPct = maxProv > 0 ? (count / maxProv) * 100 : 0

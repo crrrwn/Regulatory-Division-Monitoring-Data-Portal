@@ -16,7 +16,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 let analytics = null
 if (typeof window !== 'undefined') {
-  analytics = getAnalytics(app)
+  try {
+    analytics = getAnalytics(app)
+  } catch (e) {
+    console.warn('[Firebase] Analytics init skipped:', e?.message)
+  }
 }
 
 export const auth = getAuth(app)

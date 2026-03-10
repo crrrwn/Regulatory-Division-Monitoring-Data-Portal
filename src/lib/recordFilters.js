@@ -32,8 +32,15 @@ const MUNICIPALITY_TO_PROVINCE = {
 export function getMonthFromDoc(doc) {
   const d = doc.createdAt || doc.date || doc.dateApplied || doc.applicationDate || doc.dateOfMonitoring || doc.inspectionDate || doc.dateReceived || doc.dateReported || doc.requestLetterDate || doc.dateOfCommunicationLetter || doc.dateOfSurveillance || doc.dateOfRequest || doc.dateReceivedAndEvaluated || doc.dateOfPreAssessment || doc.dateOfMonitoring
   if (!d) return null
-  const date = typeof d === 'string' ? new Date(d) : d
-  if (isNaN(date.getTime())) return null
+  let date
+  if (typeof d?.toDate === 'function') {
+    date = d.toDate()
+  } else if (typeof d === 'string') {
+    date = new Date(d)
+  } else {
+    date = d
+  }
+  if (!date || typeof date.getTime !== 'function' || isNaN(date.getTime())) return null
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
@@ -114,7 +121,15 @@ export function docToRow(doc) {
     else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       if (typeof value.toDate === 'function') row[key] = value.toDate().toLocaleString()
       else row[key] = Object.entries(value).map(([k, v]) => `${k}: ${v}`).join('; ')
-    } else if (Array.isArray(value)) row[key] = value.join(', ')
+    } else if (Array.isArray(value)) {
+      if (key === 'items' && value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
+        row[key] = value.map((it) => {
+          const p = [it.crops, it.variety].filter(Boolean).join(' / ') || '—'
+          const t = it.total ?? ((parseInt(it.noOfCertified, 10) || 0) + (parseInt(it.noOfNonCertifiedSexual, 10) || 0) + (parseInt(it.noOfNonCertifiedAsexual, 10) || 0))
+          return `${p}: ${t}`
+        }).join('; ')
+      } else row[key] = value.join(', ')
+    }
     else row[key] = String(value)
   })
   return row

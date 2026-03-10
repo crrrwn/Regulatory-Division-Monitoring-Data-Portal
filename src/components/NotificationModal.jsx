@@ -13,7 +13,7 @@ export default function NotificationModal({ open, onClose, type = 'success', tit
       onClick={(e) => e.target === e.currentTarget && onClose?.()}
     >
       <div
-        className="bg-white rounded-2xl w-full max-w-md overflow-hidden modal-in border-2 border-primary/20 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4),0_0_0_1px_rgba(30,77,43,0.08)]"
+        className="bg-white rounded-2xl w-full max-w-[320px] overflow-hidden modal-in border-2 border-primary/20 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.4),0_0_0_1px_rgba(30,77,43,0.08)]"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="p-8 text-center">

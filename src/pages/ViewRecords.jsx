@@ -6,7 +6,7 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
-import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS, COLLECTION_DATE_FIELD_FOR_YEAR } from '../lib/collections'
+import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, PLANT_MATERIAL_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS, COLLECTION_DATE_FIELD_FOR_YEAR } from '../lib/collections'
 import { useDisabledUnits } from '../context/DisabledUnitsContext'
 import { getUnitIdsForSections } from '../lib/sections'
 import {
@@ -29,6 +29,12 @@ function getDisplayName(data, collectionId) {
   // GoodAgriPractices: show nameOfFarmer (Monitoring) or nameOfApplicant (GAP Certification)
   if (collectionId === 'goodAgriPractices') {
     const name = data?.nameOfFarmer ?? data?.nameOfApplicant
+    if (name != null && name !== '') return String(name)
+    return '—'
+  }
+  // PlantMaterial (Plant Nursery): show nameOfPlantNursery (Stock Inventory), nameOfNursery, or applicant (Accreditation)
+  if (collectionId === 'plantMaterial') {
+    const name = data?.nameOfPlantNursery ?? data?.nameOfNursery ?? data?.applicant
     if (name != null && name !== '') return String(name)
     return '—'
   }
@@ -136,7 +142,7 @@ export default function ViewRecords() {
     }
   }, [deleteConfirming])
   useEffect(() => {
-    if (selectedCollection !== 'goodAgriPractices') setFilterFormType('')
+    if (selectedCollection !== 'goodAgriPractices' && selectedCollection !== 'plantMaterial') setFilterFormType('')
   }, [selectedCollection])
 
   useEffect(() => {
@@ -171,13 +177,25 @@ export default function ViewRecords() {
     filtered = filtered.filter((d) => (d.semester || '') === filterSemester)
   }
   if (filterProvince) {
-    filtered = filtered.filter((d) => getProvinceFromDoc(d) === filterProvince)
+    if (filterProvince === '__NO_PROVINCE__') {
+      filtered = filtered.filter((d) => !getProvinceFromDoc(d))
+    } else {
+      filtered = filtered.filter((d) => getProvinceFromDoc(d) === filterProvince)
+    }
   }
 
   const isGAP = selectedCollection === 'goodAgriPractices'
+  const isPlantMaterial = selectedCollection === 'plantMaterial'
   if (isGAP && filterFormType) {
     if (filterFormType === 'other') {
       filtered = filtered.filter((d) => d.formType !== 'gapCertification' && d.formType !== 'monitoring')
+    } else {
+      filtered = filtered.filter((d) => d.formType === filterFormType)
+    }
+  }
+  if (isPlantMaterial && filterFormType) {
+    if (filterFormType === 'other') {
+      filtered = filtered.filter((d) => d.formType !== 'accreditation' && d.formType !== 'monitoring' && d.formType !== 'stockInventory')
     } else {
       filtered = filtered.filter((d) => d.formType === filterFormType)
     }
@@ -188,7 +206,13 @@ export default function ViewRecords() {
   const filteredGapMonitoring = isGAP ? filtered.filter((d) => d.formType === 'monitoring') : []
   const filteredGapOther = isGAP ? filtered.filter((d) => d.formType !== 'gapCertification' && d.formType !== 'monitoring') : []
 
-  const displayList = isGAP ? [...filteredGapCert, ...filteredGapMonitoring, ...filteredGapOther] : filtered
+  // PlantMaterial: split for Accreditation vs Monitoring vs Stock Inventory sections
+  const filteredPlantAccred = isPlantMaterial ? filtered.filter((d) => d.formType === 'accreditation') : []
+  const filteredPlantMonitoring = isPlantMaterial ? filtered.filter((d) => d.formType === 'monitoring') : []
+  const filteredPlantStockInv = isPlantMaterial ? filtered.filter((d) => d.formType === 'stockInventory') : []
+  const filteredPlantOther = isPlantMaterial ? filtered.filter((d) => !['accreditation', 'monitoring', 'stockInventory'].includes(d.formType)) : []
+
+  const displayList = isGAP ? [...filteredGapCert, ...filteredGapMonitoring, ...filteredGapOther] : isPlantMaterial ? [...filteredPlantAccred, ...filteredPlantMonitoring, ...filteredPlantStockInv, ...filteredPlantOther] : filtered
   const totalPages = Math.max(1, Math.ceil(displayList.length / PAGE_SIZE))
   const paginatedList = displayList.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
@@ -1297,6 +1321,11 @@ export default function ViewRecords() {
       const formFields = formType && GOOD_AGRI_PRACTICES_FORM_FIELDS[formType]
       if (formFields?.length) order = formFields
     }
+    if (selectedCollection === 'plantMaterial' && PLANT_MATERIAL_FORM_FIELDS) {
+      const formType = rest.formType
+      const formFields = formType && PLANT_MATERIAL_FORM_FIELDS[formType]
+      if (formFields?.length) order = formFields
+    }
     if (order && order.length) {
       const formKeys = order.filter((k) => !skip.includes(k))
       const onlyFormFields = {}
@@ -1448,6 +1477,21 @@ export default function ViewRecords() {
         tableRows += '<tr><td colspan="' + numCols + '" style="background:#78716c;color:#fff;font-weight:700;padding:6px 8px;">OTHER (' + gapOther.length + ' record(s))</td></tr>'
         gapOther.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
       }
+    } else if (selectedCollection === 'plantMaterial') {
+      const plantAccred = filtered.filter((d) => d.formType === 'accreditation')
+      const plantMonitoring = filtered.filter((d) => d.formType === 'monitoring')
+      const plantStockInv = filtered.filter((d) => d.formType === 'stockInventory')
+      const plantOther = filtered.filter((d) => !['accreditation', 'monitoring', 'stockInventory'].includes(d.formType))
+      tableRows += '<tr><td colspan="' + numCols + '" style="background:#065f46;color:#fff;font-weight:700;padding:6px 8px;">PLANT NURSERY ACCREDITATION' + (plantAccred.length ? ' (' + plantAccred.length + ' record(s))' : '') + '</td></tr>'
+      plantAccred.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
+      tableRows += '<tr><td colspan="' + numCols + '" style="background:#065f46;color:#fff;font-weight:700;padding:6px 8px;">MONITORING OF ACCREDITED PLANT NURSERY' + (plantMonitoring.length ? ' (' + plantMonitoring.length + ' record(s))' : '') + '</td></tr>'
+      plantMonitoring.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
+      tableRows += '<tr><td colspan="' + numCols + '" style="background:#065f46;color:#fff;font-weight:700;padding:6px 8px;">PLANT NURSERY STOCK INVENTORY' + (plantStockInv.length ? ' (' + plantStockInv.length + ' record(s))' : '') + '</td></tr>'
+      plantStockInv.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
+      if (plantOther.length) {
+        tableRows += '<tr><td colspan="' + numCols + '" style="background:#78716c;color:#fff;font-weight:700;padding:6px 8px;">OTHER (' + plantOther.length + ' record(s))</td></tr>'
+        plantOther.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
+      }
     } else {
       filtered.forEach((doc, idx) => { tableRows += rowToTr(doc, idx) })
     }
@@ -1459,9 +1503,13 @@ export default function ViewRecords() {
     const metaParts = []
     if (filterYear) metaParts.push(`Year: ${formatYearLabel(filterYear)}`)
     if (filterSemester) metaParts.push(`Semester: ${filterSemester}`)
-    if (filterProvince) metaParts.push(`Province: ${filterProvince}`)
+    if (filterProvince) metaParts.push(`Province: ${filterProvince === '__NO_PROVINCE__' ? 'Unknown / No Province' : filterProvince}`)
     if (selectedCollection === 'goodAgriPractices' && filterFormType) {
       const formTypeLabel = filterFormType === 'gapCertification' ? 'GAP Certification' : filterFormType === 'monitoring' ? 'Monitoring of GAP Certified Farmer' : 'Other'
+      metaParts.push(`Form Type: ${formTypeLabel}`)
+    }
+    if (selectedCollection === 'plantMaterial' && filterFormType) {
+      const formTypeLabel = filterFormType === 'accreditation' ? 'Plant Nursery Accreditation' : filterFormType === 'monitoring' ? 'Monitoring of Accredited Plant Nursery' : filterFormType === 'stockInventory' ? 'Stock Inventory' : 'Other'
       metaParts.push(`Form Type: ${formTypeLabel}`)
     }
     metaParts.push(`Printed: ${new Date().toLocaleString()}`)
@@ -1669,6 +1717,32 @@ export default function ViewRecords() {
       )
     }
 
+    if (key === 'items' && Array.isArray(value)) {
+      const summary = value.map((it, i) => {
+        const parts = [it.crops, it.variety].filter(Boolean)
+        const qty = it.total != null ? it.total : (parseInt(it.noOfCertified, 10) || 0) + (parseInt(it.noOfNonCertifiedSexual, 10) || 0) + (parseInt(it.noOfNonCertifiedAsexual, 10) || 0)
+        return `${i + 1}. ${parts.join(' / ') || '—'} (Total: ${qty})`
+      }).join('\n')
+      return (
+        <div className="p-3 rounded-xl border-2 border-[#e8e0d4] bg-[#faf8f5] text-sm text-[#1e4d2b] whitespace-pre-wrap max-h-48 overflow-y-auto">
+          {summary || 'No items'}
+        </div>
+      )
+    }
+
+    if (key === 'asOfMonthYear') {
+      const monthVal = value != null && value !== '' ? String(value).slice(0, 7) : ''
+      return (
+        <input
+          type="month"
+          value={monthVal}
+          onChange={(e) => updateEditField(key, e.target.value)}
+          className={inputClass}
+          aria-label={key}
+        />
+      )
+    }
+
     if (isDateField(key)) {
       const dateVal = toDateInputValue(value)
       return (
@@ -1832,7 +1906,7 @@ export default function ViewRecords() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 pb-10 sm:pb-12 min-w-0 w-full max-w-full overflow-x-hidden">
+    <div className="space-y-4 sm:space-y-6 pb-6 xs:pb-10 sm:pb-12 min-w-0 w-full max-w-full overflow-x-hidden">
       
       {/* --- HEADER SECTION --- */}
       <div className="view-records-anim-1 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 hover:-translate-y-0.5 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
@@ -1879,7 +1953,7 @@ export default function ViewRecords() {
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_80%_0%,rgba(255,255,255,0.12),transparent_50%)]" />
           <span className="relative z-10 text-[10px] font-black text-white uppercase tracking-widest">Filters & Search</span>
         </div>
-        <div className="p-4 sm:p-5 border-l-4 border-[#b8a066]/25 space-y-4">
+        <div className="p-3 xs:p-4 sm:p-5 border-l-4 border-[#b8a066]/25 space-y-3 xs:space-y-4">
           {/* Primary search bar */}
           <div className="flex flex-col min-w-0">
             <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Search Records</label>
@@ -1905,8 +1979,8 @@ export default function ViewRecords() {
             </div>
           </div>
 
-          {/* Filter row */}
-          <div className={`grid grid-cols-1 sm:grid-cols-2 gap-4 lg:gap-5 lg:items-end ${selectedCollection === 'goodAgriPractices' ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
+          {/* Filter row — stack on mobile for 6.1" phones */}
+          <div className={`grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 gap-3 xs:gap-4 lg:gap-5 lg:items-end ${(selectedCollection === 'goodAgriPractices' || selectedCollection === 'plantMaterial') ? 'lg:grid-cols-5' : 'lg:grid-cols-4'}`}>
             <div className="flex flex-col min-w-0">
               <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5 transition-colors duration-300">Select Unit</label>
               <AppSelect
@@ -1970,6 +2044,7 @@ export default function ViewRecords() {
                 placeholder="All Provinces"
                 options={[
                   { value: '', label: 'All Provinces' },
+                  { value: '__NO_PROVINCE__', label: 'Unknown / No Province' },
                   ...PROVINCES.map((p) => ({ value: p, label: p })),
                 ]}
                 leftIcon={<iconify-icon icon="mdi:map-marker-outline" width="18"></iconify-icon>}
@@ -1988,6 +2063,26 @@ export default function ViewRecords() {
                     { value: '', label: 'All Forms' },
                     { value: 'gapCertification', label: 'GAP Certification' },
                     { value: 'monitoring', label: 'Monitoring of GAP Certified Farmer' },
+                    { value: 'other', label: 'Other' },
+                  ]}
+                  leftIcon={<iconify-icon icon="mdi:file-document-outline" width="18"></iconify-icon>}
+                  aria-label="Form Type"
+                  className="min-w-0"
+                />
+              </div>
+            )}
+            {selectedCollection === 'plantMaterial' && (
+              <div className="flex flex-col min-w-0">
+                <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Form Type</label>
+                <AppSelect
+                  value={filterFormType}
+                  onChange={setFilterFormType}
+                  placeholder="All Forms"
+                  options={[
+                    { value: '', label: 'All Forms' },
+                    { value: 'accreditation', label: 'Plant Nursery Accreditation' },
+                    { value: 'monitoring', label: 'Monitoring of Accredited Plant Nursery' },
+                    { value: 'stockInventory', label: 'Stock Inventory' },
                     { value: 'other', label: 'Other' },
                   ]}
                   leftIcon={<iconify-icon icon="mdi:file-document-outline" width="18"></iconify-icon>}
@@ -2035,7 +2130,7 @@ export default function ViewRecords() {
             </div>
           </div>
         )}
-        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-260px)] sm:max-h-[calc(100vh-280px)] min-h-0 custom-scrollbar view-records-scroll flex-1 border-l-4 border-[#1e4d2b]/25 -mx-1 px-1 sm:mx-0 sm:px-0">
+        <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-260px)] xs:max-h-[calc(100vh-280px)] sm:max-h-[calc(100vh-300px)] min-h-0 custom-scrollbar view-records-scroll flex-1 border-l-4 border-[#1e4d2b]/25 -mx-1 px-1 sm:mx-0 sm:px-0">
           <table className="w-full text-sm text-left border-collapse">
             <thead className="sticky top-0 z-10 bg-gradient-to-r from-[#faf8f5] to-[#f2ede6] border-b-2 border-[#e8e0d4]">
               <tr>
@@ -2053,7 +2148,7 @@ export default function ViewRecords() {
                   </th>
                 )}
                 <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Name / Identifier</th>
-                {isGAP && (
+                {(isGAP || isPlantMaterial) && (
                   <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Type</th>
                 )}
                 {RATING_COLLECTIONS[selectedCollection] && (
@@ -2066,7 +2161,7 @@ export default function ViewRecords() {
             <tbody className="divide-y divide-[#e8e0d4]">
               {displayList.length === 0 ? (
                 <tr>
-                  <td colSpan={4 + (isGAP ? 1 : 0) + (RATING_COLLECTIONS[selectedCollection] ? 1 : 0) + (canDelete() ? 1 : 0)} className="px-6 py-16 text-center">
+                  <td colSpan={4 + ((isGAP || isPlantMaterial) ? 1 : 0) + (RATING_COLLECTIONS[selectedCollection] ? 1 : 0) + (canDelete() ? 1 : 0)} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-[#5c7355] rounded-xl border-2 border-dashed border-[#1e4d2b]/25 bg-[#f0f5ee]/80 py-12 mx-4">
                       <iconify-icon icon="mdi:database-off-outline" width="56" class="opacity-60 animate-pulse"></iconify-icon>
                       <p className="mt-3 font-semibold text-[#1e4d2b]">No records found</p>
@@ -2098,9 +2193,10 @@ export default function ViewRecords() {
                         </div>
                       </div>
                     </td>
-                    {isGAP && (
+                    {(isGAP || isPlantMaterial) && (
                       <td className="px-5 py-3.5 whitespace-nowrap text-xs font-semibold text-[#5c574f]">
-                        {docItem.formType === 'gapCertification' ? 'GAP Certification' : docItem.formType === 'monitoring' ? 'Monitoring' : 'Other'}
+                        {isGAP && (docItem.formType === 'gapCertification' ? 'GAP Certification' : docItem.formType === 'monitoring' ? 'Monitoring' : 'Other')}
+                        {isPlantMaterial && (docItem.formType === 'accreditation' ? 'Accreditation' : docItem.formType === 'monitoring' ? 'Monitoring' : docItem.formType === 'stockInventory' ? 'Stock Inv.' : 'Other')}
                       </td>
                     )}
                     {RATING_COLLECTIONS[selectedCollection] && (
@@ -2181,15 +2277,15 @@ export default function ViewRecords() {
         </div>
       </div>
 
-      {/* --- DELETE CONFIRMATION MODAL (portal = full-screen backdrop) --- */}
+      {/* --- DELETE CONFIRMATION MODAL (portal = full-screen backdrop) — full width on 6.1" phones --- */}
       {deleteConfirming && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 xs:p-4 animate-in fade-in duration-300">
           <div
             className="absolute inset-0 min-h-[100dvh] min-w-full bg-[#153019]/80 backdrop-blur-md animate-in fade-in duration-300"
             style={{ top: 0, left: 0, right: 0, bottom: 0 }}
             onClick={deletePhase === 'confirm' ? () => setDeleteConfirming(null) : undefined}
           />
-          <div className="relative bg-white rounded-xl sm:rounded-2xl border-2 border-[#e8e0d4] shadow-2xl shadow-[#1e4d2b]/20 w-full max-w-md overflow-hidden animate-in zoom-in-95 fade-in duration-300 ease-out" style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          <div className="relative bg-white rounded-xl sm:rounded-2xl border-2 border-[#e8e0d4] shadow-2xl shadow-[#1e4d2b]/20 w-full max-w-[320px] overflow-hidden animate-in zoom-in-95 fade-in duration-300 ease-out" style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
             {deletePhase === 'deleting' ? (
               /* --- LOADING: Deleting with progress bar --- */
               <div className="p-6 sm:p-8 flex flex-col gap-6">
@@ -2264,15 +2360,15 @@ export default function ViewRecords() {
         document.body
       )}
 
-      {/* --- EDIT MODAL (portal = full-screen backdrop) --- */}
+      {/* --- EDIT MODAL (portal = full-screen backdrop) — full width on 6.1" phones --- */}
       {editing && createPortal(
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 animate-in fade-in duration-300">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 xs:p-4 animate-in fade-in duration-300">
           <div
             className="absolute inset-0 min-h-[100dvh] min-w-full bg-[#153019]/80 backdrop-blur-md animate-in fade-in duration-300"
             style={{ top: 0, left: 0, right: 0, bottom: 0 }}
             onClick={() => setEditing(null)}
           />
-          <div className="relative bg-white rounded-xl sm:rounded-2xl border-2 border-[#e8e0d4] shadow-2xl shadow-[#1e4d2b]/20 w-full max-w-2xl max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-300 ease-out" style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
+          <div className="relative bg-white rounded-xl sm:rounded-2xl border-2 border-[#e8e0d4] shadow-2xl shadow-[#1e4d2b]/20 w-full max-w-[calc(100vw-16px)] xs:max-w-md sm:max-w-lg max-h-[90dvh] sm:max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 fade-in duration-300 ease-out" style={{ animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)' }}>
             <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-4 sm:px-6 py-4 flex justify-between items-center relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
               <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
               <div className="relative z-10 min-w-0">
@@ -2292,6 +2388,11 @@ export default function ViewRecords() {
                   if (selectedCollection === 'goodAgriPractices' && GOOD_AGRI_PRACTICES_FORM_FIELDS) {
                     const formType = editForm.formType
                     const formFields = formType && GOOD_AGRI_PRACTICES_FORM_FIELDS[formType]
+                    if (formFields?.length) order = formFields
+                  }
+                  if (selectedCollection === 'plantMaterial' && PLANT_MATERIAL_FORM_FIELDS) {
+                    const formType = editForm.formType
+                    const formFields = formType && PLANT_MATERIAL_FORM_FIELDS[formType]
                     if (formFields?.length) order = formFields
                   }
                   const labels = COLLECTION_FIELD_LABELS?.[selectedCollection]

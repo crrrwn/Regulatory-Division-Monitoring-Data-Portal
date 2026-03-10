@@ -38,7 +38,7 @@ class ErrorBoundary extends React.Component {
                 Refresh Page
               </button>
               <a
-                href="/dashboard"
+                href={`${(import.meta.env.BASE_URL || '/').replace(/\/$/, '')}/dashboard`}
                 className="px-4 py-2.5 bg-[#b8a066] text-[#153019] rounded-xl font-semibold text-sm hover:bg-[#d4c4a0] transition-colors"
               >
                 Go to Dashboard
