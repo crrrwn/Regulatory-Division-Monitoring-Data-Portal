@@ -16,7 +16,7 @@ const SIDEBAR_SECTIONS = [
       { path: '/dashboard/forms/animal-welfare', label: 'Animal Welfare Concern' },
       { path: '/dashboard/forms/livestock-handlers', label: 'Livestock & Handlers' },
       { path: '/dashboard/forms/transport-carrier', label: 'Transport Carriers' },
-      { path: '/dashboard/forms/plant-material', label: 'Plant Nursery' },
+      { path: '/dashboard/forms/plant-material', label: 'Plant Nursery Accreditation' },
       { path: '/dashboard/forms/organic-agri', label: 'Organic Agri Certification' },
     ],
   },
