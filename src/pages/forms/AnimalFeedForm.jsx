@@ -95,7 +95,7 @@ export default function AnimalFeedForm() {
 
   return (
     <FormLayout title="Animal Feeds Registration">
-      <div className="max-w-5xl mx-auto pb-10">
+      <div className="w-full max-w-5xl mx-auto pb-10 px-3 xs:px-4 sm:px-5 min-w-0">
         
         {/* --- FORM HEADER --- */}
         <div className="mb-8 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">

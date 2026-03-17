@@ -127,7 +127,7 @@ export default function PlantMaterialForm() {
 
   return (
     <FormLayout title="Plant Nursery">
-      <div className="max-w-5xl mx-auto pb-6 xs:pb-10 min-w-0 w-full">
+      <div className="w-full max-w-5xl mx-auto pb-6 xs:pb-10 px-3 xs:px-4 sm:px-5 min-w-0">
 
         {/* --- HEADER --- */}
         <div className="mb-8 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
@@ -324,7 +324,7 @@ export default function PlantMaterialForm() {
           )}
 
           {/* --- Form Submission Date (for year count) --- */}
-          {formType && (
+          {formType && formType !== 'stockInventory' && (
             <div className="bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8">
               <div className="max-w-xs">
                 <label className={labelClass}>Form Submission Date (for year count)</label>

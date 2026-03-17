@@ -121,7 +121,7 @@ export default function SafdzValidationForm() {
 
   return (
     <FormLayout title="SAFDZ Validation">
-      <div className="max-w-5xl mx-auto pb-10 min-w-0 w-full">
+      <div className="w-full max-w-5xl mx-auto pb-10 px-3 xs:px-4 sm:px-5 min-w-0">
         {/* --- HEADER --- */}
         <div className="mb-8 rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-lg shadow-[#1e4d2b]/8 overflow-hidden hover:shadow-xl hover:shadow-[#1e4d2b]/12 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
           <div className="bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-5 sm:px-6 py-4 relative overflow-hidden border-b-2 border-[#1e4d2b]/20">
