@@ -32,6 +32,7 @@ export default function LivestockHandlersForm() {
   const [recommendation, setRecommendation] = useState('')
   const [attachmentFileName, setAttachmentFileName] = useState('')
   const [attachmentData, setAttachmentData] = useState('')
+  const [formSubmissionDate, setFormSubmissionDate] = useState('')
 
   const { submit, loading, message, setMessage } = useFormSubmit('livestockHandlers')
 
@@ -75,6 +76,7 @@ export default function LivestockHandlersForm() {
     recommendation,
     attachmentFileName,
     attachmentData,
+    formSubmissionDate,
   })
 
   const handleSubmit = async (e) => {
@@ -101,6 +103,7 @@ export default function LivestockHandlersForm() {
     setRecommendation('')
     setAttachmentFileName('')
     setAttachmentData('')
+    setFormSubmissionDate('')
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
@@ -252,6 +255,10 @@ export default function LivestockHandlersForm() {
                 <p className="mt-2 text-[10px] text-[#5c574f]">
                   {attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {attachmentFileName}</span> : 'Max file size: 768 KB (Images/PDF)'}
                 </p>
+              </div>
+              <div>
+                <label className={labelClass}>Form Submission Date (for year count)</label>
+                <input type="date" value={formSubmissionDate} onChange={(e) => setFormSubmissionDate(e.target.value)} className={inputClass} aria-label="Form Submission Date" />
               </div>
             </div>
           </div>

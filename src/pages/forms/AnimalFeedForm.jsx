@@ -40,6 +40,7 @@ const initialState = {
   attachmentFileName: '', attachmentData: '', remarks: '',
   ratingQuantity: '', ratingServicesPersonnel: '', ratingTraining: '', ratingAttitude: '', ratingPromptness: '',
   recommendation: '',
+  formSubmissionDate: '',
 }
 
 export default function AnimalFeedForm() {
@@ -395,6 +396,10 @@ export default function AnimalFeedForm() {
                 <div>
                    <label className={labelClass}>Status / Remarks</label>
                    <AppSelect value={form.remarks} onChange={(v) => update('remarks', v)} placeholder="Select Status" options={[{ value: '', label: 'Select Status' }, ...REMARKS_OPTIONS.map((o) => ({ value: o, label: o }))]} aria-label="Status" />
+                </div>
+                <div>
+                   <label className={labelClass}>Form Submission Date (for year count)</label>
+                   <input type="date" value={form.formSubmissionDate} onChange={(e) => update('formSubmissionDate', e.target.value)} className={inputClass} aria-label="Form Submission Date" />
                 </div>
              </div>
           </div>

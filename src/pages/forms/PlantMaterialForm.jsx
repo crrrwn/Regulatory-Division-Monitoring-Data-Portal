@@ -42,6 +42,7 @@ const accreditationInitial = {
   recommendation: '',
   attachmentFileName: '',
   attachmentData: '',
+  formSubmissionDate: '',
 }
 
 const monitoringInitial = {
@@ -65,9 +66,10 @@ const monitoringInitial = {
   recommendation: '',
   attachmentFileName: '',
   attachmentData: '',
+  formSubmissionDate: '',
 }
 
-const stockInventoryInitial = { formType: 'stockInventory' }
+const stockInventoryInitial = { formType: 'stockInventory', formSubmissionDate: '' }
 
 const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB (Firestore doc limit ~1 MB)
 
@@ -319,6 +321,16 @@ export default function PlantMaterialForm() {
                 </div>
               )}
             </>
+          )}
+
+          {/* --- Form Submission Date (for year count) --- */}
+          {formType && (
+            <div className="bg-white p-6 sm:p-7 rounded-2xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/8">
+              <div className="max-w-xs">
+                <label className={labelClass}>Form Submission Date (for year count)</label>
+                <input type="date" value={form.formSubmissionDate || ''} onChange={(e) => update('formSubmissionDate', e.target.value)} className={inputClass} aria-label="Form Submission Date" />
+              </div>
+            </div>
           )}
 
           {/* --- ACTION BAR (only for Accreditation & Monitoring, not when empty or Stock Inventory) --- */}

@@ -177,11 +177,7 @@ export default function ViewRecords() {
     filtered = filtered.filter((d) => (d.semester || '') === filterSemester)
   }
   if (filterProvince) {
-    if (filterProvince === '__NO_PROVINCE__') {
-      filtered = filtered.filter((d) => !getProvinceFromDoc(d))
-    } else {
-      filtered = filtered.filter((d) => getProvinceFromDoc(d) === filterProvince)
-    }
+    filtered = filtered.filter((d) => getProvinceFromDoc(d) === filterProvince)
   }
 
   const isGAP = selectedCollection === 'goodAgriPractices'
@@ -223,7 +219,7 @@ export default function ViewRecords() {
     if (currentPage > totalPages) setCurrentPage(totalPages)
   }, [totalPages, currentPage])
 
-  const canEdit = (docItem) => role === 'admin' || docItem.createdBy === user?.uid
+  const canEdit = () => role === 'admin' || role === 'staff'
   const canDelete = () => role === 'admin'
 
   const allDisplayedIds = paginatedList.map((d) => d.id)
@@ -1503,7 +1499,7 @@ export default function ViewRecords() {
     const metaParts = []
     if (filterYear) metaParts.push(`Year: ${formatYearLabel(filterYear)}`)
     if (filterSemester) metaParts.push(`Semester: ${filterSemester}`)
-    if (filterProvince) metaParts.push(`Province: ${filterProvince === '__NO_PROVINCE__' ? 'Unknown / No Province' : filterProvince}`)
+    if (filterProvince) metaParts.push(`Province: ${filterProvince}`)
     if (selectedCollection === 'goodAgriPractices' && filterFormType) {
       const formTypeLabel = filterFormType === 'gapCertification' ? 'GAP Certification' : filterFormType === 'monitoring' ? 'Monitoring of GAP Certified Farmer' : 'Other'
       metaParts.push(`Form Type: ${formTypeLabel}`)
@@ -2044,7 +2040,6 @@ export default function ViewRecords() {
                 placeholder="All Provinces"
                 options={[
                   { value: '', label: 'All Provinces' },
-                  { value: '__NO_PROVINCE__', label: 'Unknown / No Province' },
                   ...PROVINCES.map((p) => ({ value: p, label: p })),
                 ]}
                 leftIcon={<iconify-icon icon="mdi:map-marker-outline" width="18"></iconify-icon>}
@@ -2214,15 +2209,20 @@ export default function ViewRecords() {
                     )}
                     <td className="px-5 py-3.5 whitespace-nowrap">
                       <div className="text-[#1e4d2b] text-xs font-semibold">
-                        {docItem.createdAt ? new Date(docItem.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—'}
-                      </div>
-                      <div className="text-[#5c7355] text-[10px] font-medium">
-                        {docItem.createdAt ? new Date(docItem.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                        {docItem.formSubmissionDate
+                          ? (() => {
+                              const d = docItem.formSubmissionDate
+                              const date = typeof d === 'string' ? new Date(d) : (d?.toDate ? d.toDate() : null)
+                              return date && !isNaN(date.getTime())
+                                ? date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })
+                                : String(d).slice(0, 10) || '—'
+                            })()
+                          : '—'}
                       </div>
                     </td>
                     <td className="px-5 py-3.5 text-center">
                       <div className="flex items-center justify-center gap-1.5">
-                        {canEdit(docItem) && (
+                        {canEdit() && (
                           <button onClick={() => openEdit(docItem)} className="p-2 rounded-xl bg-[#1e4d2b]/10 border-2 border-[#1e4d2b]/30 text-[#1e4d2b] hover:bg-[#1e4d2b]/20 hover:border-[#1e4d2b] hover:shadow-md active:scale-95 transition-all duration-300" title="Edit">
                             <iconify-icon icon="mdi:pencil-outline" width="18"></iconify-icon>
                           </button>

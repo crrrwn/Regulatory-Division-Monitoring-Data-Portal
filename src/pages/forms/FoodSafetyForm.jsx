@@ -19,6 +19,7 @@ const initialState = {
   recommendation: '',
   attachmentFileName: '',
   attachmentData: '',
+  formSubmissionDate: '',
 }
 
 const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB (Firestore doc limit ~1 MB)
@@ -89,6 +90,10 @@ export default function FoodSafetyForm() {
           <p className="mt-2 text-[10px] text-[#5c574f]">
             {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 768 KB (Images/PDF)'}
           </p>
+        </div>
+        <div>
+          <label className={labelClass}>Form Submission Date (for year count)</label>
+          <input type="date" value={form.formSubmissionDate} onChange={(e) => update('formSubmissionDate', e.target.value)} className={inputClass} aria-label="Form Submission Date" />
         </div>
 
         {message && (

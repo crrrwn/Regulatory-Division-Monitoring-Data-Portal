@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { getSystemLogs } from '../lib/systemLogs'
+import { getSystemLogs, deleteSystemLog, deleteSystemLogsByPeriod } from '../lib/systemLogs'
 import AppSelect from '../components/AppSelect'
 
 const ACTION_LABELS = {
@@ -43,6 +43,13 @@ export default function SystemLogs() {
   const [actionFilter, setActionFilter] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [deleteConfirming, setDeleteConfirming] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
+  const [deleteYear, setDeleteYear] = useState('')
+  const [deleteMonth, setDeleteMonth] = useState('')
+  const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [bulkDeleteResult, setBulkDeleteResult] = useState(null)
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -79,6 +86,34 @@ export default function SystemLogs() {
     setCurrentPage(1)
   }, [actionFilter, roleFilter])
 
+  const yearOptions = useMemo(() => {
+    const years = new Set()
+    logs.forEach((l) => {
+      if (!l.timestamp) return
+      const d = new Date(l.timestamp)
+      if (!isNaN(d.getTime())) years.add(d.getFullYear())
+    })
+    return Array.from(years)
+      .sort((a, b) => b - a)
+      .map((y) => ({ value: String(y), label: String(y) }))
+  }, [logs])
+
+  const MONTH_OPTIONS = [
+    { value: '', label: 'All months' },
+    { value: '1', label: 'January' },
+    { value: '2', label: 'February' },
+    { value: '3', label: 'March' },
+    { value: '4', label: 'April' },
+    { value: '5', label: 'May' },
+    { value: '6', label: 'June' },
+    { value: '7', label: 'July' },
+    { value: '8', label: 'August' },
+    { value: '9', label: 'September' },
+    { value: '10', label: 'October' },
+    { value: '11', label: 'November' },
+    { value: '12', label: 'December' },
+  ]
+
   const formatDate = (iso) => {
     if (!iso) return '—'
     const d = new Date(iso)
@@ -86,6 +121,54 @@ export default function SystemLogs() {
       dateStyle: 'short',
       timeStyle: 'medium',
     })
+  }
+
+  const handleDeleteClick = (log) => setDeleteConfirming(log)
+  const handleDeleteCancel = () => setDeleteConfirming(null)
+  const handleDeleteConfirm = async () => {
+    if (!deleteConfirming) return
+    const { id } = deleteConfirming
+    setDeletingId(id)
+    try {
+      await deleteSystemLog(id)
+      setLogs((prev) => prev.filter((l) => l.id !== id))
+      setDeleteConfirming(null)
+    } catch (err) {
+      setError(err.message || 'Failed to delete log.')
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
+  const handleBulkDelete = async () => {
+    if (!deleteYear || bulkDeleting) return
+    setBulkDeleting(true)
+    setBulkDeleteResult(null)
+    setError('')
+    try {
+      const yearNum = Number(deleteYear)
+      const monthNum = deleteMonth ? Number(deleteMonth) : null
+      const result = await deleteSystemLogsByPeriod({ year: yearNum, month: monthNum })
+      setBulkDeleteResult(result)
+      if (result.deleted > 0) {
+        setLogs((prev) =>
+          prev.filter((l) => {
+            if (!l.timestamp) return true
+            const d = new Date(l.timestamp)
+            if (isNaN(d.getTime())) return true
+            const y = d.getFullYear()
+            const m = d.getMonth() + 1
+            if (y !== yearNum) return true
+            if (monthNum) return m !== monthNum
+            return false
+          })
+        )
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to delete logs.')
+    } finally {
+      setBulkDeleting(false)
+    }
   }
 
   return (
@@ -144,14 +227,32 @@ export default function SystemLogs() {
               className="min-w-0"
             />
           </div>
-          <div className="flex items-center justify-end gap-2 lg:pb-0.5">
-            <span className="text-sm font-bold text-[#1e4d2b]">
-              <span className="tabular-nums">{filtered.length}</span>
-              <span className="text-[#5c574f] font-semibold"> of </span>
-              <span className="tabular-nums">{logs.length}</span>
-              <span className="text-[#5c574f] font-semibold"> logs</span>
-            </span>
-            <span className="text-[10px] font-semibold text-[#8a857c] uppercase tracking-wider">· {PAGE_SIZE} per page</span>
+          <div className="flex flex-col lg:items-end lg:pb-0.5 gap-2">
+            <div className="flex items-center justify-end gap-2">
+              <span className="text-sm font-bold text-[#1e4d2b]">
+                <span className="tabular-nums">{filtered.length}</span>
+                <span className="text-[#5c574f] font-semibold"> of </span>
+                <span className="tabular-nums">{logs.length}</span>
+                <span className="text-[#5c574f] font-semibold"> logs</span>
+              </span>
+              <span className="text-[10px] font-semibold text-[#8a857c] uppercase tracking-wider">· {PAGE_SIZE} per page</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setBulkDeleteOpen(true); setBulkDeleteResult(null); }}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl border-2 border-red-200 bg-red-50 text-red-700 font-bold text-xs uppercase tracking-wider hover:bg-red-100 hover:border-red-400 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all duration-200"
+              >
+                <iconify-icon icon="mdi:trash-can-outline" width="16"></iconify-icon>
+                Delete by date
+              </button>
+            </div>
+            {bulkDeleteResult && (
+              <p className="text-[11px] text-[#5c574f] font-medium text-right">
+                Deleted <span className="font-bold text-[#1e4d2b] tabular-nums">{bulkDeleteResult.deleted}</span> log(s){' '}
+                {deleteMonth ? `for ${MONTH_OPTIONS.find((m) => m.value === deleteMonth)?.label || ''} ${deleteYear}` : `for year ${deleteYear}`}.
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -196,6 +297,7 @@ export default function SystemLogs() {
                       <th className="px-5 py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap text-left">User</th>
                       <th className="px-5 py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap text-left">Role</th>
                       <th className="px-5 py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider text-left">Details</th>
+                      <th className="px-4 py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider text-center w-20">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#e8e0d4] bg-white">
@@ -227,6 +329,21 @@ export default function SystemLogs() {
                           </span>
                         </td>
                         <td className="px-5 py-3 text-[#5c574f] text-xs max-w-[240px] truncate" title={log.details || ''}>{log.details || '—'}</td>
+                        <td className="px-4 py-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteClick(log)}
+                            disabled={deletingId === log.id}
+                            title="Delete this log"
+                            className="inline-flex items-center justify-center w-9 h-9 rounded-xl border-2 border-red-200/80 bg-red-50/80 text-red-600 hover:bg-red-100 hover:border-red-300 hover:shadow-md hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 group/btn"
+                          >
+                            {deletingId === log.id ? (
+                              <iconify-icon icon="mdi:loading" width="18" className="animate-spin"></iconify-icon>
+                            ) : (
+                              <iconify-icon icon="mdi:trash-can-outline" width="18" className="group-hover/btn:scale-110 transition-transform"></iconify-icon>
+                            )}
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -265,6 +382,136 @@ export default function SystemLogs() {
           )}
         </div>
       </div>
+
+      {/* Delete single log confirmation modal */}
+      {deleteConfirming && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-2xl shadow-[#1e4d2b]/20 max-w-md w-full overflow-hidden">
+            <div className="px-6 py-5 border-b border-[#e8e0d4] bg-gradient-to-r from-[#faf8f5] to-[#f5f0e8]">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-red-100 border-2 border-red-200">
+                  <iconify-icon icon="mdi:trash-can-outline" width="28" className="text-red-600"></iconify-icon>
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-[#1e4d2b] uppercase tracking-tight">Delete log?</h3>
+                  <p className="text-sm text-[#5c574f] mt-0.5">This action cannot be undone.</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-4 text-sm text-[#2d2a26]">
+              <p className="font-semibold text-[#1e4d2b]">{ACTION_LABELS[deleteConfirming.action] || deleteConfirming.action}</p>
+              <p className="text-[#5c574f] mt-1">{formatDate(deleteConfirming.timestamp)} · {deleteConfirming.userEmail || '—'}</p>
+            </div>
+            <div className="px-6 py-4 flex gap-3 justify-end border-t border-[#e8e0d4] bg-[#faf8f5]">
+              <button
+                type="button"
+                onClick={handleDeleteCancel}
+                className="px-5 py-2.5 rounded-xl border-2 border-[#e8e0d4] bg-white text-[#5c574f] font-bold text-sm hover:bg-[#f5f0e8] hover:border-[#b8a066]/40 transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteConfirm}
+                disabled={deletingId === deleteConfirming.id}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 shadow-lg hover:shadow-red-600/25 disabled:opacity-60 transition-all duration-200"
+              >
+                {deletingId === deleteConfirming.id ? (
+                  <>
+                    <iconify-icon icon="mdi:loading" width="18" className="animate-spin"></iconify-icon>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
+                    Delete log
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk delete by date modal */}
+      {bulkDeleteOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="rounded-2xl border-2 border-[#e8e0d4] bg-white shadow-2xl shadow-[#1e4d2b]/20 max-w-md w-full overflow-hidden">
+            <div className="px-6 py-5 border-b border-[#e8e0d4] bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019]">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-red-100 border-2 border-red-200">
+                  <iconify-icon icon="mdi:trash-can-clock-outline" width="28" className="text-red-700"></iconify-icon>
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-white uppercase tracking-tight">Delete logs by date</h3>
+                  <p className="text-[11px] font-semibold text-white/85 tracking-wider mt-0.5">Choose year and optional month to remove logs.</p>
+                </div>
+              </div>
+            </div>
+            <div className="px-6 py-5 space-y-4 bg-gradient-to-b from-[#faf8f5] to-[#f5f0e8]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Year<span className="text-red-600">*</span></label>
+                  <AppSelect
+                    options={yearOptions.length ? [{ value: '', label: 'Select year...' }, ...yearOptions] : [{ value: '', label: 'Select year...' }]}
+                    value={deleteYear}
+                    onChange={(val) => setDeleteYear(val)}
+                    placeholder="Select year..."
+                    aria-label="Year to delete"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-[#5c7355] uppercase tracking-wider mb-1.5">Month (optional)</label>
+                  <AppSelect
+                    options={MONTH_OPTIONS}
+                    value={deleteMonth}
+                    onChange={(val) => setDeleteMonth(val)}
+                    placeholder="All months"
+                    aria-label="Month to delete"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-[#5c574f]">
+                <span className="font-semibold text-[#1e4d2b]">Note:</span> This will permanently delete all logs for the selected year
+                {deleteMonth ? ' and month.' : ' (or entire year if no month is selected).'}
+              </p>
+              {bulkDeleteResult && (
+                <p className="text-[11px] text-[#5c574f] font-medium">
+                  Deleted <span className="font-bold text-[#1e4d2b] tabular-nums">{bulkDeleteResult.deleted}</span> log(s)
+                  {deleteMonth ? ` for ${MONTH_OPTIONS.find((m) => m.value === deleteMonth)?.label || ''} ${deleteYear}` : ` for year ${deleteYear}`}.
+                </p>
+              )}
+            </div>
+            <div className="px-6 py-4 flex gap-3 justify-end border-t border-[#e8e0d4] bg-white">
+              <button
+                type="button"
+                onClick={() => { setBulkDeleteOpen(false); setBulkDeleting(false); }}
+                className="px-5 py-2.5 rounded-xl border-2 border-[#e8e0d4] bg-white text-[#5c574f] font-bold text-sm hover:bg-[#f5f0e8] hover:border-[#b8a066]/40 transition-all duration-200"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkDelete}
+                disabled={!deleteYear || bulkDeleting}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-600 text-white font-bold text-sm hover:bg-red-700 shadow-lg hover:shadow-red-600/25 disabled:opacity-60 transition-all duration-200"
+              >
+                {bulkDeleting ? (
+                  <>
+                    <iconify-icon icon="mdi:loading" width="18" className="animate-spin"></iconify-icon>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <iconify-icon icon="mdi:trash-can-outline" width="18"></iconify-icon>
+                    Delete logs
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

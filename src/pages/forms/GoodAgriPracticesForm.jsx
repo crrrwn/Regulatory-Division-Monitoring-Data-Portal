@@ -41,6 +41,7 @@ export default function GoodAgriPracticesForm() {
   const [recommendation, setRecommendation] = useState('')
   const [attachmentFileName, setAttachmentFileName] = useState('')
   const [attachmentData, setAttachmentData] = useState('')
+  const [formSubmissionDate, setFormSubmissionDate] = useState('')
 
   const { submit, loading, message, setMessage } = useFormSubmit('goodAgriPractices')
 
@@ -64,7 +65,7 @@ export default function GoodAgriPracticesForm() {
   }
 
   const buildPayload = () => {
-    const base = { formType, semester, controlNo, location, province, area, remarks, ...ratings, recommendation, attachmentFileName, attachmentData }
+    const base = { formType, semester, controlNo, location, province, area, remarks, ...ratings, recommendation, attachmentFileName, attachmentData, formSubmissionDate }
     if (formType === 'gapCertification') {
       return {
         ...base,
@@ -111,6 +112,7 @@ export default function GoodAgriPracticesForm() {
     setRecommendation('')
     setAttachmentFileName('')
     setAttachmentData('')
+    setFormSubmissionDate('')
   }
 
   const handleSubmit = async (e) => {
@@ -248,6 +250,10 @@ export default function GoodAgriPracticesForm() {
                     <p className="mt-2 text-[10px] text-[#5c574f]">
                       {attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {attachmentFileName}</span> : 'Max file size: 768 KB (Images/PDF)'}
                     </p>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Form Submission Date (for year count)</label>
+                    <input type="date" value={formSubmissionDate} onChange={(e) => setFormSubmissionDate(e.target.value)} className={inputClass} aria-label="Form Submission Date" />
                   </div>
                 </div>
               </div>

@@ -58,8 +58,9 @@ async function fetchAnalytics() {
       if (!year) year = 'Unknown'
       byYear[year] = (byYear[year] || 0) + 1
       const province = getProvinceFromDoc(data)
-      const provKey = province || 'Unknown / No Province'
-      byProvince[provKey] = (byProvince[provKey] || 0) + 1
+      if (province) {
+        byProvince[province] = (byProvince[province] || 0) + 1
+      }
 
       let hasAnyRating = false
       const rowScores = []

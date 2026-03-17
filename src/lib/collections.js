@@ -62,9 +62,11 @@ export const COLLECTION_TITLE_FIELD = {
   safdzValidation: 'nameOfApplicant',
 }
 
-// Date-of-application field per collection for Master Records "by year" (from Edit Record labels / first application date).
-// goodAgriPractices: try dateOfRequest then dateOfMonitoring. Units with no date use null.
-export const COLLECTION_DATE_FIELD_FOR_YEAR = {
+// Single field used for "by year" count across all forms (same for every collection).
+export const FORM_SUBMISSION_DATE_FIELD = 'formSubmissionDate'
+
+// Original date fields per collection (for backfilling formSubmissionDate on existing records).
+export const OLD_COLLECTION_DATE_FIELD_FOR_YEAR = {
   animalFeed: 'date',
   animalWelfare: 'dateApplied',
   livestockHandlers: 'dateOfApplicationReceivedAndEvaluated',
@@ -82,36 +84,54 @@ export const COLLECTION_DATE_FIELD_FOR_YEAR = {
   safdzValidation: 'dateReceived',
 }
 
+export const COLLECTION_DATE_FIELD_FOR_YEAR = {
+  animalFeed: FORM_SUBMISSION_DATE_FIELD,
+  animalWelfare: FORM_SUBMISSION_DATE_FIELD,
+  livestockHandlers: FORM_SUBMISSION_DATE_FIELD,
+  transportCarrier: FORM_SUBMISSION_DATE_FIELD,
+  plantMaterial: FORM_SUBMISSION_DATE_FIELD,
+  organicAgri: FORM_SUBMISSION_DATE_FIELD,
+  goodAgriPractices: FORM_SUBMISSION_DATE_FIELD,
+  goodAnimalHusbandry: FORM_SUBMISSION_DATE_FIELD,
+  organicPostMarket: FORM_SUBMISSION_DATE_FIELD,
+  landUseMatter: FORM_SUBMISSION_DATE_FIELD,
+  foodSafety: FORM_SUBMISSION_DATE_FIELD,
+  plantPestSurveillance: FORM_SUBMISSION_DATE_FIELD,
+  cfsAdmcc: FORM_SUBMISSION_DATE_FIELD,
+  animalDiseaseSurveillance: FORM_SUBMISSION_DATE_FIELD,
+  safdzValidation: FORM_SUBMISSION_DATE_FIELD,
+}
+
 // Edit modal in ViewRecords: same order as in each form in pages/forms (keep in sync with form payloads).
 export const COLLECTION_FIELD_ORDER = {
-  animalFeed: ['date', 'semester', 'province', 'controlNo', 'registrationNo', 'dateOfInspection', 'dateOfMonitoring', 'companyName', 'lastName', 'middleName', 'firstName', 'nameExt', 'completeName', 'birthDate', 'barangay', 'municipality', 'completeAddress', 'officeAddress', 'plantAddress', 'cellphone', 'email', 'natureOfBusiness', 'businessOrg', 'productLines', 'type', 'orNo', 'orDate', 'fee', 'dateIssued', 'dateOfFeedSampling1stSem', 'dateOfFeedSampling2ndSem', 'noOfFeedSamples1stSem', 'noOfFeedSamples2ndSem', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  animalWelfare: ['dateApplied', 'semester', 'facilityName', 'ownerName', 'province', 'address', 'facilityType', 'certificateNo', 'dateOfInspection', 'orNo', 'orDate', 'fee', 'endorsementToBAI', 'registrationDate', 'validityDate', 'status', 'applicationType', 'speciesHandled', 'headVet', 'prcLicenseNo', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  livestockHandlers: ['semester', 'controlNo', 'registrationNo', 'nameOfEstablishment', 'nameOfApplicant', 'address', 'province', 'typeOfApplication', 'dateOfApplicationReceivedAndEvaluated', 'orNumber', 'orDate', 'amountOfFeeCollected', 'dateOfInspection', 'dateOfCertification', 'transmittalDateToBAI', 'validity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  transportCarrier: ['semester', 'controlNo', 'registrationNo', 'nameOfEstablishment', 'nameOfApplicant', 'address', 'province', 'typeOfApplication', 'dateOfApplicationReceivedAndEvaluated', 'orNumber', 'orDate', 'amountOfFeeCollected', 'dateOfInspectionAndMonitoring', 'dateOfCertification', 'transmittalDateToBAI', 'validity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  plantMaterial: ['formType', 'semester', 'applicant', 'nameOfNursery', 'areaOfNursery', 'province', 'location', 'cropsVariety', 'submissionOfApplicationForm', 'evaluationOfDocumentary', 'paymentOfApplicationFee', 'amountOfFee', 'dateOfInspectionOfNursery', 'validatedResult', 'endorsementOfApplication', 'nameOfOperator', 'accreditedCropsVariety', 'status', 'validityDateOfAccreditation', 'dateOfMonitoring', 'remarks', 'nameOfPlantNursery', 'operator', 'asOfMonthYear', 'items', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  organicAgri: ['semester', 'application', 'dateOfApplication', 'nameOfGroup', 'nameOfApplicant', 'province', 'location', 'area', 'dateOfEvaluation', 'remarks', 'dateOfEndorsement', 'finalInspection', 'status', 'issuanceOfCertificate', 'finalRemarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  goodAgriPractices: ['formType', 'semester', 'controlNo', 'dateOfRequest', 'nameOfApplicant', 'location', 'province', 'area', 'crop', 'dateOfPreAssessment', 'remarks', 'dateOfEndorsementToBPI', 'dateOfFinalInspection', 'status', 'dateOfMonitoring', 'nameOfFarmer', 'certificateNumber', 'certificateValidity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  goodAnimalHusbandry: ['semester', 'province', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  organicPostMarket: ['semester', 'requestLetterDate', 'identifiedMarketOutlet', 'dateOfCommunicationLetter', 'nameOfProduct', 'commodity', 'certification', 'nameOfOwnerManager', 'province', 'location', 'dateOfSurveillance', 'dateOfRelease', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  landUseMatter: ['semester', 'controlNo', 'nameOfApplicant', 'purposeOfApplication', 'sizeOfArea', 'province', 'location', 'dateOfRequest', 'dateReceivedAndEvaluated', 'dateOfReplyToRequest', 'dateReceivedByApplicant', 'fieldInvestigation', 'dateOfEndorsement', 'issuanceOfCertificate', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  foodSafety: ['semester', 'province', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  plantPestSurveillance: ['semester', 'dateOfRequestAndCollection', 'farmerName', 'province', 'address', 'contactNumber', 'gpsLocation', 'crop', 'variety', 'datePlanted', 'areaPlanted', 'areaAffected', 'percentInfestation', 'pestsDiseases', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  cfsAdmcc: ['semester', 'clientName', 'typeOfDiseaseSurveillance', 'purpose', 'province', 'address', 'dateOfRequest', 'dateOfSurveillance', 'numberOfSamples', 'dateSubmittedToLab', 'dateOfEndorsementToDA', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  animalDiseaseSurveillance: ['semester', 'clientName', 'typeOfDiseaseSurveillance', 'purpose', 'province', 'address', 'dateOfRequest', 'dateOfSurveillance', 'numberOfSamples', 'dateSubmittedToLab', 'dateOfEndorsementToDA', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  safdzValidation: ['semester', 'explorationPermitApplicationNo', 'nameOfApplicant', 'dateReceived', 'province', 'location', 'area', 'dateOfReplyToRequest', 'endorsementToBSWM', 'endorsementToMGB', 'fieldValidation', 'remarks', 'rescheduledDate', 'fieldValidationReport', 'issuanceOfCertificateAndEndorsementToMGB', 'status', 'findings', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
+  animalFeed: ['date', 'semester', 'province', 'controlNo', 'registrationNo', 'dateOfInspection', 'dateOfMonitoring', 'companyName', 'lastName', 'middleName', 'firstName', 'nameExt', 'completeName', 'birthDate', 'barangay', 'municipality', 'completeAddress', 'officeAddress', 'plantAddress', 'cellphone', 'email', 'natureOfBusiness', 'businessOrg', 'productLines', 'type', 'orNo', 'orDate', 'fee', 'dateIssued', 'dateOfFeedSampling1stSem', 'dateOfFeedSampling2ndSem', 'noOfFeedSamples1stSem', 'noOfFeedSamples2ndSem', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  animalWelfare: ['dateApplied', 'semester', 'facilityName', 'ownerName', 'province', 'address', 'facilityType', 'certificateNo', 'dateOfInspection', 'orNo', 'orDate', 'fee', 'endorsementToBAI', 'registrationDate', 'validityDate', 'status', 'applicationType', 'speciesHandled', 'headVet', 'prcLicenseNo', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  livestockHandlers: ['semester', 'controlNo', 'registrationNo', 'nameOfEstablishment', 'nameOfApplicant', 'address', 'province', 'typeOfApplication', 'dateOfApplicationReceivedAndEvaluated', 'orNumber', 'orDate', 'amountOfFeeCollected', 'dateOfInspection', 'dateOfCertification', 'transmittalDateToBAI', 'validity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  transportCarrier: ['semester', 'controlNo', 'registrationNo', 'nameOfEstablishment', 'nameOfApplicant', 'address', 'province', 'typeOfApplication', 'dateOfApplicationReceivedAndEvaluated', 'orNumber', 'orDate', 'amountOfFeeCollected', 'dateOfInspectionAndMonitoring', 'dateOfCertification', 'transmittalDateToBAI', 'validity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  plantMaterial: ['formType', 'semester', 'applicant', 'nameOfNursery', 'areaOfNursery', 'province', 'location', 'cropsVariety', 'submissionOfApplicationForm', 'evaluationOfDocumentary', 'paymentOfApplicationFee', 'amountOfFee', 'dateOfInspectionOfNursery', 'validatedResult', 'endorsementOfApplication', 'nameOfOperator', 'accreditedCropsVariety', 'status', 'validityDateOfAccreditation', 'dateOfMonitoring', 'remarks', 'nameOfPlantNursery', 'operator', 'asOfMonthYear', 'items', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  organicAgri: ['semester', 'application', 'dateOfApplication', 'nameOfGroup', 'nameOfApplicant', 'province', 'location', 'area', 'dateOfEvaluation', 'remarks', 'dateOfEndorsement', 'finalInspection', 'status', 'issuanceOfCertificate', 'finalRemarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  goodAgriPractices: ['formType', 'semester', 'controlNo', 'dateOfRequest', 'nameOfApplicant', 'location', 'province', 'area', 'crop', 'dateOfPreAssessment', 'remarks', 'dateOfEndorsementToBPI', 'dateOfFinalInspection', 'status', 'dateOfMonitoring', 'nameOfFarmer', 'certificateNumber', 'certificateValidity', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  goodAnimalHusbandry: ['semester', 'province', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  organicPostMarket: ['semester', 'requestLetterDate', 'identifiedMarketOutlet', 'dateOfCommunicationLetter', 'nameOfProduct', 'commodity', 'certification', 'nameOfOwnerManager', 'province', 'location', 'dateOfSurveillance', 'dateOfRelease', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  landUseMatter: ['semester', 'controlNo', 'nameOfApplicant', 'purposeOfApplication', 'sizeOfArea', 'province', 'location', 'dateOfRequest', 'dateReceivedAndEvaluated', 'dateOfReplyToRequest', 'dateReceivedByApplicant', 'fieldInvestigation', 'dateOfEndorsement', 'issuanceOfCertificate', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  foodSafety: ['semester', 'province', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  plantPestSurveillance: ['semester', 'dateOfRequestAndCollection', 'farmerName', 'province', 'address', 'contactNumber', 'gpsLocation', 'crop', 'variety', 'datePlanted', 'areaPlanted', 'areaAffected', 'percentInfestation', 'pestsDiseases', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  cfsAdmcc: ['semester', 'clientName', 'typeOfDiseaseSurveillance', 'purpose', 'province', 'address', 'dateOfRequest', 'dateOfSurveillance', 'numberOfSamples', 'dateSubmittedToLab', 'dateOfEndorsementToDA', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  animalDiseaseSurveillance: ['semester', 'clientName', 'typeOfDiseaseSurveillance', 'purpose', 'province', 'address', 'dateOfRequest', 'dateOfSurveillance', 'numberOfSamples', 'dateSubmittedToLab', 'dateOfEndorsementToDA', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  safdzValidation: ['semester', 'explorationPermitApplicationNo', 'nameOfApplicant', 'dateReceived', 'province', 'location', 'area', 'dateOfReplyToRequest', 'endorsementToBSWM', 'endorsementToMGB', 'fieldValidation', 'remarks', 'rescheduledDate', 'fieldValidationReport', 'issuanceOfCertificateAndEndorsementToMGB', 'status', 'findings', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
 }
 
 // GoodAgriPractices: which fields to show in ViewRecords Edit per form type (only that form’s fields)
 export const GOOD_AGRI_PRACTICES_FORM_FIELDS = {
-  gapCertification: ['formType', 'semester', 'controlNo', 'dateOfRequest', 'nameOfApplicant', 'location', 'province', 'area', 'crop', 'dateOfPreAssessment', 'remarks', 'dateOfEndorsementToBPI', 'dateOfFinalInspection', 'status', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  monitoring: ['formType', 'semester', 'controlNo', 'dateOfMonitoring', 'nameOfFarmer', 'location', 'province', 'area', 'certificateNumber', 'certificateValidity', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
+  gapCertification: ['formType', 'semester', 'controlNo', 'dateOfRequest', 'nameOfApplicant', 'location', 'province', 'area', 'crop', 'dateOfPreAssessment', 'remarks', 'dateOfEndorsementToBPI', 'dateOfFinalInspection', 'status', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  monitoring: ['formType', 'semester', 'controlNo', 'dateOfMonitoring', 'nameOfFarmer', 'location', 'province', 'area', 'certificateNumber', 'certificateValidity', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
 }
 
 // PlantMaterial (Plant Nursery): which fields to show in ViewRecords Edit per form type
 export const PLANT_MATERIAL_FORM_FIELDS = {
-  accreditation: ['formType', 'semester', 'applicant', 'nameOfNursery', 'areaOfNursery', 'province', 'location', 'cropsVariety', 'submissionOfApplicationForm', 'evaluationOfDocumentary', 'paymentOfApplicationFee', 'amountOfFee', 'dateOfInspectionOfNursery', 'validatedResult', 'endorsementOfApplication', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  monitoring: ['formType', 'semester', 'nameOfNursery', 'nameOfOperator', 'province', 'location', 'accreditedCropsVariety', 'areaOfNursery', 'status', 'validityDateOfAccreditation', 'dateOfMonitoring', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData'],
-  stockInventory: ['formType', 'nameOfPlantNursery', 'operator', 'province', 'location', 'asOfMonthYear', 'items'],
+  accreditation: ['formType', 'semester', 'applicant', 'nameOfNursery', 'areaOfNursery', 'province', 'location', 'cropsVariety', 'submissionOfApplicationForm', 'evaluationOfDocumentary', 'paymentOfApplicationFee', 'amountOfFee', 'dateOfInspectionOfNursery', 'validatedResult', 'endorsementOfApplication', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  monitoring: ['formType', 'semester', 'nameOfNursery', 'nameOfOperator', 'province', 'location', 'accreditedCropsVariety', 'areaOfNursery', 'status', 'validityDateOfAccreditation', 'dateOfMonitoring', 'remarks', 'ratingQuantity', 'ratingServicesPersonnel', 'ratingTraining', 'ratingAttitude', 'ratingPromptness', 'recommendation', 'attachmentFileName', 'attachmentData', 'formSubmissionDate'],
+  stockInventory: ['formType', 'nameOfPlantNursery', 'operator', 'province', 'location', 'asOfMonthYear', 'items', 'formSubmissionDate'],
 }
 
 // Rating fields for Plant Pest Surveillance (1-5 scale)
@@ -173,6 +193,7 @@ export const COLLECTION_FIELD_LABELS = {
     ratingAttitude: '2.2 Attitude (courteousness)',
     ratingPromptness: '2.3 Promptness in attending the request',
     recommendation: 'Recommendation',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   animalWelfare: {
     dateApplied: 'Date of Application',
@@ -203,6 +224,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   livestockHandlers: {
     semester: 'Semester',
@@ -229,6 +251,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   transportCarrier: {
     semester: 'Semester',
@@ -255,6 +278,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   plantMaterial: {
     formType: 'Form Type',
@@ -291,6 +315,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   organicPostMarket: {
     semester: 'Semester',
@@ -316,6 +341,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   landUseMatter: {
     controlNo: 'Control No.',
@@ -340,6 +366,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   organicAgri: {
     semester: 'Semester',
@@ -367,6 +394,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   goodAgriPractices: {
     formType: 'Form Type',
@@ -395,6 +423,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   goodAnimalHusbandry: {
     semester: 'Semester',
@@ -407,6 +436,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   plantPestSurveillance: {
     semester: 'Semester',
@@ -432,6 +462,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   cfsAdmcc: {
     semester: 'Semester',
@@ -454,6 +485,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   animalDiseaseSurveillance: {
     clientName: 'Name of Local Government Unit/Client/Farm',
@@ -475,6 +507,7 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
   safdzValidation: {
     semester: 'Semester',
@@ -502,5 +535,6 @@ export const COLLECTION_FIELD_LABELS = {
     recommendation: 'Recommendation',
     attachmentFileName: 'Attachments (file name)',
     attachmentData: 'Attachments (file)',
+    formSubmissionDate: 'Form Submission Date (for year count)',
   },
 }
