@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
 import { sanitizeAttachmentFileName } from '../lib/attachmentFileName'
+import { uploadAttachmentBase64 } from '../lib/attachmentStorage'
 
 export function useFormSubmit(collectionName) {
   const [loading, setLoading] = useState(false)
@@ -19,9 +20,25 @@ export function useFormSubmit(collectionName) {
       const normalizedAttachmentFileName = data?.attachmentFileName
         ? sanitizeAttachmentFileName(data.attachmentFileName)
         : data?.attachmentFileName || ''
-      const normalizedData = {
+      let normalizedData = {
         ...data,
         attachmentFileName: normalizedAttachmentFileName,
+      }
+      if (normalizedData?.attachmentData) {
+        const uploaded = await uploadAttachmentBase64({
+          base64: normalizedData.attachmentData,
+          fileName: normalizedAttachmentFileName || 'attachment',
+          collectionName,
+          docId: docId || 'new',
+        })
+        normalizedData = {
+          ...normalizedData,
+          attachmentFileName: uploaded.fileName,
+          attachmentUrl: uploaded.url,
+          attachmentPath: uploaded.path,
+          attachmentSizeBytes: uploaded.size,
+          attachmentData: '',
+        }
       }
       const payload = {
         ...normalizedData,

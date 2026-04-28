@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
 import { sanitizeAttachmentFileName } from '../lib/attachmentFileName'
+import { uploadAttachmentBase64 } from '../lib/attachmentStorage'
 import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, PLANT_MATERIAL_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS, COLLECTION_DATE_FIELD_FOR_YEAR } from '../lib/collections'
 import { useDisabledUnits } from '../context/DisabledUnitsContext'
 import { getUnitIdsForSections } from '../lib/sections'
@@ -1327,6 +1328,12 @@ export default function ViewRecords() {
       const formKeys = order.filter((k) => !skip.includes(k))
       const onlyFormFields = {}
       formKeys.forEach((k) => { onlyFormFields[k] = rest[k] })
+      if (rest.attachmentUrl && !Object.prototype.hasOwnProperty.call(onlyFormFields, 'attachmentUrl')) {
+        onlyFormFields.attachmentUrl = rest.attachmentUrl
+      }
+      if (rest.attachmentPath && !Object.prototype.hasOwnProperty.call(onlyFormFields, 'attachmentPath')) {
+        onlyFormFields.attachmentPath = rest.attachmentPath
+      }
       setEditForm(onlyFormFields)
     } else {
       setEditForm(rest)
@@ -1354,7 +1361,23 @@ export default function ViewRecords() {
   const saveEdit = async () => {
     if (!editing) return
     try {
-      const payload = { ...editForm, updatedAt: new Date().toISOString() }
+      let payload = { ...editForm, updatedAt: new Date().toISOString() }
+      if (payload?.attachmentData) {
+        const uploaded = await uploadAttachmentBase64({
+          base64: payload.attachmentData,
+          fileName: payload.attachmentFileName || 'attachment',
+          collectionName: selectedCollection,
+          docId: editing,
+        })
+        payload = {
+          ...payload,
+          attachmentFileName: uploaded.fileName,
+          attachmentUrl: uploaded.url,
+          attachmentPath: uploaded.path,
+          attachmentSizeBytes: uploaded.size,
+          attachmentData: '',
+        }
+      }
       const sanitized = sanitizePayloadForFirestore(payload)
       await updateDoc(doc(db, selectedCollection, editing), sanitized)
       setEditing(null)
@@ -1761,7 +1784,12 @@ export default function ViewRecords() {
     if (key === 'attachmentData') {
       const base64 = value && String(value)
       const fileName = editForm.attachmentFileName || 'attachment'
+      const fileUrl = editForm.attachmentUrl ? String(editForm.attachmentUrl) : ''
       const download = () => {
+        if (!base64 && fileUrl) {
+          window.open(fileUrl, '_blank', 'noopener,noreferrer')
+          return
+        }
         try {
           const bin = atob(base64)
           const arr = new Uint8Array(bin.length)
@@ -1778,6 +1806,8 @@ export default function ViewRecords() {
       const removeAttachment = () => {
         updateEditField('attachmentData', '')
         updateEditField('attachmentFileName', '')
+        updateEditField('attachmentUrl', '')
+        updateEditField('attachmentPath', '')
       }
       const handleAttachmentChange = (e) => {
         const file = e.target.files?.[0]
@@ -1793,16 +1823,18 @@ export default function ViewRecords() {
           const b64 = typeof data === 'string' ? data.split(',')[1] || data : ''
           updateEditField('attachmentData', b64)
           updateEditField('attachmentFileName', sanitizeAttachmentFileName(file.name))
+          updateEditField('attachmentUrl', '')
+          updateEditField('attachmentPath', '')
         }
         reader.readAsDataURL(file)
         e.target.value = ''
       }
       return (
         <div className="space-y-3">
-          {base64 && base64.length > 0 ? (
+          {(base64 && base64.length > 0) || fileUrl ? (
             <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border-2 border-[#e8e0d4] bg-[#faf8f5]">
               <span className="text-sm font-semibold text-[#1e4d2b] truncate flex-1 min-w-0" title={fileName}>{fileName}</span>
-              <button type="button" onClick={download} className="px-3 py-2 min-h-[44px] bg-[#1e4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#153019] whitespace-nowrap touch-manipulation">Download</button>
+              <button type="button" onClick={download} className="px-3 py-2 min-h-[44px] bg-[#1e4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#153019] whitespace-nowrap touch-manipulation">{fileUrl && !base64 ? 'Open' : 'Download'}</button>
               <button type="button" onClick={removeAttachment} className="px-3 py-2 min-h-[44px] border-2 border-red-400 text-red-600 rounded-xl text-sm font-bold hover:bg-red-50 whitespace-nowrap touch-manipulation">Remove</button>
             </div>
           ) : (
