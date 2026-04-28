@@ -1,8 +1,9 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import { handleFileAttachment } from '../../lib/handleFileAttachment'
 import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
@@ -36,23 +37,17 @@ export default function LivestockHandlersForm() {
 
   const { submit, loading, message, setMessage } = useFormSubmit('livestockHandlers')
 
-  const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25 MB
+  const [uploading, setUploading] = useState(false)
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
-    if (!file) { setAttachmentFileName(''); setAttachmentData(''); return }
-    if (file.size > MAX_ATTACHMENT_SIZE) {
-      setMessage({ type: 'error', text: 'File too large. Max 25 MB.' })
-      e.target.value = ''
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const data = reader.result
-      setAttachmentFileName(file.name)
-      setAttachmentData(typeof data === 'string' ? data.split(',')[1] || data : '')
-      setMessage(null)
-    }
-    reader.readAsDataURL(file)
+    e.target.value = ''
+    handleFileAttachment(file, {
+      collectionName: 'livestockHandlers',
+      setUploading,
+      setMessage,
+      onSuccess: ({ fileName, attachmentData: url }) => { setAttachmentFileName(fileName); setAttachmentData(url) },
+      onClear: () => { setAttachmentFileName(''); setAttachmentData('') },
+    })
   }
 
   const buildPayload = () => ({

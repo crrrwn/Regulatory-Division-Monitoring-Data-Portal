@@ -7,7 +7,8 @@ import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
 import { sanitizeAttachmentFileName } from '../lib/attachmentFileName'
-import { uploadAttachmentBase64 } from '../lib/attachmentStorage'
+import { isFirestoreFileRef, getFileIdFromRef, loadFileFromChunks } from '../lib/firestoreFileStorage'
+import { handleFileAttachment } from '../lib/handleFileAttachment'
 import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, PLANT_MATERIAL_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS, COLLECTION_DATE_FIELD_FOR_YEAR } from '../lib/collections'
 import { useDisabledUnits } from '../context/DisabledUnitsContext'
 import { getUnitIdsForSections } from '../lib/sections'
@@ -103,6 +104,8 @@ export default function ViewRecords() {
   const [filterFormType, setFilterFormType] = useState('') // Good Agri Practices only: '' | 'gapCertification' | 'monitoring' | 'other'
   const [editing, setEditing] = useState(null)
   const [editForm, setEditForm] = useState({})
+  const [editUploading, setEditUploading] = useState(false)
+  const [editUploadMsg, setEditUploadMsg] = useState(null)
   const [exporting, setExporting] = useState(false)
   const [deleteConfirming, setDeleteConfirming] = useState(null) // { id, name } or { ids: string[], count } or null
   const [deletePhase, setDeletePhase] = useState('confirm') // 'confirm' | 'deleting'
@@ -1328,12 +1331,6 @@ export default function ViewRecords() {
       const formKeys = order.filter((k) => !skip.includes(k))
       const onlyFormFields = {}
       formKeys.forEach((k) => { onlyFormFields[k] = rest[k] })
-      if (rest.attachmentUrl && !Object.prototype.hasOwnProperty.call(onlyFormFields, 'attachmentUrl')) {
-        onlyFormFields.attachmentUrl = rest.attachmentUrl
-      }
-      if (rest.attachmentPath && !Object.prototype.hasOwnProperty.call(onlyFormFields, 'attachmentPath')) {
-        onlyFormFields.attachmentPath = rest.attachmentPath
-      }
       setEditForm(onlyFormFields)
     } else {
       setEditForm(rest)
@@ -1361,23 +1358,8 @@ export default function ViewRecords() {
   const saveEdit = async () => {
     if (!editing) return
     try {
-      let payload = { ...editForm, updatedAt: new Date().toISOString() }
-      if (payload?.attachmentData) {
-        const uploaded = await uploadAttachmentBase64({
-          base64: payload.attachmentData,
-          fileName: payload.attachmentFileName || 'attachment',
-          collectionName: selectedCollection,
-          docId: editing,
-        })
-        payload = {
-          ...payload,
-          attachmentFileName: uploaded.fileName,
-          attachmentUrl: uploaded.url,
-          attachmentPath: uploaded.path,
-          attachmentSizeBytes: uploaded.size,
-          attachmentData: '',
-        }
-      }
+      // attachmentData is base64 (small file), firestore:<fileId> (large file chunks), URL (legacy), or empty.
+      const payload = { ...editForm, updatedAt: new Date().toISOString() }
       const sanitized = sanitizePayloadForFirestore(payload)
       await updateDoc(doc(db, selectedCollection, editing), sanitized)
       setEditing(null)
@@ -1780,61 +1762,77 @@ export default function ViewRecords() {
       )
     }
 
-    // Uploaded file (base64) — display with filename, Download, Remove, and file input to upload/replace
+    // Uploaded file — display with filename, Download, Remove, and file input to upload/replace
     if (key === 'attachmentData') {
-      const base64 = value && String(value)
+      const rawValue = value && String(value)
       const fileName = editForm.attachmentFileName || 'attachment'
-      const fileUrl = editForm.attachmentUrl ? String(editForm.attachmentUrl) : ''
-      const download = () => {
-        if (!base64 && fileUrl) {
-          window.open(fileUrl, '_blank', 'noopener,noreferrer')
-          return
-        }
+      const looksLikeUrl = typeof rawValue === 'string' && (rawValue.startsWith('http://') || rawValue.startsWith('https://'))
+      const hasFile = rawValue && rawValue.length > 0
+
+      const download = async () => {
+        if (!rawValue) return
+        if (looksLikeUrl) { window.open(rawValue, '_blank', 'noopener,noreferrer'); return }
         try {
-          const bin = atob(base64)
-          const arr = new Uint8Array(bin.length)
-          for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i)
-          const blob = new Blob([arr])
+          let base64 = rawValue
+          let dlName = fileName
+          if (isFirestoreFileRef(rawValue)) {
+            const loaded = await loadFileFromChunks(getFileIdFromRef(rawValue))
+            base64 = loaded.base64
+            dlName = loaded.fileName || dlName
+          }
+          // Detect MIME type from extension for better browser handling
+          const ext = (dlName || '').split('.').pop().toLowerCase()
+          const mimeMap = {
+            pdf: 'application/pdf', png: 'image/png', jpg: 'image/jpeg',
+            jpeg: 'image/jpeg', gif: 'image/gif', webp: 'image/webp',
+            doc: 'application/msword',
+            docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            xls: 'application/vnd.ms-excel',
+            xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            csv: 'text/csv', txt: 'text/plain', zip: 'application/zip',
+          }
+          const mime = mimeMap[ext] || 'application/octet-stream'
+          // Use fetch to convert base64 → blob (non-blocking, handles large files)
+          const dataUrl = `data:${mime};base64,${base64}`
+          const res = await fetch(dataUrl)
+          const blob = await res.blob()
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.href = url
-          a.download = fileName
+          a.download = dlName
+          document.body.appendChild(a)
           a.click()
-          URL.revokeObjectURL(url)
-        } catch (_) { /* ignore */ }
+          document.body.removeChild(a)
+          setTimeout(() => URL.revokeObjectURL(url), 1000)
+        } catch (err) { alert(`Download failed: ${err.message}`) }
       }
+
       const removeAttachment = () => {
         updateEditField('attachmentData', '')
         updateEditField('attachmentFileName', '')
-        updateEditField('attachmentUrl', '')
-        updateEditField('attachmentPath', '')
       }
+
       const handleAttachmentChange = (e) => {
         const file = e.target.files?.[0]
-        if (!file) return
-        if (file.size > MAX_ATTACHMENT_SIZE) {
-          alert('File too large. Max 25 MB.')
-          e.target.value = ''
-          return
-        }
-        const reader = new FileReader()
-        reader.onload = () => {
-          const data = reader.result
-          const b64 = typeof data === 'string' ? data.split(',')[1] || data : ''
-          updateEditField('attachmentData', b64)
-          updateEditField('attachmentFileName', sanitizeAttachmentFileName(file.name))
-          updateEditField('attachmentUrl', '')
-          updateEditField('attachmentPath', '')
-        }
-        reader.readAsDataURL(file)
         e.target.value = ''
+        handleFileAttachment(file, {
+          collectionName: selectedCollection,
+          setUploading: setEditUploading,
+          setMessage: setEditUploadMsg,
+          onSuccess: ({ fileName: fn, attachmentData: ad }) => {
+            updateEditField('attachmentFileName', fn)
+            updateEditField('attachmentData', ad)
+          },
+          onClear: () => { updateEditField('attachmentFileName', ''); updateEditField('attachmentData', '') },
+        })
       }
+
       return (
         <div className="space-y-3">
-          {(base64 && base64.length > 0) || fileUrl ? (
+          {hasFile ? (
             <div className="flex flex-wrap items-center gap-2 p-3 rounded-xl border-2 border-[#e8e0d4] bg-[#faf8f5]">
               <span className="text-sm font-semibold text-[#1e4d2b] truncate flex-1 min-w-0" title={fileName}>{fileName}</span>
-              <button type="button" onClick={download} className="px-3 py-2 min-h-[44px] bg-[#1e4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#153019] whitespace-nowrap touch-manipulation">{fileUrl && !base64 ? 'Open' : 'Download'}</button>
+              <button type="button" onClick={download} className="px-3 py-2 min-h-[44px] bg-[#1e4d2b] text-white rounded-xl text-sm font-bold hover:bg-[#153019] whitespace-nowrap touch-manipulation">{looksLikeUrl ? 'Open' : 'Download'}</button>
               <button type="button" onClick={removeAttachment} className="px-3 py-2 min-h-[44px] border-2 border-red-400 text-red-600 rounded-xl text-sm font-bold hover:bg-red-50 whitespace-nowrap touch-manipulation">Remove</button>
             </div>
           ) : (
@@ -1845,10 +1843,17 @@ export default function ViewRecords() {
             <input
               type="file"
               onChange={handleAttachmentChange}
-              className="block w-full text-sm text-[#5c574f] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1e4d2b]/10 file:text-[#1e4d2b] hover:file:bg-[#1e4d2b]/20 border-2 border-dashed border-[#e8e0d4] rounded-xl py-2.5 px-3"
+              disabled={editUploading}
+              className="block w-full text-sm text-[#5c574f] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1e4d2b]/10 file:text-[#1e4d2b] hover:file:bg-[#1e4d2b]/20 border-2 border-dashed border-[#e8e0d4] rounded-xl py-2.5 px-3 disabled:opacity-60"
             />
           </label>
-          <p className="text-[10px] text-[#5c574f]">Max 25 MB (images or PDF). Same as in forms.</p>
+          <p className="text-[10px] text-[#5c574f]">
+            {editUploading
+              ? <span className="text-[#b8a066] font-bold animate-pulse">{editUploadMsg?.text || 'Saving file...'}</span>
+              : editUploadMsg?.type === 'error'
+                ? <span className="text-red-600 font-bold">{editUploadMsg.text}</span>
+                : 'Max 25 MB (images or PDF). Same as in forms.'}
+          </p>
         </div>
       )
     }

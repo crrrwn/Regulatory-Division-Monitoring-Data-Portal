@@ -1,8 +1,9 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import { handleFileAttachment } from '../../lib/handleFileAttachment'
 import { PROVINCES } from '../../lib/regions'
 import 'iconify-icon'
 
@@ -22,7 +23,6 @@ const initialState = {
   formSubmissionDate: '',
 }
 
-const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25 MB
 
 export default function FoodSafetyForm() {
   const [form, setForm] = useState(initialState)
@@ -30,22 +30,17 @@ export default function FoodSafetyForm() {
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
 
+  const [uploading, setUploading] = useState(false)
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
-    if (!file) { update('attachmentFileName', ''); update('attachmentData', ''); return }
-    if (file.size > MAX_ATTACHMENT_SIZE) {
-      setMessage({ type: 'error', text: 'File too large. Max 25 MB.' })
-      e.target.value = ''
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const data = reader.result
-      const base64 = typeof data === 'string' ? data.split(',')[1] || data : ''
-      setForm((f) => ({ ...f, attachmentFileName: file.name, attachmentData: base64 }))
-      setMessage(null)
-    }
-    reader.readAsDataURL(file)
+    e.target.value = ''
+    handleFileAttachment(file, {
+      collectionName: 'foodSafety',
+      setUploading,
+      setMessage,
+      onSuccess: ({ fileName, attachmentData }) => { update('attachmentFileName', fileName); update('attachmentData', attachmentData) },
+      onClear: () => { update('attachmentFileName', ''); update('attachmentData', '') },
+    })
   }
 
   const handleSubmit = async (e) => {

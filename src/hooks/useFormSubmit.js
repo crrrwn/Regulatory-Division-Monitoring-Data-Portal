@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
 import { sanitizeAttachmentFileName } from '../lib/attachmentFileName'
-import { uploadAttachmentBase64 } from '../lib/attachmentStorage'
 
 export function useFormSubmit(collectionName) {
   const [loading, setLoading] = useState(false)
@@ -17,34 +16,21 @@ export function useFormSubmit(collectionName) {
     setLoading(true)
     setMessage(null)
     try {
-      const normalizedAttachmentFileName = data?.attachmentFileName
-        ? sanitizeAttachmentFileName(data.attachmentFileName)
-        : data?.attachmentFileName || ''
-      let normalizedData = {
+      // Sanitize the attachment file name.
+      // attachmentData is either: base64 (small file stored inline), firestore:<fileId> (large file in chunks), or empty.
+      const normalizedData = {
         ...data,
-        attachmentFileName: normalizedAttachmentFileName,
+        attachmentFileName: data?.attachmentFileName
+          ? sanitizeAttachmentFileName(data.attachmentFileName)
+          : '',
       }
-      if (normalizedData?.attachmentData) {
-        const uploaded = await uploadAttachmentBase64({
-          base64: normalizedData.attachmentData,
-          fileName: normalizedAttachmentFileName || 'attachment',
-          collectionName,
-          docId: docId || 'new',
-        })
-        normalizedData = {
-          ...normalizedData,
-          attachmentFileName: uploaded.fileName,
-          attachmentUrl: uploaded.url,
-          attachmentPath: uploaded.path,
-          attachmentSizeBytes: uploaded.size,
-          attachmentData: '',
-        }
-      }
+
       const payload = {
         ...normalizedData,
         createdBy: user?.uid || null,
         createdAt: new Date().toISOString(),
       }
+
       if (docId) {
         await updateDoc(doc(db, collectionName, docId), { ...normalizedData, updatedAt: new Date().toISOString() })
         setMessage({ type: 'success', text: 'Record updated successfully.' })

@@ -4,6 +4,7 @@ import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import AppSelect from '../../components/AppSelect'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
 import { PROVINCES } from '../../lib/regions'
+import { handleFileAttachment } from '../../lib/handleFileAttachment'
 import 'iconify-icon'
 
 const NATURE_OPTIONS = ['Mixed Feed', 'Feed Ingredient Manufacturer', 'Toll Manufacturer', 'Importer', 'Indentor', 'Supplier', 'Distributor', 'Retailer']
@@ -15,7 +16,6 @@ const SEMESTER_OPTIONS = [
   { value: '2nd Semester', label: '2nd Semester' },
 ]
 
-const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25 MB
 
 function buildFullName({ lastName = '', firstName = '', middleName = '', nameExt = '' }) {
   const last = String(lastName).trim()
@@ -55,26 +55,17 @@ export default function AnimalFeedForm() {
     return next
   })
 
+  const [uploading, setUploading] = useState(false)
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
-    if (!file) {
-      update('attachmentFileName', '')
-      update('attachmentData', '')
-      return
-    }
-    if (file.size > MAX_ATTACHMENT_SIZE) {
-      setMessage({ type: 'error', text: 'File too large. Max 25 MB.' })
-      e.target.value = ''
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const data = reader.result
-      const base64 = typeof data === 'string' ? data.split(',')[1] || data : ''
-      setForm((f) => ({ ...f, attachmentFileName: file.name, attachmentData: base64 }))
-      setMessage(null)
-    }
-    reader.readAsDataURL(file)
+    e.target.value = ''
+    handleFileAttachment(file, {
+      collectionName: 'animalFeed',
+      setUploading,
+      setMessage,
+      onSuccess: ({ fileName, attachmentData }) => { update('attachmentFileName', fileName); update('attachmentData', attachmentData) },
+      onClear: () => { update('attachmentFileName', ''); update('attachmentData', '') },
+    })
   }
 
   const handleSubmit = async (e) => {

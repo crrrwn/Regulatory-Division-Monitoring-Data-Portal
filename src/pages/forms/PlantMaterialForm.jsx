@@ -1,9 +1,10 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import FormLayout from '../../components/FormLayout'
 import CustomerRatingsTable from '../../components/CustomerRatingsTable'
 import AppSelect from '../../components/AppSelect'
 import StockInventoryTable from '../../components/StockInventoryTable'
 import { useFormSubmit } from '../../hooks/useFormSubmit'
+import { handleFileAttachment } from '../../lib/handleFileAttachment'
 import { PROVINCES } from '../../lib/regions'
 import { Plus, Trash2 } from 'lucide-react'
 import 'iconify-icon'
@@ -71,7 +72,6 @@ const monitoringInitial = {
 
 const stockInventoryInitial = { formType: 'stockInventory', formSubmissionDate: '' }
 
-const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25 MB
 
 export default function PlantMaterialForm() {
   const [formType, setFormType] = useState('')
@@ -86,22 +86,17 @@ export default function PlantMaterialForm() {
     else if (value === 'stockInventory') setForm({ ...stockInventoryInitial, formType: value })
   }
 
+  const [uploading, setUploading] = useState(false)
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
-    if (!file) { update('attachmentFileName', ''); update('attachmentData', ''); return }
-    if (file.size > MAX_ATTACHMENT_SIZE) {
-      setMessage({ type: 'error', text: 'File too large. Max 25 MB.' })
-      e.target.value = ''
-      return
-    }
-    const reader = new FileReader()
-    reader.onload = () => {
-      const data = reader.result
-      const base64 = typeof data === 'string' ? data.split(',')[1] || data : ''
-      setForm((f) => ({ ...f, attachmentFileName: file.name, attachmentData: base64 }))
-      setMessage(null)
-    }
-    reader.readAsDataURL(file)
+    e.target.value = ''
+    handleFileAttachment(file, {
+      collectionName: 'plantMaterial',
+      setUploading,
+      setMessage,
+      onSuccess: ({ fileName, attachmentData }) => { update('attachmentFileName', fileName); update('attachmentData', attachmentData) },
+      onClear: () => { update('attachmentFileName', ''); update('attachmentData', '') },
+    })
   }
 
   const buildPayload = () => {
