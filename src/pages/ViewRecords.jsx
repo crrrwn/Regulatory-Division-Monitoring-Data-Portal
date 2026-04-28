@@ -6,6 +6,7 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
+import { sanitizeAttachmentFileName } from '../lib/attachmentFileName'
 import { COLLECTIONS, COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, GOOD_AGRI_PRACTICES_FORM_FIELDS, PLANT_MATERIAL_FORM_FIELDS, RATING_FIELD_KEYS, RATING_LABELS, COLLECTION_DATE_FIELD_FOR_YEAR } from '../lib/collections'
 import { useDisabledUnits } from '../context/DisabledUnitsContext'
 import { getUnitIdsForSections } from '../lib/sections'
@@ -1341,6 +1342,10 @@ export default function ViewRecords() {
     const out = {}
     Object.keys(obj).forEach((k) => {
       const v = obj[k]
+      if (k === 'attachmentFileName' && typeof v === 'string') {
+        out[k] = sanitizeAttachmentFileName(v)
+        return
+      }
       out[k] = v === undefined ? null : sanitizePayloadForFirestore(v)
     })
     return out
@@ -1787,7 +1792,7 @@ export default function ViewRecords() {
           const data = reader.result
           const b64 = typeof data === 'string' ? data.split(',')[1] || data : ''
           updateEditField('attachmentData', b64)
-          updateEditField('attachmentFileName', file.name)
+          updateEditField('attachmentFileName', sanitizeAttachmentFileName(file.name))
         }
         reader.readAsDataURL(file)
         e.target.value = ''

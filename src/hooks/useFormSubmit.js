@@ -4,6 +4,7 @@ import { db } from '../lib/firebase'
 import { useAuth } from '../context/AuthContext'
 import { useNotification } from '../context/NotificationContext'
 import { addSystemLog } from '../lib/systemLogs'
+import { sanitizeAttachmentFileName } from '../lib/attachmentFileName'
 
 export function useFormSubmit(collectionName) {
   const [loading, setLoading] = useState(false)
@@ -15,13 +16,20 @@ export function useFormSubmit(collectionName) {
     setLoading(true)
     setMessage(null)
     try {
-      const payload = {
+      const normalizedAttachmentFileName = data?.attachmentFileName
+        ? sanitizeAttachmentFileName(data.attachmentFileName)
+        : data?.attachmentFileName || ''
+      const normalizedData = {
         ...data,
+        attachmentFileName: normalizedAttachmentFileName,
+      }
+      const payload = {
+        ...normalizedData,
         createdBy: user?.uid || null,
         createdAt: new Date().toISOString(),
       }
       if (docId) {
-        await updateDoc(doc(db, collectionName, docId), { ...data, updatedAt: new Date().toISOString() })
+        await updateDoc(doc(db, collectionName, docId), { ...normalizedData, updatedAt: new Date().toISOString() })
         setMessage({ type: 'success', text: 'Record updated successfully.' })
         showNotification({ type: 'success', title: 'Changes saved', message: 'Record updated successfully.' })
         addSystemLog({ action: 'record_updated', userId: user?.uid, userEmail: user?.email, role: role || 'staff', details: `${collectionName} record updated.` }).catch(() => {})

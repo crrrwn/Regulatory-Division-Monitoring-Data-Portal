@@ -37,6 +37,8 @@ const initialState = {
   areaAffected: '',
   percentInfestation: '',
   pestsDiseases: '',
+  cropEntries: [{ variety: '', datePlanted: '', areaPlanted: '' }],
+  surveillanceEntries: [{ pestsDiseases: '', percentInfestation: '' }],
   remarks: '',
   ratingQuantity: '',
   ratingServicesPersonnel: '',
@@ -57,6 +59,41 @@ export default function PlantPestSurveillanceForm() {
 
   const update = (key, value) => setForm((f) => ({ ...f, [key]: value }))
   const updateUpper = (key) => (e) => update(key, (e.target.value || '').toUpperCase())
+  const updateCropEntry = (index, key, value) => {
+    setForm((prev) => {
+      const next = [...(Array.isArray(prev.cropEntries) ? prev.cropEntries : [{ variety: '', datePlanted: '', areaPlanted: '' }])]
+      const normalizedValue = key === 'datePlanted' ? (value || '') : (value || '').toUpperCase()
+      next[index] = { ...(next[index] || { variety: '', datePlanted: '', areaPlanted: '' }), [key]: normalizedValue }
+      return { ...prev, cropEntries: next }
+    })
+  }
+  const addCropEntry = () => {
+    setForm((prev) => ({ ...prev, cropEntries: [...(Array.isArray(prev.cropEntries) ? prev.cropEntries : []), { variety: '', datePlanted: '', areaPlanted: '' }] }))
+  }
+  const removeCropEntry = (index) => {
+    setForm((prev) => {
+      const current = Array.isArray(prev.cropEntries) ? prev.cropEntries : []
+      const filtered = current.filter((_, i) => i !== index)
+      return { ...prev, cropEntries: filtered.length ? filtered : [{ variety: '', areaPlanted: '' }] }
+    })
+  }
+  const updateSurveillanceEntry = (index, key, value) => {
+    setForm((prev) => {
+      const next = [...(Array.isArray(prev.surveillanceEntries) ? prev.surveillanceEntries : [{ pestsDiseases: '', percentInfestation: '' }])]
+      next[index] = { ...(next[index] || { pestsDiseases: '', percentInfestation: '' }), [key]: (value || '').toUpperCase() }
+      return { ...prev, surveillanceEntries: next }
+    })
+  }
+  const addSurveillanceEntry = () => {
+    setForm((prev) => ({ ...prev, surveillanceEntries: [...(Array.isArray(prev.surveillanceEntries) ? prev.surveillanceEntries : []), { pestsDiseases: '', percentInfestation: '' }] }))
+  }
+  const removeSurveillanceEntry = (index) => {
+    setForm((prev) => {
+      const current = Array.isArray(prev.surveillanceEntries) ? prev.surveillanceEntries : []
+      const filtered = current.filter((_, i) => i !== index)
+      return { ...prev, surveillanceEntries: filtered.length ? filtered : [{ pestsDiseases: '', percentInfestation: '' }] }
+    })
+  }
 
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
@@ -78,7 +115,34 @@ export default function PlantPestSurveillanceForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const ok = await submit(form)
+    const normalizedCropEntries = (Array.isArray(form.cropEntries) ? form.cropEntries : [])
+      .map((entry) => ({
+        variety: String(entry?.variety || '').toUpperCase(),
+        datePlanted: String(entry?.datePlanted || ''),
+        areaPlanted: String(entry?.areaPlanted || '').toUpperCase(),
+      }))
+      .filter((entry) => entry.variety || entry.datePlanted || entry.areaPlanted)
+   const normalizedSurveillanceEntries = (Array.isArray(form.surveillanceEntries) ? form.surveillanceEntries : [])
+      .map((entry) => ({
+        pestsDiseases: String(entry?.pestsDiseases || '').toUpperCase(),
+        percentInfestation: String(entry?.percentInfestation || '').toUpperCase(),
+      }))
+      .filter((entry) => entry.pestsDiseases || entry.percentInfestation)
+
+    const firstCropEntry = normalizedCropEntries[0] || { variety: '', datePlanted: '', areaPlanted: '' }
+    const firstSurveillanceEntry = normalizedSurveillanceEntries[0] || { pestsDiseases: '', percentInfestation: '' }
+
+    const payload = {
+      ...form,
+      cropEntries: normalizedCropEntries.length ? normalizedCropEntries : [{ variety: '', datePlanted: '', areaPlanted: '' }],
+      surveillanceEntries: normalizedSurveillanceEntries.length ? normalizedSurveillanceEntries : [{ pestsDiseases: '', percentInfestation: '' }],
+      variety: firstCropEntry.variety,
+      datePlanted: firstCropEntry.datePlanted,
+      areaPlanted: firstCropEntry.areaPlanted,
+      pestsDiseases: firstSurveillanceEntry.pestsDiseases,
+      percentInfestation: firstSurveillanceEntry.percentInfestation,
+    }
+    const ok = await submit(payload)
     if (ok) {
       setForm(initialState)
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -199,34 +263,57 @@ export default function PlantPestSurveillanceForm() {
                 <input type="text" value={form.crop} onChange={updateUpper('crop')} placeholder="e.g. Rice" className={`${inputClass} pl-10`} />
               </div>
             </div>
-            <div className="sm:col-span-2">
-              <label className={labelClass}>Variety</label>
-              <input 
-                type="text" 
-                value={form.variety} 
-                onChange={updateUpper('variety')} 
-                className={inputClass} 
-                placeholder="e.g. NSIC Rc 222" 
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className={labelClass}>Date Planted</label>
-              <input 
-                type="date" 
-                value={form.datePlanted} 
-                onChange={(e) => update('datePlanted', e.target.value)} 
-                className={inputClass} 
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className={labelClass}>Area Planted (Ha)</label>
-              <input 
-                type="text" 
-                value={form.areaPlanted} 
-                onChange={updateUpper('areaPlanted')} 
-                className={inputClass} 
-                placeholder="Total Hectares" 
-              />
+            <div className="sm:col-span-4 space-y-3">
+              <label className={labelClass}>Variety + Date Planted + Area Planted (Ha)</label>
+              {(Array.isArray(form.cropEntries) ? form.cropEntries : [{ variety: '', datePlanted: '', areaPlanted: '' }]).map((entry, index) => (
+                <div key={`crop-entry-${index}`} className="grid sm:grid-cols-12 gap-3 items-center">
+                  <div className="sm:col-span-4">
+                    <input
+                      type="text"
+                      value={entry.variety || ''}
+                      onChange={(e) => updateCropEntry(index, 'variety', e.target.value)}
+                      className={inputClass}
+                      placeholder="e.g. NSIC Rc 222"
+                    />
+                  </div>
+                  <div className="sm:col-span-3">
+                    <input
+                      type="date"
+                      value={entry.datePlanted || ''}
+                      onChange={(e) => updateCropEntry(index, 'datePlanted', e.target.value)}
+                      className={inputClass}
+                    />
+                  </div>
+                  <div className="sm:col-span-3">
+                    <input
+                      type="text"
+                      value={entry.areaPlanted || ''}
+                      onChange={(e) => updateCropEntry(index, 'areaPlanted', e.target.value)}
+                      className={inputClass}
+                      placeholder="Total Hectares"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 flex justify-end">
+                    {(Array.isArray(form.cropEntries) ? form.cropEntries.length : 0) > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeCropEntry(index)}
+                        className="px-3 py-2 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-all"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addCropEntry}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[#1e4d2b] border-2 border-dashed border-[#1e4d2b]/50 rounded-xl hover:bg-[#1e4d2b]/10 transition-all"
+              >
+                <iconify-icon icon="mdi:plus" width="16"></iconify-icon>
+                Add another
+              </button>
             </div>
           </div>
         </div>
@@ -238,22 +325,6 @@ export default function PlantPestSurveillanceForm() {
           </h3>
           
           <div className="grid sm:grid-cols-12 gap-6">
-            <div className="sm:col-span-12">
-              <label className={labelClass}>Observed Pests / Diseases</label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <AlertTriangle className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
-                </div>
-                <input 
-                  type="text" 
-                  value={form.pestsDiseases} 
-                  onChange={updateUpper('pestsDiseases')} 
-                  className={`${inputClass} pl-10`} 
-                  placeholder="e.g. Fall Armyworm, Rice Blast, Stem Borer" 
-                />
-              </div>
-            </div>
-
             <div className="sm:col-span-6">
               <label className={labelClass}>Area Affected (Ha)</label>
               <input 
@@ -265,15 +336,54 @@ export default function PlantPestSurveillanceForm() {
               />
             </div>
 
-            <div className="sm:col-span-6">
-              <label className={labelClass}>Percent Infestation (%)</label>
-              <input 
-                type="text" 
-                value={form.percentInfestation} 
-                onChange={updateUpper('percentInfestation')} 
-                className={inputClass} 
-                placeholder="e.g. 15%" 
-              />
+            <div className="sm:col-span-12 space-y-3">
+              <label className={labelClass}>Observed Pests / Diseases + Percent Infestation (%)</label>
+              {(Array.isArray(form.surveillanceEntries) ? form.surveillanceEntries : [{ pestsDiseases: '', percentInfestation: '' }]).map((entry, index) => (
+                <div key={`surveillance-entry-${index}`} className="grid sm:grid-cols-12 gap-3 items-center">
+                  <div className="sm:col-span-7">
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <AlertTriangle className="h-4 w-4 text-[#5c574f] group-focus-within:text-[#1e4d2b] transition-colors duration-300" />
+                      </div>
+                      <input
+                        type="text"
+                        value={entry.pestsDiseases || ''}
+                        onChange={(e) => updateSurveillanceEntry(index, 'pestsDiseases', e.target.value)}
+                        className={`${inputClass} pl-10`}
+                        placeholder="e.g. Fall Armyworm, Rice Blast, Stem Borer"
+                      />
+                    </div>
+                  </div>
+                  <div className="sm:col-span-3">
+                    <input
+                      type="text"
+                      value={entry.percentInfestation || ''}
+                      onChange={(e) => updateSurveillanceEntry(index, 'percentInfestation', e.target.value)}
+                      className={inputClass}
+                      placeholder="e.g. 15%"
+                    />
+                  </div>
+                  <div className="sm:col-span-2 flex justify-end">
+                    {(Array.isArray(form.surveillanceEntries) ? form.surveillanceEntries.length : 0) > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => removeSurveillanceEntry(index)}
+                        className="px-3 py-2 text-xs font-bold text-red-700 bg-red-50 border border-red-200 rounded-xl hover:bg-red-100 transition-all"
+                      >
+                        Remove
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addSurveillanceEntry}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[#1e4d2b] border-2 border-dashed border-[#1e4d2b]/50 rounded-xl hover:bg-[#1e4d2b]/10 transition-all"
+              >
+                <iconify-icon icon="mdi:plus" width="16"></iconify-icon>
+                Add another
+              </button>
             </div>
 
             <div className="sm:col-span-12">
