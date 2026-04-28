@@ -46,7 +46,7 @@ const initialState = {
   formSubmissionDate: '',
 }
 
-const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB (Firestore doc limit ~1 MB)
+const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25 MB
 
 export default function AnimalDiseaseSurveillanceForm() {
   const [form, setForm] = useState(initialState)
@@ -59,7 +59,7 @@ export default function AnimalDiseaseSurveillanceForm() {
     const file = e.target.files?.[0]
     if (!file) { update('attachmentFileName', ''); update('attachmentData', ''); return }
     if (file.size > MAX_ATTACHMENT_SIZE) {
-      setMessage({ type: 'error', text: `File too large. Max ${Math.round(MAX_ATTACHMENT_SIZE / 1024)} KB.` })
+      setMessage({ type: 'error', text: 'File too large. Max 25 MB.' })
       e.target.value = ''
       return
     }
@@ -285,7 +285,7 @@ export default function AnimalDiseaseSurveillanceForm() {
               )}
             </div>
             <p className="mt-2 text-[10px] text-[#5c574f]">
-              {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 768 KB (Images/PDF)'}
+              {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 25 MB (Images/PDF)'}
             </p>
           </div>
           <div>

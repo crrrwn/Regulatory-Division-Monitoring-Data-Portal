@@ -132,7 +132,7 @@ export default function ViewRecords() {
   }, [enabledCollectionIds, selectedCollection])
 
   const VIEW_RECORDS_LIMIT = 5000
-  const MAX_ATTACHMENT_SIZE = 768 * 1024 // ~768 KB, same as forms (Firestore doc limit ~1 MB)
+  const MAX_ATTACHMENT_SIZE = 25 * 1024 * 1024 // 25 MB
 
   useEffect(() => setSelectedIds(new Set()), [selectedCollection])
   useEffect(() => {
@@ -1778,7 +1778,7 @@ export default function ViewRecords() {
         const file = e.target.files?.[0]
         if (!file) return
         if (file.size > MAX_ATTACHMENT_SIZE) {
-          alert(`File too large. Max ${Math.round(MAX_ATTACHMENT_SIZE / 1024)} KB.`)
+          alert('File too large. Max 25 MB.')
           e.target.value = ''
           return
         }
@@ -1811,7 +1811,7 @@ export default function ViewRecords() {
               className="block w-full text-sm text-[#5c574f] file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#1e4d2b]/10 file:text-[#1e4d2b] hover:file:bg-[#1e4d2b]/20 border-2 border-dashed border-[#e8e0d4] rounded-xl py-2.5 px-3"
             />
           </label>
-          <p className="text-[10px] text-[#5c574f]">Max 768 KB (images or PDF). Same as in forms.</p>
+          <p className="text-[10px] text-[#5c574f]">Max 25 MB (images or PDF). Same as in forms.</p>
         </div>
       )
     }
