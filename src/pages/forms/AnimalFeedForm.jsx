@@ -59,6 +59,7 @@ export default function AnimalFeedForm() {
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
     e.target.value = ''
+    if (file) update('attachmentFileName', file.name)
     handleFileAttachment(file, {
       collectionName: 'animalFeed',
       setUploading,
@@ -371,7 +372,14 @@ export default function AnimalFeedForm() {
                       )}
                    </div>
                    <p className="mt-2 text-[10px] text-[#5c574f]">
-                     {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 25 MB (Images/PDF)'}
+                     {uploading ? (
+                       <span className="text-[#b8a066] font-bold flex items-center gap-1.5">
+                         <iconify-icon icon="mdi:loading" class="animate-spin" width="13"></iconify-icon>
+                         Uploading...
+                       </span>
+                     ) : form.attachmentFileName ? (
+                       <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span>
+                     ) : 'Max file size: 25 MB (Images/PDF)'}
                    </p>
                 </div>
              </div>
@@ -398,8 +406,8 @@ export default function AnimalFeedForm() {
           {/* --- ACTION BAR --- */}
           <div className="animal-feed-section animal-feed-section-9 pt-2">
              {message && (
-                <div className={`animal-feed-message-enter mb-4 mx-auto max-w-2xl p-4 rounded-xl shadow-lg flex items-center gap-3 border-l-4 ${message.type === 'success' ? 'bg-[#1e4d2b] text-white border-[#153019]' : 'bg-red-500 text-white border-red-700'}`}>
-                  <iconify-icon icon={message.type === 'success' ? 'mdi:check-circle' : 'mdi:alert-circle'} width="24"></iconify-icon>
+                <div className={`animal-feed-message-enter mb-4 mx-auto max-w-2xl p-4 rounded-xl shadow-lg flex items-center gap-3 border-l-4 ${message.type === 'success' ? 'bg-[#1e4d2b] text-white border-[#153019]' : message.type === 'info' ? 'bg-blue-600 text-white border-blue-800' : 'bg-red-500 text-white border-red-700'}`}>
+                  <iconify-icon icon={message.type === 'success' ? 'mdi:check-circle' : message.type === 'info' ? 'mdi:information' : 'mdi:alert-circle'} width="24"></iconify-icon>
                   <p className="font-medium">{message.text}</p>
                 </div>
              )}
@@ -407,7 +415,7 @@ export default function AnimalFeedForm() {
              <div className="flex justify-end">
                 <button 
                   type="submit" 
-                  disabled={loading} 
+                  disabled={loading || uploading} 
                   className="w-full sm:w-auto min-h-[44px] px-6 sm:px-8 py-3.5 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] text-white rounded-xl font-bold tracking-wide flex items-center justify-center gap-2 shadow-lg shadow-[#1e4d2b]/25 hover:shadow-xl hover:shadow-[#1e4d2b]/35 hover:-translate-y-1 hover:scale-[1.02] active:scale-[0.98] touch-manipulation transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-lg disabled:hover:scale-100"
                 >
                   {loading ? (

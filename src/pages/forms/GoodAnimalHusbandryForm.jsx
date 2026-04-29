@@ -34,6 +34,7 @@ export default function GoodAnimalHusbandryForm() {
   const handleAttachmentChange = (e) => {
     const file = e.target.files?.[0]
     e.target.value = ''
+    if (file) update('attachmentFileName', file.name)
     handleFileAttachment(file, {
       collectionName: 'goodAnimalHusbandry',
       setUploading,
@@ -83,7 +84,14 @@ export default function GoodAnimalHusbandryForm() {
             )}
           </div>
           <p className="mt-2 text-[10px] text-[#5c574f]">
-            {form.attachmentFileName ? <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span> : 'Max file size: 25 MB (Images/PDF)'}
+            {uploading ? (
+              <span className="text-[#b8a066] font-bold flex items-center gap-1.5">
+                <iconify-icon icon="mdi:loading" class="animate-spin" width="13"></iconify-icon>
+                Uploading...
+              </span>
+            ) : form.attachmentFileName ? (
+              <span className="text-[#1e4d2b] font-bold">Selected: {form.attachmentFileName}</span>
+            ) : 'Max file size: 25 MB (Images/PDF)'}
           </p>
         </div>
         <div>
@@ -92,9 +100,9 @@ export default function GoodAnimalHusbandryForm() {
         </div>
 
         {message && (
-          <p className={`p-3 rounded ${message.type === 'success' ? 'bg-primary/10 text-primary border border-primary/30' : 'bg-red-50 text-red-700 border border-red-200'}`}>{message.text}</p>
+          <p className={`p-3 rounded ${message.type === 'success' ? 'bg-primary/10 text-primary border border-primary/30' : message.type === 'info' ? 'bg-blue-50 text-blue-800 border border-blue-300' : 'bg-red-50 text-red-700 border border-red-200'}`}>{message.text}</p>
         )}
-        <button type="submit" disabled={loading} className="min-h-[44px] px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 font-semibold touch-manipulation">
+        <button type="submit" disabled={loading || uploading} className="min-h-[44px] px-6 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-dark disabled:opacity-50 font-semibold touch-manipulation">
           {loading ? 'Saving...' : 'Submit'}
         </button>
       </form>

@@ -2192,13 +2192,16 @@ export default function ViewRecords() {
                   <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Avg. Rating</th>
                 )}
                 <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider whitespace-nowrap">Date</th>
+                <th className="px-3 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider text-center whitespace-nowrap w-10" title="Attachment">
+                  <iconify-icon icon="mdi:paperclip" width="14"></iconify-icon>
+                </th>
                 <th className="px-3 sm:px-5 py-3 sm:py-3.5 font-black text-[#1e4d2b] uppercase text-[10px] tracking-wider text-center w-20 sm:w-24">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[#e8e0d4]">
               {displayList.length === 0 ? (
                 <tr>
-                  <td colSpan={4 + ((isGAP || isPlantMaterial) ? 1 : 0) + (RATING_COLLECTIONS[selectedCollection] ? 1 : 0) + (canDelete() ? 1 : 0)} className="px-6 py-16 text-center">
+                  <td colSpan={5 + ((isGAP || isPlantMaterial) ? 1 : 0) + (RATING_COLLECTIONS[selectedCollection] ? 1 : 0) + (canDelete() ? 1 : 0)} className="px-6 py-16 text-center">
                     <div className="flex flex-col items-center justify-center text-[#5c7355] rounded-xl border-2 border-dashed border-[#1e4d2b]/25 bg-[#f0f5ee]/80 py-12 mx-4">
                       <iconify-icon icon="mdi:database-off-outline" width="56" class="opacity-60 animate-pulse"></iconify-icon>
                       <p className="mt-3 font-semibold text-[#1e4d2b]">No records found</p>
@@ -2261,6 +2264,15 @@ export default function ViewRecords() {
                             })()
                           : '—'}
                       </div>
+                    </td>
+                    <td className="px-3 py-3.5 text-center whitespace-nowrap">
+                      {(docItem.attachmentData || docItem.attachmentFileName) ? (
+                        <span title={docItem.attachmentFileName || 'Has attachment'} className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-[#1e4d2b]/10 text-[#1e4d2b]">
+                          <iconify-icon icon="mdi:paperclip" width="16"></iconify-icon>
+                        </span>
+                      ) : (
+                        <span className="text-[#c9c4bc] text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3.5 text-center">
                       <div className="flex items-center justify-center gap-1.5">
