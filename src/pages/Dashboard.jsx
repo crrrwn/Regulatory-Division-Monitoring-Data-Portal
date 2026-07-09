@@ -6,6 +6,8 @@ import {
   MapPin,
   Award,
   LayoutGrid,
+  ShieldCheck,
+  Activity,
   AlertCircle,
 } from 'lucide-react'
 
@@ -14,8 +16,24 @@ export default function Dashboard() {
   const [lastRefreshedAt] = useState(() => new Date())
 
   const provinceEntries = Object.entries(stats?.byProvince || {}).sort((a, b) => b[1] - a[1])
-  const unitEntries = Object.entries(stats?.byUnit || {}).sort((a, b) => (b[1]?.count ?? 0) - (a[1]?.count ?? 0))
+  const unitEntries = Object.entries(stats?.byUnit || {}).map(([id, unitStats]) => {
+    const unitInfo = COLLECTIONS.find(c => c.id === id)
+    return [id, { ...unitStats, label: unitInfo?.label, byApplicationType: unitStats.byApplicationType }]
+  }).sort((a, b) => (b[1]?.count ?? 0) - (a[1]?.count ?? 0))
+
   const maxUnitCount = Math.max(...unitEntries.map(([, v]) => v?.count ?? 0), 1)
+
+  const registrationLicensingUnits = ['animalFeed', 'animalWelfare', 'livestockHandlers', 'transportCarrier', 'plantMaterial', 'organicAgri']
+  const qualityControlUnits = ['goodAgriPractices', 'goodAnimalHusbandry', 'organicPostMarket', 'landUseMatter', 'foodSafety', 'safdzValidation']
+  const surveillanceUnits = ['plantPestSurveillance', 'cfsAdmcc', 'animalDiseaseSurveillance']
+
+  const registrationLicensingTotal = registrationLicensingUnits.reduce((sum, unitId) => sum + (stats?.byUnit?.[unitId]?.count ?? 0), 0)
+  const qualityControlTotal = qualityControlUnits.reduce((sum, unitId) => sum + (stats?.byUnit?.[unitId]?.count ?? 0), 0)
+  const surveillanceTotal = surveillanceUnits.reduce((sum, unitId) => sum + (stats?.byUnit?.[unitId]?.count ?? 0), 0)
+
+  const heroStats = [
+    { title: 'Total Records', value: stats?.total ?? 0, icon: FileText, gradient: 'from-[#1e4d2b] to-[#153019]' },
+  ]
 
   return (
     <>
@@ -49,26 +67,33 @@ export default function Dashboard() {
         )}
 
         {/* --- HERO STATS CARDS --- */}
-        <div className="analytics-section grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-3 gap-2 xs:gap-3" style={{ animationDelay: '80ms' }}>
-          <StatCard 
-            title="Total Records" 
-            value={stats?.total ?? 0} 
-            icon={FileText} 
+        <div className="analytics-section grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-2 xs:gap-3" style={{ animationDelay: '80ms' }}>
+          <StatCard
+            title="Total Records"
+            value={stats?.total ?? 0}
+            icon={FileText}
             gradient="from-[#1e4d2b] to-[#153019]"
             iconColor="text-white"
           />
-          <StatCard 
-            title="Active Units" 
-            value={COLLECTIONS.length} 
-            icon={LayoutGrid} 
+          <StatCard
+            title="Registration & Licensing"
+            value={registrationLicensingTotal}
+            icon={Award}
             gradient="from-[#5c7355] to-[#4a6b3c]"
             iconColor="text-white"
           />
-          <StatCard 
-            title="Provinces" 
-            value={Object.keys(stats?.byProvince || {}).length} 
-            icon={MapPin} 
+          <StatCard
+            title="Quality Control"
+            value={qualityControlTotal}
+            icon={ShieldCheck}
             gradient="from-[#9a7b4f] to-[#8f7a45]"
+            iconColor="text-white"
+          />
+          <StatCard
+            title="Surveillance"
+            value={surveillanceTotal}
+            icon={Activity}
+            gradient="from-[#6b8e5a] to-[#5a7a4c]"
             iconColor="text-white"
           />
         </div>
@@ -127,6 +152,70 @@ export default function Dashboard() {
            </div>
         </div>
 
+        {/* --- BREAKDOWN PER UNIT --- */}
+        <div className="analytics-section w-full min-w-0 max-w-full rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#1e4d2b]/10 overflow-hidden bg-white hover:shadow-xl hover:shadow-[#1e4d2b]/15 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]" style={{ animationDelay: '200ms' }}>
+          <div className="shrink-0 bg-gradient-to-r from-[#1e4d2b] via-[#1a4526] to-[#153019] px-3 sm:px-5 py-3 relative overflow-hidden border-b-2 border-[#1e4d2b]/25">
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_20%_0%,rgba(255,255,255,0.1),transparent_50%)]" />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-white/15 backdrop-blur-sm border border-white/20 text-white shrink-0">
+                  <LayoutGrid size={16} className="sm:w-[18px] sm:h-[18px]" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-sm sm:text-base font-black text-white uppercase tracking-tight drop-shadow-sm truncate">Breakdown Per Unit</h3>
+                  <p className="text-[9px] sm:text-[10px] font-semibold text-white/85 tracking-wider mt-0.5 truncate">Total records for each operational unit</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="p-2 xs:p-3 sm:p-5 bg-gradient-to-b from-[#faf8f5] to-[#f2ede6] border-l-4 border-[#1e4d2b]/25 min-w-0 overflow-x-hidden">
+            <div className="grid grid-cols-1 min-[480px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 xs:gap-3 min-w-0">
+              {unitEntries.map(([id, data], index) => {
+                const barPct = maxUnitCount > 0 ? ((data?.count ?? 0) / maxUnitCount) * 100 : 0
+                const isTop = index < 3
+                return (
+                  <div
+                    key={id}
+                    className="group relative bg-white rounded-lg border-2 border-[#e8e0d4] p-2.5 sm:p-3 shadow-md hover:shadow-xl hover:shadow-[#1e4d2b]/15 hover:border-[#1e4d2b]/40 hover:-translate-y-1 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] overflow-hidden animate-in fade-in min-w-0"
+                    style={{ animationDelay: `${index * 35}ms`, animationDuration: '600ms', animationTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)', animationFillMode: 'both' }}
+                  >
+                    <div className="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-[#1e4d2b]/10 to-transparent rounded-bl-full pointer-events-none transition-opacity duration-500 group-hover:opacity-60" />
+                    {isTop && (
+                      <div className={`absolute top-1.5 right-1.5 w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-black shadow-md ring-1 ring-black/10 transition-transform duration-500 group-hover:scale-110 ${
+                        index === 0 ? 'bg-gradient-to-br from-[#b8a066] to-[#9a7b4f] text-[#153019]' : 
+                        index === 1 ? 'bg-gradient-to-br from-[#5c7355] to-[#4a6b3c] text-white' : 
+                        'bg-gradient-to-br from-[#1e4d2b] to-[#153019] text-white'
+                      }`}>
+                        {index + 1}
+                      </div>
+                    )}
+                    <div className="flex flex-col items-start text-left relative z-10 min-w-0">
+                       <span className="text-[9px] sm:text-[10px] font-bold text-[#5c574f] uppercase tracking-wider mt-0.5 sm:mt-1 truncate w-full max-w-full pr-6" title={data?.label}>{data?.label}</span>
+                       <span className="text-lg sm:text-xl md:text-2xl font-black tabular-nums text-[#1e4d2b] group-hover:scale-110 transition-transform duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] mt-1.5">{data?.count ?? 0}</span>
+                       <div className="flex items-center gap-2 mt-1.5">
+                         {data?.byApplicationType?.New > 0 && (
+                           <div className="text-[9px] font-semibold text-sky-800 bg-sky-100/80 px-2 py-0.5 rounded-md">New: {data.byApplicationType.New}</div>
+                         )}
+                         {data?.byApplicationType?.Renewal > 0 && (
+                           <div className="text-[9px] font-semibold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">Renewal: {data.byApplicationType.Renewal}</div>
+                         )}
+                       </div>
+                      <div className="w-full h-1.5 mt-2 bg-[#e8e0d4]/80 rounded-full overflow-hidden shadow-inner">
+                        <div
+                          className="h-full bg-gradient-to-r from-[#1e4d2b] to-[#5c7355] rounded-full transition-[width] duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                           style={{
+                            width: `${Math.max(barPct, 5)}%`,
+                           }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+
         {/* --- TOP UNITS --- */}
         <div className="analytics-section grid lg:grid-cols-1 gap-4 h-full" style={{ animationDelay: '240ms' }}>
           <div className="rounded-xl border-2 border-[#e8e0d4] shadow-lg shadow-[#b8a066]/15 overflow-hidden flex flex-col max-h-[380px] bg-white hover:shadow-xl hover:shadow-[#b8a066]/20 transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)]">
@@ -157,13 +246,22 @@ export default function Dashboard() {
                          >
                            {index + 1}
                          </div>
-                         <span className="text-[11px] font-bold text-[#1e4d2b] truncate uppercase tracking-tight" title={data?.label}>{data?.label}</span>
+                         <span className="text-[11px] font-bold text-[#1e4d2b] truncate uppercase tracking-tight" title={data?.label}>
+                           {data?.label}
+                         </span>
                        </div>
-                       <span className="text-xs font-black text-[#1e4d2b] shrink-0 ml-1.5">{data?.count ?? 0}</span>
+                       <div className="flex items-center gap-3 shrink-0 ml-1.5">
+                         {data?.byApplicationType?.New > 0 && <span className="text-[10px] font-semibold text-sky-700 bg-sky-100/80 px-2 py-0.5 rounded-md">New: {data.byApplicationType.New}</span>}
+                         {data?.byApplicationType?.Renewal > 0 && <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100/80 px-2 py-0.5 rounded-md">Renewal: {data.byApplicationType.Renewal}</span>}
+                         <span className="text-xs font-black text-[#1e4d2b] min-w-[24px] text-right">{data?.count ?? 0}</span>
+                       </div>
                      </div>
                      <div className="w-full h-1.5 bg-[#e8e0d4]/80 rounded-full overflow-hidden">
                        <div
-                         className={`h-full rounded-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${index === 0 ? 'bg-gradient-to-r from-[#b8a066] to-[#9a7b4f]' : index === 1 ? 'bg-gradient-to-r from-[#9a7b4f] to-[#8f7a45]' : 'bg-gradient-to-r from-[#1e4d2b] to-[#153019]'}`}
+                         className={`h-full rounded-full transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
+                           index === 0 ? 'bg-gradient-to-r from-[#b8a066] to-[#9a7b4f]' : 
+                           index === 1 ? 'bg-gradient-to-r from-[#5c7355] to-[#4a6b3c]' : 
+                           'bg-gradient-to-r from-[#1e4d2b] to-[#153019]'}`}
                          style={{ width: `${((data?.count ?? 0) / maxUnitCount) * 100}%` }}
                        />
                      </div>
