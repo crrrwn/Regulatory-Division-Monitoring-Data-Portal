@@ -1,4 +1,3 @@
-import ExcelJS from 'exceljs'
 import { docToRow, toTitleCase } from './recordFilters'
 import { COLLECTION_TITLE_FIELD, COLLECTION_FIELD_ORDER, COLLECTION_FIELD_LABELS, RATING_FIELD_KEYS } from './collections'
 
@@ -30,6 +29,7 @@ const EXPORT_MAX_RECORDS = 15000
 /** Export records to Excel with styled header and columns. Optionally show By Year, By Semester, By Province. */
 export async function exportToExcel(records, collectionId, collectionLabel, options = {}) {
   if (!Array.isArray(records)) throw new Error('Invalid records')
+  const { default: ExcelJS } = await import('exceljs')
   const toExport = records.length > EXPORT_MAX_RECORDS ? records.slice(0, EXPORT_MAX_RECORDS) : records
   if (records.length > EXPORT_MAX_RECORDS) {
     console.warn(`[exportExcel] Capped at ${EXPORT_MAX_RECORDS} records (had ${records.length})`)
