@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 
 export default function Dashboard() {
-  const { stats, error } = useAnalytics()
+  const { filteredStats: stats, error } = useAnalytics()
   const [lastRefreshedAt] = useState(() => new Date())
 
   const provinceEntries = Object.entries(stats?.byProvince || {}).sort((a, b) => b[1] - a[1])
@@ -199,6 +199,21 @@ export default function Dashboard() {
                          {data?.byApplicationType?.Renewal > 0 && (
                            <div className="text-[9px] font-semibold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">Renewal: {data.byApplicationType.Renewal}</div>
                          )}
+                       </div>
+                       <div className="w-full mt-2">
+                         <p className="text-[8px] font-bold text-[#5c574f] uppercase tracking-wider mb-1">By province</p>
+                         <div className="flex flex-wrap gap-1">
+                           {Object.entries(data?.byProvince || {})
+                             .sort((a, b) => b[1] - a[1])
+                             .map(([province, count]) => (
+                               <span key={province} className="text-[9px] font-semibold text-[#1e4d2b] bg-[#edf3eb] px-1.5 py-0.5 rounded-md">
+                                 {province}: {count}
+                               </span>
+                             ))}
+                           {Object.keys(data?.byProvince || {}).length === 0 && (
+                             <span className="text-[9px] text-[#7a746a]">No province data</span>
+                           )}
+                         </div>
                        </div>
                       <div className="w-full h-1.5 mt-2 bg-[#e8e0d4]/80 rounded-full overflow-hidden shadow-inner">
                         <div

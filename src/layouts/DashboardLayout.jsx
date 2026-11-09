@@ -6,6 +6,7 @@ import { pathToCollectionId } from '../lib/collections'
 import { getUnitIdsForSections, isPathAllowedForSections } from '../lib/sections'
 import { getPublicImageUrl } from '../utils/publicAssets'
 import { addSystemLog } from '../lib/systemLogs'
+import { useAnalytics } from '../context/AnalyticsContext'
 
 const SIDEBAR_SECTIONS = [
   {
@@ -49,9 +50,11 @@ function DashboardLayout() {
   const [openSections, setOpenSections] = useState([])
   const [logoutModalOpen, setLogoutModalOpen] = useState(false)
   const [logoutSuccess, setLogoutSuccess] = useState(false)
+  const [filterMenuOpen, setFilterMenuOpen] = useState(false)
   const location = useLocation()
   const navigate = useNavigate()
   const { user, role, userSection, userAllowedSections, signOut } = useAuth()
+  const { filters, setFilters, filterOptions } = useAnalytics()
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -324,6 +327,77 @@ function DashboardLayout() {
 
            {/* Right: Date (Visible on tablets and up) */}
            <div className="flex items-center gap-1 sm:gap-4 shrink-0">
+              {location.pathname === '/dashboard' && (
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setFilterMenuOpen((open) => !open)}
+                    aria-expanded={filterMenuOpen}
+                    aria-haspopup="dialog"
+                    className={`inline-flex items-center gap-1.5 min-h-[40px] px-2.5 sm:px-3 rounded-lg border text-xs font-semibold transition-colors ${
+                      filters.semester || filters.year
+                        ? 'border-primary/30 bg-primary/10 text-primary'
+                        : 'border-border bg-white text-text-muted hover:bg-surface'
+                    }`}
+                  >
+                    <iconify-icon icon="mdi:filter-variant" width="17"></iconify-icon>
+                    <span>Filters</span>
+                    {(filters.semester || filters.year) && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary" aria-label="Filters active"></span>
+                    )}
+                  </button>
+                  {filterMenuOpen && (
+                    <div
+                      role="dialog"
+                      aria-label="Dashboard filters"
+                      className="absolute right-0 top-full mt-2 z-50 w-[min(280px,calc(100vw-24px))] p-4 rounded-xl border border-border bg-white shadow-xl"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-bold text-primary">Filter dashboard</h3>
+                        <button
+                          type="button"
+                          onClick={() => setFilterMenuOpen(false)}
+                          className="p-1 text-text-muted hover:text-primary rounded"
+                          aria-label="Close filters"
+                        >
+                          <iconify-icon icon="mdi:close" width="18"></iconify-icon>
+                        </button>
+                      </div>
+                      <label className="block text-xs font-semibold text-text-muted mb-1.5" htmlFor="dashboard-semester-filter">Semester</label>
+                      <select
+                        id="dashboard-semester-filter"
+                        value={filters.semester}
+                        onChange={(event) => setFilters((current) => ({ ...current, semester: event.target.value }))}
+                        className="w-full h-10 px-3 mb-3 rounded-lg border border-border bg-white text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      >
+                        <option value="">All Semesters</option>
+                        <option value="1st Semester">1st Semester</option>
+                        <option value="2nd Semester">2nd Semester</option>
+                      </select>
+                      <label className="block text-xs font-semibold text-text-muted mb-1.5" htmlFor="dashboard-year-filter">Year</label>
+                      <select
+                        id="dashboard-year-filter"
+                        value={filters.year}
+                        onChange={(event) => setFilters((current) => ({ ...current, year: event.target.value }))}
+                        className="w-full h-10 px-3 rounded-lg border border-border bg-white text-sm text-primary focus:outline-none focus:ring-2 focus:ring-primary/30"
+                      >
+                        <option value="">All Years</option>
+                        {filterOptions.years.map((year) => (
+                          <option key={year} value={year}>{year === 'Unknown' ? 'No date' : year}</option>
+                        ))}
+                      </select>
+                      <button
+                        type="button"
+                        onClick={() => setFilters({ semester: '', year: '' })}
+                        disabled={!filters.semester && !filters.year}
+                        className="mt-3 text-xs font-semibold text-primary hover:underline disabled:text-text-muted disabled:no-underline disabled:cursor-not-allowed"
+                      >
+                        Clear filters
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               <div className="hidden sm:flex items-center gap-2 px-2 sm:px-3 py-1.5 bg-surface rounded-full border border-border">
                  <iconify-icon icon="mdi:calendar-month-outline" width="16" class="text-text-muted"></iconify-icon>
                  <span className="text-xs font-semibold text-primary whitespace-nowrap">
